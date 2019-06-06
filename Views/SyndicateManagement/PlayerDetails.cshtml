@@ -1,0 +1,75 @@
+@model TauManager.ViewModels.PlayerDetailsViewModel
+
+<h2 class="text-center">@Html.DisplayFor(m => m.Player.Name)</h2>
+
+@if(Model.LastActivityId == -1)
+{
+    <div class="alert alert-danger">This player has no activity recorded ever (no difference found between any history records).</div>
+} else if (Model.LastActivityId == 0)
+{
+    <div class="alert alert-warning">Last activity more than 2 weeks ago, <a asp-action="PlayerDetails" asp-route-id="@Model.Player.Id" asp-route-loadAll="true">load @Model.MoreRows more row(s)</a> to see it.</div>
+}
+
+<dl class="row">
+   <dt class="col-sm-2">@Html.LabelFor(m => m.Player.Level)</dt>
+   <dd class="col-sm-4">@Html.DisplayFor(m => m.Player.Level)</dd>
+   <dt class="col-sm-2 physical-stat">@Html.LabelFor(m => m.Player.StatTotal)</dt>
+   <dd class="col-sm-4 physical-stat">@Html.DisplayFor(m => m.Player.StatTotal)</dd>
+   <dt class="col-sm-2">@Html.LabelFor(m => m.Player.Bank)</dt>
+   <dd class="col-sm-4">@Html.DisplayFor(m => m.Player.BankString)</dd>
+   <dt class="col-sm-2 physical-stat">@Html.LabelFor(m => m.Player.Strength)</dt>
+   <dd class="col-sm-4 physical-stat">@Html.DisplayFor(m => m.Player.Strength)</dd>
+   <dt class="col-sm-2">@Html.LabelFor(m => m.Player.Bonds)</dt>
+   <dd class="col-sm-4">@Html.DisplayFor(m => m.Player.Bonds)</dd>
+   <dt class="col-sm-2 physical-stat">@Html.LabelFor(m => m.Player.Agility)</dt>
+   <dd class="col-sm-4 physical-stat">@Html.DisplayFor(m => m.Player.Agility)</dd>
+   <dt class="col-sm-2">@Html.LabelFor(m => m.Player.LastUpdate)</dt>
+   <dd class="col-sm-4">@(Model.Player.LastUpdate.ToString("yyyy-MM-dd hh:mm:ss"))</dd>
+   <dt class="col-sm-2 physical-stat">@Html.LabelFor(m => m.Player.Stamina)</dt>
+   <dd class="col-sm-4 physical-stat">@Html.DisplayFor(m => m.Player.Stamina)</dd>
+   <dt class="col-sm-2 mental-stat">@Html.LabelFor(m => m.Player.Intelligence)</dt>
+   <dd class="col-sm-4 mental-stat">@Html.DisplayFor(m => m.Player.Intelligence)</dd>
+   <dt class="col-sm-2 mental-stat">@Html.LabelFor(m => m.Player.Social)</dt>
+   <dd class="col-sm-4 mental-stat">@Html.DisplayFor(m => m.Player.Social)</dd>
+</dl>
+
+<h4 class="text-center">Player history</h4>
+<table class="table table-condensed table-striped">
+    <thead>
+        <tr>
+            <th>Recorded At</th>
+            <th>Level</th>
+            <th>Stats Total</th>
+            <th>Str</th>
+            <th>Agi</th>
+            <th>Sta</th>
+            <th>Int</th>
+            <th>Soc</th>
+            <th>Credits</th>
+            <th>Bonds</th>
+        </tr>
+    </thead>
+    <tbody>
+    @foreach (var playerHistory in Model.History)
+    {
+        <tr class="@(Model.LastActivityId == playerHistory.Id ? "font-weight-bold" : "")">
+            <td>@playerHistory.RecordedAt.ToString("yyyy-MM-dd hh:mm:ss")</td>
+            <td>@playerHistory.Level</td>
+            <td>@playerHistory.StatTotal</td>
+            <td>@playerHistory.Strength</td>
+            <td>@playerHistory.Agility</td>
+            <td>@playerHistory.Stamina</td>
+            <td>@playerHistory.Intelligence</td>
+            <td>@playerHistory.Social</td>
+            <td>@playerHistory.Bank</td>
+            <td>@playerHistory.Bonds</td>
+        </tr>
+    }
+    @if (Model.MoreRows > 0)
+    {
+        <tr>
+            <td class="text-center" colspan="10"><a asp-action="PlayerDetails" asp-route-id="@Model.Player.Id" asp-route-loadAll="true">Load @Model.MoreRows more row(s)</a></td>
+        </tr>
+    }
+    </tbody>
+</table>

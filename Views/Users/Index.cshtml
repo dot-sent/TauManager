@@ -1,0 +1,69 @@
+@model TauManager.ViewModels.UserListViewModel
+
+<div class="text-center">
+    <h2>Current users</h2>
+</div>
+
+<table class="table table-condensed table-striped">
+    <thead>
+        <tr>
+            <td>UserName</td>
+            <td>Associated player</td>
+            <td>Roles</td>
+            <td>Active?</td>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var userModel in Model.Users)
+{
+        <tr>
+            <td>@(userModel.User.UserName)</td>
+            <td>
+                <select class="sel-user-player" data-user-id="@userModel.User.Id" id="sel_player_@(userModel.User.NormalizedUserName)">
+                    <!option value="0"@(userModel.User.PlayerId == 0 ? " selected" : "")>--Unassigned--</!option>
+                @foreach (var player in Model.Players)
+                {
+                    <!option value="@player.Id"@(userModel.User.PlayerId == player.Id ? " selected" : "")>@player.Name</!option>
+                }
+                </select>
+            </td>
+            <td>
+                @foreach (var role in Model.Roles.Keys)
+                {
+                    <div>
+                        <input type="checkbox" class="cb-user-role" data-user-id="@userModel.User.Id" data-role-name="@role" id="cb_@(userModel.User.NormalizedUserName + role)"@(userModel.Roles[role] ? " checked" : "")@(Model.Roles[role] ? "" : " disabled")>
+                        <label for="cb_@(userModel.User.NormalizedUserName + role)">@(role)</label>
+                    </div>
+                }
+            </td>
+            <td>
+                <input type="checkbox" class="cb-user-active" data-user-id="@userModel.User.Id" id="cbactive_@(userModel.User.NormalizedUserName)"@(userModel.User.IsApproved ? " checked" : "")@(userModel.AllowActivation ? "" : " disabled")>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
+
+@section Scripts {
+    <script type="text/javascript">
+        configureControlPostback('.cb-user-role', '/Users/ChangeRole', 
+            {
+                userId : 'user-id',
+                roleName : 'role-name',
+                status: '#checked'
+            }
+        );
+        configureControlPostback('.sel-user-player', '/Users/SetPlayer',
+            {
+                userId : 'user-id',
+                playerId : 'val'
+            }
+        );
+        configureControlPostback('.cb-user-active', '/Users/SetActive',
+            {
+                userId : 'user-id',
+                status : '#checked'
+            }
+        );
+    </script>
+}

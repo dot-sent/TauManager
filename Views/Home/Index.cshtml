@@ -1,0 +1,28 @@
+﻿@model TauManager.ViewModels.SyndicateMetricsViewModel
+@{
+    ViewData["Title"] = "[TAU] syndicate homepage";
+}
+
+@if (User.Identity.IsAuthenticated){
+<div class="text-center">
+    <h2>Welcome, @(User.Identity.Name)!</h2>
+    <p>
+        What enemy do you want to smash today?
+    </p>
+</div>
+<div class="text-center">
+    <h3>Syndicate metrics</h3>
+</div>
+@await Html.PartialAsync("_SyndicateSummaryPartial", Model);
+} else {
+<div class="text-center">
+    <h2>Welcome [TAU] members!</h2>
+    <p>
+        If you have an account, please <a id="login" asp-area="Identity" asp-page="/Account/Login">login</a>.
+    </p>
+    <p>
+        If you don't, please <a id="register" asp-area="Identity" asp-page="/Account/Register">register</a> 
+        first and contact Dotsent in-game to activate your account. Enjoy!
+    </p>
+</div>
+}

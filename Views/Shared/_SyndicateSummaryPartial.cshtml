@@ -1,0 +1,86 @@
+@model TauManager.ViewModels.SyndicateMetricsViewModel
+<div class="row">
+    <div class="col-md-4">
+        <div class="text-center">
+            <h4>Count by stats total</h4>
+        </div>
+        <table class="table table-condensed table-striped table-bordered">
+            <thead class="text-center">
+                <tr>
+                    <th>Stats total</th>
+                    <th>Count</th>
+                </tr>
+            </thead>
+            <tbody class="text-right">
+            @foreach (var statCategory in Model.PlayerCountByStatTotal.Keys)
+            {
+                <tr>
+                    <td>@statCategory</td>
+                    <td>@Model.PlayerCountByStatTotal[statCategory]</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+    <div class="col-md-8">
+        <div class="text-center">
+            <h4>Averages by player tier</h4>
+        </div>
+        <table class="table table-striped table-bordered">
+            <thead class="text-center">
+                <tr>
+                    <th rowspan="2">Tier</th>
+                    <th rowspan="2">Count</th>
+                    <th colspan="3">Total</th>
+                    <th rowspan="2">Str</th>
+                    <th rowspan="2">Agi</th>
+                    <th rowspan="2">Sta</th>
+                </tr>
+                <tr>
+                    <th>Avg</th>
+                    <th>Stddev</th>
+                    <th>Median</th>
+                </tr>
+            </thead>
+            <tbody class="text-right">
+            @for(int i = Model.MaxTier; i > 0; i--)
+            {
+                <tr>
+                    <td>@i</td>
+                @if (!Model.PlayerStats.ContainsKey(i))
+                {
+                    <td>0</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                } else {
+                    <td class="font-weight-bold">@Html.DisplayFor(m => m.PlayerStats[i].PlayerCount)</td>
+                    <td class="font-weight-bold">@Html.DisplayFor(m => m.PlayerStats[i].StatTotal)</td>
+                    <td>@Html.DisplayFor(m => m.PlayerStats[i].StatTotalStdDev)</td>
+                    <td>@Html.DisplayFor(m => m.PlayerStats[i].StatTotalMedian)</td>
+                    <td>@Html.DisplayFor(m => m.PlayerStats[i].Strength)</td>
+                    <td>@Html.DisplayFor(m => m.PlayerStats[i].Agility)</td>
+                    <td>@Html.DisplayFor(m => m.PlayerStats[i].Stamina)</td>
+                }
+                </tr>
+                @if(Model.PlayerToCompare != null && Model.PlayerToCompare.Tier == i)
+                {
+                <tr class="font-weight-bold text-primary">
+                    <td>@i (you)</td>
+                    <td>-</td>
+                    <td class="@(Model.PlayerStats[i].StatTotal > Model.PlayerToCompare.StatTotal ? "text-danger" : "text-success")">@Html.DisplayFor(m => m.PlayerToCompare.StatTotal), &Delta;=@((Model.PlayerToCompare.StatTotal - Model.PlayerStats[i].StatTotal).ToString("N3"))</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td class="@(Model.PlayerStats[i].Strength > Model.PlayerToCompare.Strength ? "text-danger" : "text-success")">@Html.DisplayFor(m => m.PlayerToCompare.Strength), &Delta;=@((Model.PlayerToCompare.Strength - Model.PlayerStats[i].Strength).ToString("N3"))</td>
+                    <td class="@(Model.PlayerStats[i].Agility > Model.PlayerToCompare.Agility ? "text-danger" : "text-success")">@Html.DisplayFor(m => m.PlayerToCompare.Agility), &Delta;=@((Model.PlayerToCompare.Agility - Model.PlayerStats[i].Agility).ToString("N3"))</td>
+                    <td class="@(Model.PlayerStats[i].Stamina > Model.PlayerToCompare.Stamina ? "text-danger" : "text-success")">@Html.DisplayFor(m => m.PlayerToCompare.Stamina), &Delta;=@((Model.PlayerToCompare.Stamina - Model.PlayerStats[i].Stamina).ToString("N3"))</td>
+                </tr>
+                }
+            }                
+            </tbody>
+        </table>
+    </div>
+</div>

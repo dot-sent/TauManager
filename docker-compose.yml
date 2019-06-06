@@ -1,0 +1,21 @@
+version: "3"
+services:
+    web:
+        image: taumanager:latest
+        ports:
+            - "5000:80"
+        env_file:
+            - /etc/tau.env
+        extra_hosts:
+            - "database:172.17.0.1"
+    proxy:
+        build:
+            context:  ./nginx
+            dockerfile: Dockerfile
+        ports:
+            - "80:80"
+            - "443:443"
+        volumes:
+             - <certificate_dir>:<certificate_dir>
+        links:
+            - web

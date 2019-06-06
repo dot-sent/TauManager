@@ -1,0 +1,9 @@
+@model TauManager.ViewModels.LootItemViewModel
+
+<h4 class="text-center">Apply for @Model.Loot.Item.Name</h4>
+
+<div class="row">
+    <div class="col-md-12">
+        @await Html.PartialAsync("_LootCardPartial", Model)
+    </div>
+</div>

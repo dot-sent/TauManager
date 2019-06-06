@@ -1,0 +1,40 @@
+@model Dictionary<string, string>
+
+@{if (Model!=null) {
+    <h2>Processing results:</h2>
+    <table class="table table-compact table-striped">
+        <thead>
+            <tr>
+                <td>Filename</td>
+                <td>Status</td>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var fileName in Model.Keys){
+                <tr>
+                    <td>
+                        @fileName
+                    </td>
+                    <td>
+                        @Model[fileName]
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+}
+
+<form method="post" enctype="multipart/form-data">
+    <div class="form-group">
+        <div class="col-md-10">
+            <p>Upload one or multiple .html files with members' data:</p>
+            <input type="file" name="files" multiple />
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="col-md-10">
+            <input type="submit" value="Upload" />
+        </div>
+    </div>
+</form>

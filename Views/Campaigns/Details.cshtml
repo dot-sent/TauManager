@@ -1,0 +1,280 @@
+@model TauManager.ViewModels.CampaignDetailsViewModel
+
+<div class="text-center">
+@if(Model.Campaign.Id == 0)
+{
+    <h2>Add Campaign</h2>
+} else {
+    <h2>@Html.DisplayFor(m => m.Campaign.Name)</h2>
+}
+    <div>
+        <form method="post" enctype="multipart/form-data" asp-action="ImportCampaignFile">
+            <input type="hidden" name="campaignId" value="@(Model.Campaign.Id)">
+            <div class="form-group">
+                <div class="col-md-10">
+                    <p>Upload a file with this campaign results:</p>
+                    <input type="file" name="campaignResult"/>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-10">
+                    <input type="submit" value="Upload" />
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="alert alert-success@(Model.Alert == null ? " d-none" : "")">@Model.Alert</div>
+
+<div class="card mb-3">
+    <div class="card-header"><h5>Campaign details</h5></div>
+    <div class="card-body">
+        <form id="form_campaign" asp-action="Edit" method="post">
+            <input type="hidden" name="Id" id="hidden_campaign_id" value="@Model.Campaign.Id">
+            <input type="hidden" name="Tiers" id="hidden_campaign_tiers" value="@Model.Campaign.Tiers">
+            <div class="form-row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="campaign_name">Campaign name</label>
+                        <input class="form-control" id="campaign_name" name="Name" type="text" placeholder="Campaign #X" value="@(Model.Campaign.Name)">
+                    </div>
+                    <div class="form-group">
+                        <label for="campaign_manager">Manager</label>
+                        <select class="form-control" name="ManagerId" id="campaign_manager" name="ManagerId">
+                            <!option value="0"@(Model.Campaign != null && Model.Campaign.ManagerId == 0 ? " selected" : "")>--Unassigned--</!option>
+                        @foreach (var player in Model.Players)
+                        {
+                            <!option value="@player.Id"@(Model.Campaign != null && Model.Campaign.ManagerId == player.Id ? " selected" : "")>@player.Name</!option>
+                        }
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="campaign_datetime">Date and time:</label>
+                        <div class="input-group date"  id="datetimepicker_campaign" data-target-input="nearest">
+                            <input class="form-control datetimepicker-input" type="text" id="campaign_datetime" data-target="#datetimepicker_campaign"
+                                name="UTCDateTime" value="@(Model.Campaign.UTCDateTime.Value.ToString("yyyy-MM-dd HH:mm"))">
+                            <div class="input-group-append" data-target="#datetimepicker_campaign" data-toggle="datetimepicker">
+                                <div class="input-group-text"><i class="fa fa-calendar"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="campaign_station">Station:</label>
+                        <input class="form-control" id="campaign_station" name="Station" value="@Model.Campaign.Station">
+                    </div>
+                    <div class="form-group">
+                        <label for="campaign_difficulty">Difficulty: </label>
+                        <div class="input-group" id="campaign_difficulty">
+                        @foreach (var value in Model.DifficultyLevels.Keys)
+                        {
+                            bool checkedValue = (Model.Campaign.Difficulty.Value == (Campaign.CampaignDifficulty)value);
+                            <label class="form-control @(checkedValue ? " active" : "")">
+                                <input type="radio" name="Difficulty" value="@value"@(checkedValue ? " checked" : "")> @Model.DifficultyLevels[value]
+                            </label>
+                        }
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="campaign_tiers">Tiers: </label>
+                        <div class="input-group" id="campaign_tiers">
+                        @for(var tier = 1; tier <= 5; tier++)
+                        {
+                            <label for="cb_tier_@(tier)" class="form-control">
+                                <input type="checkbox" name="Tier@(tier)" id="cb_tier_@tier"@(Model.Campaign.TiersList.Contains(tier) ? " checked" : "")>
+                                &nbsp;@tier
+                            </label>
+                        }
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label for="campaign_status">Status: </label>
+                        <div class="input-group" id="campaign_status">
+                        @foreach (var value in Model.Statuses.Keys)
+                        {
+                            bool checkedValue = (Model.Campaign.Status == (Campaign.CampaignStatus)value);
+                            <label class="form-control@(checkedValue ? " active" : "")">
+                                <input type="radio" name="Status" value="@value"@(checkedValue ? " checked" : "")> @Model.Statuses[value]
+                            </label>
+                        }
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="campaign_comments">Comments:</label>
+                        <textarea class="form-control" name="Comments" id="campaign_comments">@Model.Campaign.Comments</textarea>
+                    </div>
+                    <div class="form-group">
+                        <button class="form-control btn btn-success" id="btn_save_campaign">Save changes</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+@if(Model.Campaign.Id != 0)
+{
+<div class="card mb-3">
+    <div class="card-header"><h5>Loot (<i>@Model.Loot.Count() item(s)</i>)</h5></div>
+    <div class="card-body text-center">
+        <div class="card-columns">
+            @foreach (var loot in Model.Loot)
+            {
+                @await Html.PartialAsync("_LootCardPartial", loot);
+            }
+            <div class="card" id="card_add_loot_item">
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                            <h5 class="card-title">Add loot item</h5>
+                        </li>
+                        <li class="list-group-item">
+                            <label for="radio_loot_add_tauhead">
+                                <input type="radio" name="radio-loot-add-method" value="tauhead" id="radio_loot_add_tauhead" checked>
+                                by TauHead URL:
+                            </label>
+                            <input type="text" id="input_tauhead_url" class="w-100">
+                        </li>
+                        <li class="list-group-item">
+                            <label for="radio_loot_add_known">
+                                <input type="radio" name="radio-loot-add-method" value="known" id="radio_loot_add_known">
+                                From past Epics:
+                            </label>
+                            <select id="select_loot_item" class="w-100">
+                                <option value="0" selected><i>--Undefined--</i></option>
+                            @foreach (var epic in Model.KnownEpics)
+                            {
+                                <!option value="@epic.Id">@epic.Name, @epic.Caption</!option>
+                            }    
+                            </select>
+                        </li>
+                        <li class="list-group-item">
+                            <button class="btn btn-success" id="btn_add_loot">Add</button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="card mb-3">
+    <div class="card-header"><h5>Signup and attendance</h5></div>
+    <div class="card-body">
+    @if (Model.Campaign.Attendance.Count() == 0 && Model.Campaign.Signups.Count() == 0)
+    {
+        <i>No data has been uploaded yet</i>
+    } else {
+        <table class="table table-striped table-bordered">
+            <thead class="text-center">
+                <th>Name</th>
+                <th>Signed up</th>
+                <th>Participated</th>
+            </thead>
+            <tbody>
+            @foreach (var player in Model.Players)
+            {
+                <tr>
+                    <td>@player.Name</td>
+                    <td class="text-center">@if (Model.Campaign.SignupsDict.ContainsKey(player.Id))
+                        {
+                            <i class="fa fa-check"></i>
+                        }
+                    <td class="text-center">@if (Model.Campaign.AttendanceDict.ContainsKey(player.Id))
+                        {
+                            <i class="fa fa-check"></i>
+                        }
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+    </div>
+</div>
+}
+
+@section Head{
+    <link rel="stylesheet" href="/lib/tempusdominus/tempusdominus-bootstrap-4.min.css" />    
+}
+
+@section Scripts{
+    <script type="text/javascript" src="/lib/moment/moment.min.js"></script>
+    <script type="text/javascript" src="/lib/tempusdominus/tempusdominus-bootstrap-4.min.js"></script>
+    <script type="text/javascript">
+        $(function () {
+            $('#datetimepicker_campaign').datetimepicker({
+                icons: {
+                    time: "fa fa-clock",
+                    date: "fa fa-calendar",
+                    up: "fa fa-arrow-up",
+                    down: "fa fa-arrow-down"
+                },
+                format: "YYYY-MM-DD HH:mm"
+            });
+        });
+    </script>
+    <script type="text/javascript">
+        $('#btn_save_campaign').click(function(e) {
+            e.preventDefault();
+            var tiers = 0;
+            var currentTierVal = 1;
+            for (var i = 1; i<=5; i++){
+                var $elem = $('#cb_tier_' + i);
+                var value = $elem.prop('checked');
+                if (value == true){
+                    tiers += currentTierVal;
+                }
+                currentTierVal *= 2;
+                $elem.prop('disabled', 'disabled');
+            }
+            $('#hidden_campaign_tiers').val(tiers);
+            $('#form_campaign').submit();
+        });
+        configureControlPostback('.select-loot-item-status', '/Campaigns/SetLootStatus',
+            {
+                id: 'id',
+                status: 'val'
+            });
+        configureControlPostback('.select-loot-item-holder', '/Campaigns/SetLootHolder',
+            {
+                id: 'id',
+                holderId: 'val'
+            });
+        $('#btn_add_loot').click(function(e){
+            var lootOption = $('input[name="radio-loot-add-method"]:checked').val();
+            if (lootOption == "tauhead") {
+                $.ajax({
+                    url: '/Campaigns/AddLootByTauheadURL',
+                    data: {
+                        campaignId: $('#hidden_campaign_id').val(),
+                        url: $('#input_tauhead_url').val()
+                    },
+                    cache: false,
+                    type: "POST",
+                    success: function(data, textStatus, jqXHR){
+                        $('#card_add_loot_item').before(data);
+                        var $elem = $('#card_add_loot_item').prev();
+                        configureControlPostbackObject($elem.find('.select-loot-item-status'), '/Campaigns/SetLootStatus',
+                            {
+                                id: 'id',
+                                status: 'val'
+                            });
+                        configureControlPostbackObject($elem.find('.select-loot-item-holder'), '/Campaigns/SetLootHolder',
+                            {
+                                id: 'id',
+                                holderId: 'val'
+                            });
+                        $('#input_tauhead_url').val('');
+                    },
+                    error: function(jqXHR, textStatus, errorThrown){
+                        // TODO: error handling
+                    }
+                });
+            }
+        });
+    </script>
+}

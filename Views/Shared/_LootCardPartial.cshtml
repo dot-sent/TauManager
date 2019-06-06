@@ -1,0 +1,76 @@
+@model TauManager.ViewModels.LootItemViewModel
+<div class="text-center@(Model.ShowSingleItemInterface ? "" : " card")" id="card_loot_@Model.Loot.Id">
+    <img class="card-img-top" src="@Model.Loot.Item.ImageUrl" alt="Item image" style="max-width: 150px; max-height: 150px;"/>
+    <div class="card-body">
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item">
+                <h5 class="card-title"><a href="@Model.Loot.Item.Url">@Model.Loot.Item.Name</a></h5>
+                <p class="card-text">@Model.Loot.Item.Caption</p>
+            </li>
+            <li class="list-group-item">
+                Existing requests:
+                @if (Model.AllRequests == null || Model.AllRequests.Count == 0)
+                {
+                    <i>None</i>
+                } else {
+                    <ul>
+                    @foreach (var playerPosition in Model.AllRequests.Keys)
+                    {
+                        <li>(@playerPosition) @Model.AllRequests[playerPosition]</li>
+                    }
+                    </ul>
+                }
+            </li>
+        @if (Model.ShowApplyButton)
+        {
+            <li class="list-group-item">
+            @if (Model.ShowSingleItemInterface)
+            {
+                <form action="/Campaigns/ApplyForLoot/@Model.Loot.Id" method="post">
+                    <div class="form-group">
+                        <label for="radio_apply_normal">
+                            <input type="radio" name="specialOffer" id="radio_apply_normal" value="False" checked>
+                            Apply without special offer (default)
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label for="radio_apply_special">
+                            <input type="radio" name="specialOffer" id="radio_apply_special" value="True">
+                            Apply with a special offer (specify below)
+                        </label>
+                        <textarea class="form-control" id="ta_special_request" name="comments"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <input type="submit" value="Apply">
+                    </div>
+                </form>
+            } else {
+                <a asp-action="ApplyForLoot" asp-route-id="@Model.Loot.Id" class="btn btn-success">Apply</a>
+            }
+            </li>
+        }
+        @if(Model.ShowEditControls)
+        {
+            <li class="list-group-item">
+                <label for="select_loot_item_status_@(Model.Loot.Id)">Status:</label>
+                <select id="select_loot_item_status_@(Model.Loot.Id)" class="select-loot-item-status" data-id="@Model.Loot.Id">
+                @foreach (var status in Model.LootStatuses.Keys)
+                {
+                    <!option value="@status"@((int)Model.Loot.Status == status ? " selected" : "")>@(Model.LootStatuses[status])</!option>
+                }    
+                </select>
+            </li>
+            <li class="list-group-item">
+                <label for="select_loot_item_holder_@(Model.Loot.Id)">Holder:</label>
+                <select id="select_loot_item_holder_@(Model.Loot.Id)" class="select-loot-item-holder" data-id="@Model.Loot.Id">
+                    <!option value="0"@(Model.Loot.HolderId.HasValue && Model.Loot.HolderId.Value == 0 ? " selected" : "")><i>--Unassigned--</i></!option>
+                @foreach (var player in Model.Players)
+                {
+                    <!option value="@player.Id"@(Model.Loot.HolderId.HasValue && Model.Loot.HolderId.Value == player.Id ? " selected" : "")>@(player.Name)</!option>
+                }    
+                </select>
+            </li>
+        }
+        </ul>
+    </div>
+</div>

@@ -1,0 +1,11 @@
+@model bool
+
+@if (Model)
+{
+    <div class="alert alert-success">Your application has been successfully saved</div>
+} else {
+    <div class="alert alert-danger">Your application failed to save. Please contact Dotsent and inform him about the problem.</div>
+}
+<div>
+    <a class="btn btn-primary" asp-action="Index">Back to campaigns overview</a>
+</div>

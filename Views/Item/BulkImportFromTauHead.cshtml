@@ -1,0 +1,24 @@
+@model string[]
+
+<div class="text-left">
+    <h5>Status:</h5>
+@if(Model != null && Model.Count() > 0)
+{
+    <ul>
+    @foreach (var status in Model)
+    {
+        <li>@(status)</li>
+    }
+    </ul>
+} else {
+    <i>None yet</i>
+} 
+</div>
+
+<form method="post">
+    <div class="form-group">
+        <label for="tb_urls">Paste here a list of URLs to import</label>
+        <textarea name="urls" id="tb_urls" class="form-control"></textarea>
+        <input type="submit" value="Submit"/>
+    </div>
+</form>

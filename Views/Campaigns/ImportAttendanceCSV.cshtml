@@ -1,0 +1,21 @@
+@model bool?
+
+@{
+    ViewData["Title"] = "Import attendance CSV";
+}
+
+@if(Model.HasValue)
+{
+    <div class="alert alert-@(Model.Value ? "success" : "danger")">
+        CSV import @(Model.Value ? "completed successfully." : "failed!")
+    </div>
+}
+
+<form asp-action="ImportAttendanceCSV" enctype="multipart/form-data" method="post">
+    <div class="form-group">
+        <input type="file" class="form-control" name="csvFile" accept=".csv">
+    </div>
+    <div class="form-group">
+        <input type="submit" value="Import">
+    </div>
+</form>

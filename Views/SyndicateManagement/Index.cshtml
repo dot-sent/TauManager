@@ -1,0 +1,71 @@
+@model TauManager.ViewModels.SyndicateMetricsViewModel
+@using static TauManager.Utils.DictionaryExtensions
+
+<div class="text-center">
+    <h2>Syndicate metrics</h2>
+    <p><a asp-controller="SyndicateManagement" asp-action="ImportFile">Import new file(s)</a></p>
+</div>
+@await Html.PartialAsync("_SyndicateSummaryPartial", Model);
+<div class="row">
+    <div class="col-md-12">
+        <div class="text-center">
+            <h2>Player list by tier</h2>
+        </div>
+        <table class="table table-condenced table-striped table-bordered">
+            <tbody>
+            @foreach(var tier in Model.Players.Keys)
+            {
+                <tr>
+                    <td colspan="13" class="text-center"><h4>Tier @(tier)</h4></td>
+                </tr>
+                <tr>
+                    <th>Player</th>
+                    <th>Stats Total</th>
+                    <th>Str</th>
+                    <th>Agi</th>
+                    <th>Sta</th>
+                    <th>Int</th>
+                    <th>Soc</th>
+                    <th>Credits</th>
+                    <th>Bonds</th>
+                    <th>Last updated</th>
+                    <th>Last activity</th>
+                    <th>Campaign att% Total/T5H</th>
+                    <th>In?</th>
+                </tr>
+                @foreach(var player in Model.Players[tier])
+                {
+                    <tr class="text-right">
+                        <td class="text-left"><a asp-action="PlayerDetails" asp-route-id="@player.Id">@player.Name</a></td>
+                        <td>@player.StatTotal</td>
+                        <td>@player.Strength</td>
+                        <td>@player.Agility</td>
+                        <td>@player.Stamina</td>
+                        <td>@player.Intelligence</td>
+                        <td>@player.Social</td>
+                        <td>@player.BankString</td>
+                        <td>@player.Bonds</td>
+                        <td>@player.LastUpdateString</td>
+                        <td class="player-activity player-activity-@(Model.LastActivity[player.Id].DaysClass)">@(Model.LastActivity[player.Id].DaysAgoString)</td>
+                        <td>@Model.Attendance.TotalAttendance.SingleOrGiven(player.Id, 0)%/@Model.Attendance.Last10T5HardAttendance.SingleOrGiven(player.Id, 0)%</td>
+                        <td class="text-center">
+                            <input type="checkbox" data-player-id="@player.Id" class="cb-player-active"@(player.Active ? "checked" : "")/>
+                        </td>
+                    </tr>
+                }
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts{
+    <script type="text/javascript">
+        configureControlPostback('.cb-player-active', '/SyndicateManagement/SetPlayerActive',
+            {
+                playerId: 'player-id',
+                status: '#checked'
+            }
+        );
+    </script>
+}

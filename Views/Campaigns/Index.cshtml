@@ -1,0 +1,237 @@
+@model TauManager.ViewModels.CampaignOverviewViewModel
+@{
+    ViewData["Title"] = "Syndicate campaigns overview";
+    var userHasEditRights = 
+        User.IsInRole(TauManager.Areas.Identity.Data.ApplicationRoleManager.Administrator)
+        || User.IsInRole(TauManager.Areas.Identity.Data.ApplicationRoleManager.Leader)
+        || User.IsInRole(TauManager.Areas.Identity.Data.ApplicationRoleManager.Officer);
+}
+
+<div class="text-center">
+    <h2>Syndicate Campaigns
+    @if(userHasEditRights)
+    {
+        @:(
+        <a asp-action="Create">add</a>
+        @:)
+    }
+    </h2>
+</div>
+
+<div class="card mb-3 text-center">
+    <div class="card-header">
+        Currently available loot (your position in the list: @Model.MyPosition)
+    </div>
+    <div class="card-body">
+        @if(Model.LootToDistribute.Count() > 0)
+        {
+        <div class="card-columns">
+            @foreach (var loot in Model.LootToDistribute)
+            {
+                @await Html.PartialAsync("_LootCardPartial", loot);
+            }
+        </div>
+        } else {
+            <i class="text-center">None at this moment</i>
+        }
+    </div>
+</div>
+
+<div class="card mb-3 text-center">
+    <div class="card-header">Current campaign</div>
+@if(Model.CurrentCampaigns.Count() > 0)
+{
+    <table class="card-body table table-striped table-condensed table-bordered mb-0">
+        <thead>
+            <th>Name</th>
+            <th>Time (UTC)</th>
+            <th>Time (GCT)</th>
+            <th>Manager</th>
+            <th>Status</th>
+            <th>Station</th>
+            <th>Difficulty</th>
+            <th>Tiers</th>
+        </thead>
+        <tbody>
+        @foreach(var campaign in Model.CurrentCampaigns)
+        {
+            <tr title="@campaign.Comments">
+                <td>
+                @if(userHasEditRights)
+                {
+                    <a asp-action="Details" asp-route-id="@campaign.Id">@campaign.Name</a>
+                } else {
+                    @campaign.Name
+                }
+                </td>
+                <td>@campaign.UTCDateString</td>
+                <td>@campaign.GCTDateString</td>
+                <td>
+                    @if(campaign.Manager == null)
+                    {
+                        <i>--Unassigned--</i>
+                    } else {
+                        @campaign.Manager.Name
+                    }
+                </td>
+                <td>@campaign.Status</td>
+                <td>@campaign.Station</td>
+                <td>@(campaign.Difficulty.HasValue ? @campaign.Difficulty.Value.ToString() : "Not set")</td>
+                <td>@campaign.TiersString</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+} else {
+    <div class="card-body">
+        <i class="text-center">No campaign is running at this moment</i>
+    </div>
+}
+</div>
+
+<div class="card mb-3 text-center">
+    <div class="card-header">Future campaigns</div>
+@if(Model.FutureCampaigns.Count() > 0)
+{
+    <table class="table card-body table-striped table-condensed table-bordered mb-0">
+        <thead>
+            <th>Name</th>
+            <th>Time (UTC)</th>
+            <th>Time (GCT)</th>
+            <th>Manager</th>
+            <th>Status</th>
+            <th>Station</th>
+            <th>Difficulty</th>
+            <th>Tiers</th>
+            <th>Signup</th>
+        </thead>
+        <tbody>
+        @foreach(var campaign in Model.FutureCampaigns)
+        {
+            <tr title="@campaign.Comments">
+                <td>
+                @if(userHasEditRights)
+                {
+                    <a asp-action="Details" asp-route-id="@campaign.Id">@campaign.Name</a>
+                } else {
+                    @campaign.Name
+                }
+                </td>
+                <td>@campaign.UTCDateString</td>
+                <td>@campaign.GCTDateString</td>
+                <td>
+                    @if(campaign.Manager == null)
+                    {
+                        <i>--Unassigned--</i>
+                        @if (campaign.Status == Campaign.CampaignStatus.Unknown ||
+                        campaign.Status == Campaign.CampaignStatus.Planned)
+                        {
+                            <a asp-action="Volunteer" asp-route-id="@campaign.Id" class="btn btn-success">Volunteer</a>
+                        }
+                    } else {
+                        @campaign.Manager.Name
+                    }
+                </td>
+                <td>@campaign.Status</td>
+                <td>@campaign.Station</td>
+                <td>@(campaign.Difficulty.HasValue ? @campaign.Difficulty.Value.ToString() : "Not set")</td>
+                <td>@campaign.TiersString</td>
+                <td>
+                    @if(Model.MySignups.ContainsKey(campaign.Id))
+                    {
+                        <span>Yes</span>
+                        <input type="button" class="btn btn-danger btn-sm btn-campaign-signup" value="Remove" data-campaign-id="@campaign.Id" data-status="false">
+                    } else {
+                        <span>No</span>
+                        <input type="button" class="btn btn-success btn-sm btn-campaign-signup" value="Sign up" data-campaign-id="@campaign.Id" data-status="true">
+                    }
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+} else {
+    <div class="card-body">
+        <i class="text-center">No campaigns planned at this moment</i>
+    </div>
+}
+</div>
+
+<div class="card mb-3 text-center">
+    <div class="card-header">Past campaigns</div>
+@if(Model.PastCampaigns.Count() > 0)
+{
+    <table class="table card-body table-striped table-condensed table-bordered mb-0">
+        <thead>
+            <th>Name</th>
+            <th>Time (UTC)</th>
+            <th>Time (GCT)</th>
+            <th>Manager</th>
+            <th>Status</th>
+            <th>Station</th>
+            <th>Difficulty</th>
+            <th>Tiers</th>
+            <th>Signup & Attendance</th>
+        </thead>
+        <tbody>
+        @foreach(var campaign in Model.PastCampaigns)
+        {
+            <tr title="@campaign.Comments">
+                <td>
+                @if(userHasEditRights)
+                {
+                    <a asp-action="Details" asp-route-id="@campaign.Id">@campaign.Name</a>
+                } else {
+                    @campaign.Name
+                }
+                </td>
+                <td>@campaign.UTCDateString</td>
+                <td>@campaign.GCTDateString</td>
+                <td>
+                    @if(campaign.Manager == null)
+                    {
+                        <i>--Unassigned--</i>
+                    } else {
+                        @campaign.Manager.Name
+                    }
+                </td>
+                <td>@campaign.Status</td>
+                <td>@campaign.Station</td>
+                <td>@(campaign.Difficulty.HasValue ? @campaign.Difficulty.Value.ToString() : "Not set")</td>
+                <td>@campaign.TiersString</td>
+                <td>
+                    @(Model.MySignups.ContainsKey(campaign.Id) ? "Yes" : "No")/@(Model.MyAttendance.ContainsKey(campaign.Id) ? "Yes" : "No")
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+} else {
+    <div class="card-body">
+        <i class="text-center">No campaigns found in the past</i>
+    </div>
+}
+</div>
+
+@section Scripts
+{
+    <script type="text/javascript">
+        configureControlPostback('.select-loot-item-status', '/Campaigns/SetLootStatus',
+            {
+                id: 'id',
+                status: 'val'
+            });
+        configureControlPostback('.select-loot-item-holder', '/Campaigns/SetLootHolder',
+            {
+                id: 'id',
+                holderId: 'val'
+            });
+        configureControlPostback('.btn-campaign-signup', '/Campaigns/SetSignupStatus',
+            {
+                campaignId: 'campaign-id',
+                status: 'status'
+            }, "click", function() {
+                location.reload(false);
+            });
+    </script>
+}

@@ -1,0 +1,59 @@
+@model TauManager.ViewModels.LootOverviewViewModel
+@{
+    ViewData["Title"] = "Loot Overview";
+}
+
+<div class="text-center">
+    <form class="form-inline align-items-center" method="GET">
+    @foreach (var status in Model.LootStatuses.Keys)
+    {
+        <div class="form-check mb-2 mr-sm-2">
+            <input type="checkbox" class="form-check-input" name="display" value="@status" id="cb_filter_@status"@(Model.Display.Contains(status) ? " checked": "")>
+            <label for="cb_filter_@status" class="form-check-label">@Model.LootStatuses[status]</label>
+        </div>
+    }
+        <div class="form-group mb-2 mr-sm-2">
+            <input type="submit" class="btn btn-sm btn-primary form-control form-control-sm mb-2 mr-sm-2" id="btn_filter_apply" value="Apply">
+        </div>
+    </form>
+</div>
+
+<div class="card mb-3 text-center">
+    <div class="card-header">
+        <h4>Syndicate Campaigns Loot items and history</h4>
+    </div>
+@if(Model.AllLoot.Count() > 0)
+{
+    <table class="card-body table table-condensed table-bordered table-striped mb-0">
+        <thead>
+            <tr>
+                <th>Campaign</th>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Status</th>
+                <th>Holder/Owner</th>
+                <th>Stats (P/I/E, Accuracy, Weight, Value)</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var loot in Model.AllLoot)
+        {
+            <tr>
+                <td>@loot.Campaign.Name</td>
+                <td>@loot.Item.Name</td>
+                <td>@loot.Item.Caption</td>
+                <td>@loot.Status</td>
+                <td>@(loot.HolderId.HasValue ? loot.Holder.Name : "-Undefined-")</td>
+                <td>
+                    @loot.Item.Piercing.Value.ToString("N0")/@loot.Item.Impact.Value.ToString("N0")/@loot.Item.Energy.Value.ToString("N0"), @(loot.Item.Type == Item.ItemType.Weapon ? loot.Item.Accuracy.ToString() + ", " : "")@loot.Item.Weight kg, @loot.Item.Price cr
+                </td>
+            </tr>            
+        }
+        </tbody>
+    </table>
+} else {
+    <div class="card-body">
+        <i class="text-center">None at this moment</i>
+    </div>
+}
+</div>

@@ -1,0 +1,240 @@
+@model TauManager.ViewModels.LootDistributionListModel
+
+@{
+    var userHasEditRights = 
+        User.IsInRole(TauManager.Areas.Identity.Data.ApplicationRoleManager.Administrator)
+        || User.IsInRole(TauManager.Areas.Identity.Data.ApplicationRoleManager.Leader)
+        || User.IsInRole(TauManager.Areas.Identity.Data.ApplicationRoleManager.Officer);
+    var allCampaignIds = Model.AllCampaignLoot.Keys.OrderBy(k => k);
+}
+
+<div class="text-center">
+    <h2 class="text-center">Current distribution list</h2>
+</div>
+<div class="text-center">
+    <form class="form-inline align-items-center" id="form_filter" asp-action="SetLootDistributionListParams">
+        <input type="hidden" id="hidden_includeInactive" name="includeInactive">
+        <input type="hidden" id="hidden_undistributedLootOnly" name="undistributedLootOnly">
+
+        <div class="form-check mb-2 mr-sm-2">
+            <input type="checkbox" class="form-check-input" id="cb_filter_includeInactive"@(Model.IncludeInactive ? " checked": "")>
+            <label for="cb_filter_includeInactive" class="form-check-label">Include inactive players</label>
+        </div>
+        <div class="form-check mb-2 mr-sm-2">
+            <input type="checkbox" class="form-check-input" id="cb_filter_undistributedLootOnly"@(Model.UndistributedLootOnly ? " checked": "")>
+            <label for="cb_filter_undistributedLootOnly" class="form-check-label">Show undistributed loot only</label>
+        </div>
+        <div class="form-group mb-2 mr-sm-2">
+            <input type="submit" class="btn btn-sm btn-primary form-control form-control-sm mb-2 mr-sm-2" id="btn_filter_apply" value="Apply">
+        </div>
+    </form>
+</div>
+
+@if(Model.CurrentOrder.Count() == 0)
+{
+    <div class="text-center"><i>No players in distribution list yet. Fresh setup?</i></div>
+} else { var index = 1;
+    <table class="table table-sm table-striped table-bordered m-1">
+        <thead class="text-center m-1">
+            <tr>
+                <th rowspan="2">Position</th>
+                <th rowspan="2">Player</th>
+                <th rowspan="2">Active?</th>
+                <th rowspan="2">Att% T5H+</th>
+            @foreach(var campaignId in allCampaignIds)
+            {
+                <th colspan="@(Model.AllCampaignLoot[campaignId].Count())"><a href="/Campaigns/Details/@campaignId" target="_blank">@(Model.AllCampaigns[campaignId].Name)</a></th>
+            }
+            </tr>
+            <tr>
+            @foreach(var campaignId in allCampaignIds)
+            {
+                foreach(var campaignLoot in Model.AllCampaignLoot[campaignId])
+                {
+                    <th id="th_cl_@campaignLoot.Id">@(campaignLoot.Item.Name)</th>
+                }
+            }
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var player in Model.CurrentOrder)
+        {
+            <tr class="@(player.Active ? "" : "text-muted")">
+                <th>
+                    @(player.Active ? "" : "(")@(index++)@(player.Active ? "" : ")")
+                </th>
+                <th id="th_pl_@player.Id">@(player.Name)</th>
+            @if(userHasEditRights)
+            {
+                <th><input type="checkbox" class="cb-player-active" data-player-id="@player.Id"@(player.Active ? "checked=\"checked\"" : "")/></th>
+            } else {
+                <th>@(player.Active ? "Yes" : "No")</th>
+            }
+                <th>@(Model.HardT5AttendanceRate.ContainsKey(player.Id) ? Model.HardT5AttendanceRate[player.Id].ToString() : "0")%</th>
+            @foreach(var campaignId in allCampaignIds)
+            {
+                foreach(var campaignLoot in Model.AllCampaignLoot[campaignId])
+                { 
+                    var requestStatus = -1;
+                    var comment = "";
+                    if (Model.AllLootRequests.ContainsKey(player.Id) && Model.AllLootRequests[player.Id].ContainsKey(campaignLoot.Id))
+                    {
+                        requestStatus = (int)Model.AllLootRequests[player.Id][campaignLoot.Id].Status;
+                        comment = Model.AllLootRequests[player.Id][campaignLoot.Id].SpecialOfferDescription;
+                    }
+                    
+                    <td class="text-center">
+                        @if (comment == null || comment == "") 
+                        {
+                            <span>@(requestStatus == -1 ? "" : Model.AllLootRequests[player.Id][campaignLoot.Id].Status.ToString())</span>
+                        } else {
+                            <span title="@comment">@(requestStatus == -1 ? "" : Model.AllLootRequests[player.Id][campaignLoot.Id].Status.ToString())</span>
+                        }
+                        
+                    @if(userHasEditRights)
+                    {
+                        <input type="button" class="btn btn-xs btn-display-lr-editor" class="btn btn-primary" data-toggle="modal" data-target="#modal_edit_lr" value="(edit)"
+                             data-player-id="@player.Id" data-loot-id="@campaignLoot.Id" data-status="@requestStatus" data-comment="@comment">
+                    }
+                    </td>
+                }
+            }
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+
+@if(userHasEditRights)
+{
+    <form action="/Campaigns/AppendPlayerToDistributionListBottom" method="post">
+        <input type="hidden" name="lootRequestId" value="-1">
+        <div class="form-group">
+            <label for="sel_id">Player:</label>
+            <select name="id" id="sel_id" class="form-control">
+            @foreach (var player in Model.AllPlayers)
+            {
+                <option value="@player.Id">@player.Name</option>
+            }
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="ta_comment">Comment:</label>
+            <textarea name="comment" id="ta_comment" class="form-control"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Add or move to the bottom</button>
+    </form>
+
+    <div class="modal fade" id="modal_edit_lr" tabindex="-1" role="dialog" aria-labelledby="modal_edit_lr_title" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modal_edit_lr_title">Edit loot request</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="form_edit_loot_request">
+                        <input type="hidden" name="playerId" id="hidden_lr_player_id">
+                        <input type="hidden" name="campaignLootId" id="hidden_lr_loot_id">
+                        <input type="hidden" name="dropDown" id="hidden_lr_drop_down">
+                        <div class="form-group">
+                            <label for="select_lr_status">Request status:</label>
+                            <select id="select_lr_status" class="select-loot-request-status form-control form-control-sm" class="w-100 btn btn-mini" name="status">
+                                <!option value="-1">none/delete</!option>
+                                <!option value="@((int)LootRequest.LootRequestStatus.Interested)">Interested</!option>
+                                <!option value="@((int)LootRequest.LootRequestStatus.Awarded)">Awarded</!option>
+                                <!option value="@((int)LootRequest.LootRequestStatus.SpecialOffer)">Special Offer</!option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="ta_special_request_comments">Special offer:</label>
+                            <textarea id="ta_special_request_comments" class="form-control form-control-sm w-100" name="comments"></textarea>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input type="checkbox" id="cb_drop_player_loot_request" class="form-check-input">
+                            <label for="cb_drop_player_loot_request" class="form-check-label">Drop player down?</label>
+                        </div>
+                        <div class="form-group">
+                            <label for="select_loot_status">New loot status:</label>
+                            <select id="select_loot_status" class="select-loot-status form-control form-control-sm" class="w-100 btn btn-mini" name="lootStatus">
+                                <!option value="-1" selected)>-no change-</!option>
+                            @foreach (var status in Model.LootStatuses.Keys)
+                            {
+                                <!option value="@status">@(Model.LootStatuses[status])</!option>
+                            }
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="modal_edit_lr_submit">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts
+{
+    @if(userHasEditRights)
+    {
+        <script type="text/javascript">
+            $('#modal_edit_lr').on('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget);
+                var modal = $(this);
+                modal.find('.modal-title').text(
+                    $('#th_pl_' + button.data('player-id')).text() + 
+                    ' for ' +
+                     $('#th_cl_' + button.data('loot-id')).text());
+                modal.find('#select_lr_status').val(button.data('status'));
+                modal.find('#ta_special_request_comments').val(button.data('comment'));
+                modal.find('#hidden_lr_player_id').val(button.data('player-id'));
+                modal.find('#hidden_lr_loot_id').val(button.data('loot-id'));
+            });
+            $('#modal_edit_lr_submit').click(function(evt){
+                var form = $('#form_edit_loot_request');
+                form.find('#hidden_lr_drop_down').val(form.find('#cb_drop_player_loot_request').prop('checked'));
+                var data = form.serialize();
+                $.ajax({
+                    url: '/Campaigns/SetLootRequestStatus',
+                    data: data,
+                    cache: false,
+                    type: 'POST',
+                    success: function(data, textStatus, jqXHR){
+                        $('#modal_edit_lr').modal('hide');
+                        location.reload(true);
+                    },
+                    error: function(jqXHR, textStatus, errorThrown){
+
+                    }
+                });
+            })
+        </script>
+    }
+    <script type="text/javascript">
+        $('#form_filter').submit(function(evt){
+            evt.preventDefault();
+            
+            var form = $(this);
+            var url = form.attr('action');
+
+            $('#hidden_includeInactive').val($('#cb_filter_includeInactive').prop('checked'));
+            $('#hidden_undistributedLootOnly').val($('#cb_filter_undistributedLootOnly').prop('checked'));
+
+            $.ajax({
+                type: 'POST',
+                url: url,
+                data: form.serialize(),
+                success: function(data){
+                    location.reload(true);
+                },
+                error: function(jqXHR, textStatus, errorThrown){
+                    console.log('Error setting filters: textStatus="' + textStatus + '", errorThrown="' + errorThrown + '"');
+                }
+            });
+        })
+    </script>
+}
