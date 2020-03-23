@@ -2,6 +2,7 @@ using System;
 
 namespace TauManager.Models
 {
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     public class PlayerListPositionHistory
     {
         public int Id { get; set; }

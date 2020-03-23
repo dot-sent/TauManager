@@ -24,7 +24,8 @@ namespace TauManager.Areas.Identity
                     .AddRoleManager<ApplicationRoleManager>()
                     .AddEntityFrameworkStores<TauManagerIdentityDbContext>()
                     .AddUserManager<ApplicationIdentityUserManager>()
-                    .AddDefaultUI();
+                    .AddDefaultUI()
+                    .AddDefaultTokenProviders();
             });
         }
     }

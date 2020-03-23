@@ -1,3 +1,4 @@
+using System.Linq;
 using System.IO;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
@@ -6,21 +7,29 @@ using TauManager.Areas.Identity;
 using TauManager.Areas.Identity.Data;
 using TauManager.BusinessLogic;
 using System.Threading.Tasks;
+using TauManager.Utils;
+using Microsoft.AspNetCore.Authorization;
 
 namespace TauManager.Controllers
 {
     [AuthorizeRoles(ApplicationRoleManager.Administrator, ApplicationRoleManager.Leader, ApplicationRoleManager.Officer)]
-    public class SyndicateManagementController : Controller
+    public class SyndicateManagementController : SyndicateControllerBase
     {
+        #region Session keys
+        private const string KeyIncludeInactive = "SyndicateManagement_IncludeInactive";
+        #endregion
+
         private IPlayerLogic _playerLogic{ get; set; }
-        public SyndicateManagementController(IPlayerLogic logic)
+        public SyndicateManagementController(IPlayerLogic logic, ISyndicateLogic syndicateLogic, ApplicationIdentityUserManager userManager): 
+            base(syndicateLogic, userManager)
         {
             _playerLogic = logic;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            var model = _playerLogic.GetSyndicateMetrics(null);
+            var includeInactive = HttpContext.Session.Get<bool>(KeyIncludeInactive, false);
+            var model = _playerLogic.GetSyndicateMetrics(null, includeInactive, (await GetSyndicate()).Id);
             return View(model);
         }
 
@@ -30,13 +39,25 @@ namespace TauManager.Controllers
         }
 
         [HttpPost]
-        public async System.Threading.Tasks.Task<IActionResult> ImportFile(List<IFormFile> files)
+        [AllowAnonymous]
+        public async Task<IActionResult> ImportFile(List<IFormFile> files, string token)
         {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) user = _userManager.Users.SingleOrDefault(u => u.PlayerPageUploadToken == token);
+            if (user == null ||
+                (
+                    !(await _userManager.IsInRoleAsync(user, ApplicationRoleManager.Leader)) &&
+                    !(await _userManager.IsInRoleAsync(user, ApplicationRoleManager.Officer)) &&
+                    !(await _userManager.IsInRoleAsync(user, ApplicationRoleManager.Administrator))
+                )) return Unauthorized();
+
+            var syndicateId = (await GetNativeSyndicate()).Id;
+
             var model = new Dictionary<string, string>();
             foreach(var formFile in files)
             {
                 string message = "";
-                if (formFile.Length > 128000) 
+                if (formFile.Length > 256000)
                 {
                     message = $"Cannnot be processed: File size ({formFile.Length} bytes) too large";
                 } else
@@ -44,9 +65,9 @@ namespace TauManager.Controllers
                     StreamReader reader = new StreamReader(formFile.OpenReadStream());
                     string fileContents = reader.ReadToEnd();
                     reader.Close();
-                    message = await _playerLogic.ParsePlayerPageAsync(fileContents);
-                    model[formFile.FileName] = message;
+                    message = await _playerLogic.ParsePlayerPageAsync(fileContents, syndicateId);
                 }
+                model[formFile.FileName] = message;
             }
             return View(model);
         }
@@ -64,6 +85,33 @@ namespace TauManager.Controllers
             var model = _playerLogic.GetPlayerDetails(id, loadAll);
             if (model == null) return NotFound();
             return View(model);
+        }
+
+        public IActionResult PlayerDetailsChartData(int id, byte interval, byte dataKind)
+        {
+            var model = _playerLogic.GetPlayerDetailsChartData(id, interval, dataKind);
+            return Json(model);
+        }
+
+        public async Task<IActionResult> SkillsOverview(string skillGroupName)
+        {
+            var model = _playerLogic.GetSkillsOverview(skillGroupName, (await GetSyndicate()).Id);
+            return View(model);
+        }
+
+        public IActionResult SetSyndicateOverviewParams(bool includeInactive)
+        {
+            HttpContext.Session.Set<bool>(KeyIncludeInactive, includeInactive);
+            return Ok();
+        }
+
+        public async Task<IActionResult> GetPlayerPageUploadToken()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            var token = _playerLogic.GetPlayerPageUploadToken();
+            user.PlayerPageUploadToken = token;
+            await _userManager.UpdateAsync(user);
+            return View(model: token);
         }
     }
 }

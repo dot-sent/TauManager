@@ -1,8 +1,10 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using TauManager.Utils;
 
 namespace TauManager.Models
 {
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     public class Item
     {
         public const string UrlBase = "https://alpha.taustation.space/item/";
@@ -47,10 +49,34 @@ namespace TauManager.Models
         { 
             get
             {
-                return String.Format("{0} Tier {1} {2}", 
-                    Rarity.ToString(), 
+                return String.Format("{0} Tier {1} {2}",
+                    Rarity.ToString(),
                     Tier, 
                     (Type == ItemType.Weapon && WeaponType.HasValue ? WeaponType.Value.ToString() : Type.ToString()));
+            }
+        }
+        public string LDLCaption
+        { 
+            get
+            {
+                return String.Format("T{0} {1} ({2:N0}/{3:N0}/{4:N0})",
+                    Tier,
+                    (Type == ItemType.Weapon && WeaponType.HasValue ? WeaponType.Value.ToStringSplit() : Type.ToStringSplit()),
+                    Piercing.HasValue ? Piercing.Value : 0,
+                    Impact.HasValue ? Impact.Value : 0,
+                    Energy.HasValue ? Energy.Value : 0);
+            }
+        }
+        public string CampaignOverviewCaption {
+            get
+            {
+                return String.Format("{0} Tier {1} {2} ({3:N0}/{4:N0}/{5:N0})",
+                    Rarity.ToString(),
+                    Tier,
+                    (Type == ItemType.Weapon && WeaponType.HasValue ? WeaponType.Value.ToString() : Type.ToString()),
+                    Piercing.HasValue ? Piercing.Value : 0,
+                    Impact.HasValue ? Impact.Value : 0,
+                    Energy.HasValue ? Energy.Value : 0);
             }
         }
         #endregion

@@ -1,5 +1,6 @@
 namespace TauManager.Models
 {
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     public class CampaignAttendance
     {
         public int Id { get; set; }

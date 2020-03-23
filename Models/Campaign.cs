@@ -1,18 +1,19 @@
 using System.Linq;
-using System.Security.Claims;
-using System.ComponentModel.DataAnnotations;
 using System;
 using System.ComponentModel;
 using System.Collections.Generic;
 
 namespace TauManager.Models
 {
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     public class Campaign
     {
         public enum CampaignStatus : byte { Unknown, Assigned, Planned, InProgress, Abandoned, Completed, Failed, Skipped };
         public enum CampaignDifficulty : byte { Easy, Normal, Hard, Extreme };
         public int Id { get; set; }
         public string Name { get; set; }
+        public int? SyndicateId { get; set; }
+        public virtual Syndicate Syndicate { get; set; }
         public DateTime? UTCDateTime { get; set; }
         public string UTCDateString
         {
@@ -25,9 +26,7 @@ namespace TauManager.Models
         {
             get
             {
-                return UTCDateTime.HasValue ? 
-                    (UTCDateTime.Value.Subtract(new DateTime(1964, 01, 22)).Days/100.0).ToString("0.00'/'") +
-                    (UTCDateTime.Value.TimeOfDay.TotalDays*100).ToString("00.000").Replace('.', ':') : "Not set";
+                return UTCDateTime.HasValue ? Utils.GCT.MakeGCTDateTime(UTCDateTime.Value) : "Not set";
             }
         }
         public int? ManagerId { get; set; }

@@ -108,10 +108,57 @@ select.btn-mini + .caret {
   border-radius: .2rem;
 }
 
-.btn-display-lr-editor {
-  color: #aaa
+.btn-display-lr-editor:hover {
+  font-weight: bold;
 }
 
-.btn-display-lr-editor:hover {
-  color: #000
+.ldl-ok {
+  background-color: lightgreen;
+}
+
+.ldl-warn {
+  background-color: yellow;
+}
+
+.ldl-blocked {
+  background-color: coral;
+}
+
+.nav-pills.nav-green a {
+  background-color: lightgreen;
+  color: black;
+}
+
+.nav-pills.nav-green a.active {
+  background-color: green;
+  color: white;
+}
+
+/* Market card styles*/
+.card-columns-market {
+  column-count: 2;
+}
+
+.card-bg-0, .card-bg-0 > .list-group > .list-group-item  {
+  background-color: #b8daff!important;
+}
+
+.card-bg-1, .card-bg-1 > .list-group > .list-group-item {
+  background-color: #c3e6cb!important;
+}
+
+.card-bg-2, .card-bg-2 > .list-group > .list-group-item {
+  background-color: #f5c6cb!important;
+}
+
+.card-bg-3, .card-bg-3 > .list-group > .list-group-item {
+  background-color: #ffeeba!important;
+}
+
+.card-bg-4, .card-bg-4 > .list-group > .list-group-item {
+  background-color: #d6d8db!important;
+}
+
+.card-bg-5, .card-bg-5 > .list-group > .list-group-item {
+  background-color: #fdfdfe!important;
 }

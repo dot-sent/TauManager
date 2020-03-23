@@ -1,0 +1,75 @@
+@model TauManager.ViewModels.SkillOverviewViewModel
+@{
+    ViewData["Title"] = "Skills overview - syndicate management";
+}
+
+@section Head{
+    <link rel="stylesheet" href="/lib/jquery-tablesorter/theme.default.css" />
+}
+
+<div class="row mb-2">
+    <div class="col-md-12">
+        <ul class="nav nav-pills nav-fill">
+            @{
+                var allActive = String.IsNullOrEmpty(Model.SkillGroupName);
+            }
+            <li class="nav-item">
+                <a class="nav-link@(allActive ? " active" : "")" asp-route-skillGroupName="">All skills</a>
+            </li>
+        @foreach(var skillGroup in Model.AllSkillGroups){
+            <li class="nav-item">
+                <a class="nav-link@(Model.SkillGroupName == skillGroup ? " active" : "")" asp-route-skillGroupName="@skillGroup">@skillGroup</a>
+            </li>
+        }
+        </ul>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12 table-responsive">
+        <table class="table table-condensed table-striped table-bordered" id="table_skill">
+            <thead>
+                <tr>
+                    <th>Player</th>
+                    <th>Skill sum</th>
+                @foreach(var skill in Model.Skills) {
+                    <th>@skill.Name</th>
+                }
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var player in Model.Players)
+            {
+                <tr>
+                    <th>@player.Name</th>
+                    <td class="font-weight-bold text-success">@(Model.SkillValues.ContainsKey(player.Id) ?
+                        Model.SkillValues[player.Id].Values.Sum() : 0)</td>
+                @foreach (var skill in Model.Skills)
+                {
+                    <td>
+                        @(Model.SkillValues.ContainsKey(player.Id) ?
+                        Model.SkillValues[player.Id].ContainsKey(skill.Id) ? 
+                        Model.SkillValues[player.Id][skill.Id] : 0 : 0)
+                    </td>
+                }
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts{
+    <script type="text/javascript" src="/lib/jquery-tablesorter/jquery.tablesorter.min.js"></script>
+    <script type="text/javascript" src="/lib/jquery-tablesorter/jquery.tablesorter.widgets.js"></script>
+    <script type="text/javascript">
+        $(function() {
+            $("#table_skill").tablesorter({
+                theme : "default",
+                widgets: ["zebra", "stickyHeaders"],
+                ignoreCase: true
+
+            });
+        });
+    </script>
+}

@@ -1,10 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
 using HtmlAgilityPack;
-using TauManager.Areas.Identity.Data;
+using Microsoft.EntityFrameworkCore;
 using TauManager.Models;
 using TauManager.Utils;
 using TauManager.ViewModels;
@@ -14,76 +13,128 @@ namespace TauManager.BusinessLogic
     public class CampaignLogic : ICampaignLogic
     {
         private TauDbContext _dbContext { get; set; }
-        public CampaignLogic(TauDbContext dbContext)
+        private ITauHeadClient _tauHead { get; set; }
+        public CampaignLogic(TauDbContext dbContext, ITauHeadClient tauHead)
         {
             _dbContext = dbContext;
+            _tauHead = tauHead;
         }
-        public CampaignOverviewViewModel GetCampaignOverview(int playerId, bool showLootApplyButton = false, bool showLootEditControls = false)
+        public CampaignOverviewViewModel GetCampaignOverview(int playerId, bool showLootApplyButton, bool showLootEditControls, bool showAwardButton, int syndicateId)
         {
-            var players = _dbContext.Player.OrderBy(p => p.Name).AsEnumerable();
-            var playerPositions = _dbContext.PlayerListPositionHistory.GroupBy(plph => plph.PlayerId)
+            var players = _dbContext.Player.Where(p => p.SyndicateId == syndicateId).OrderBy(p => p.Name).AsEnumerable();
+            var currentPlayer = _dbContext.Player.SingleOrDefault(p => p.Id == playerId);
+            var playersOrdered = _dbContext.PlayerListPositionHistory.GroupBy(plph => plph.PlayerId)
                 .Select(g => new {
                     PlayerId =  g.Key,
                     Position = g.Max(ph => ph.Id)
                 })
+                .Join(
+                    _dbContext.Player,
+                    ph => ph.PlayerId,
+                    p => p.Id,
+                    (ph, p) => new { Player = p, Position = ph.Position }
+                )
+                .Where(php => php.Player.SyndicateId == syndicateId)
                 .OrderBy(p => p.Position)
-                .Select(p => p.PlayerId)
-                .ToList();
+                .Select(p => p.Player);
+            var playerPositions = playersOrdered.Select(p => p.Id).ToList();
+            var activePlayerPositions = playersOrdered.Where(p => p.Active).Select(p => p.Id).ToList();
             var model = new CampaignOverviewViewModel{
                 CurrentCampaigns = _dbContext.Campaign.Where(c => 
-                    c.Status == Campaign.CampaignStatus.InProgress ||
-                    c.Status == Campaign.CampaignStatus.Abandoned)
-                    .OrderByDescending(c => c.UTCDateTime).AsEnumerable(),
+                    c.SyndicateId == syndicateId &&
+                    (c.Status == Campaign.CampaignStatus.InProgress ||
+                    c.Status == Campaign.CampaignStatus.Abandoned))
+                    .OrderByDescending(c => c.UTCDateTime).ToList(),
                 PastCampaigns = _dbContext.Campaign.Where(c => 
-                    c.Status == Campaign.CampaignStatus.Completed ||
+                    c.SyndicateId == syndicateId &&
+                    (c.Status == Campaign.CampaignStatus.Completed ||
                     c.Status == Campaign.CampaignStatus.Failed ||
-                    c.Status == Campaign.CampaignStatus.Skipped)
-                    .OrderByDescending(c => c.UTCDateTime).AsEnumerable(),
+                    c.Status == Campaign.CampaignStatus.Skipped))
+                    .OrderByDescending(c => c.UTCDateTime).ToList(),
                 FutureCampaigns = _dbContext.Campaign.Where(c => 
-                    c.Status == Campaign.CampaignStatus.Assigned ||
+                    c.SyndicateId == syndicateId &&
+                    (c.Status == Campaign.CampaignStatus.Assigned ||
                     c.Status == Campaign.CampaignStatus.Planned ||
-                    c.Status == Campaign.CampaignStatus.Unknown)
-                    .OrderByDescending(c => c.UTCDateTime).AsEnumerable(),
-                LootToDistribute = _dbContext.CampaignLoot.Where(cl =>
-                    cl.Status == CampaignLoot.CampaignLootStatus.Undistributed)
+                    c.Status == Campaign.CampaignStatus.Unknown))
+                    .OrderByDescending(c => c.UTCDateTime).ToList(),
+                LootToDistribute = _dbContext.CampaignLoot
+                    .Where(cl => cl.Status == CampaignLoot.CampaignLootStatus.Undistributed)
+                    .Include(l => l.Requests)
+                    .ThenInclude(lr => lr.RequestedFor)
+                    .Include(l => l.Item)
+                    .Join(
+                        _dbContext.Campaign,
+                        cl => cl.CampaignId,
+                        c => c.Id,
+                        (cl, c) => new {CampaignLoot = cl, Campaign = c}
+                    )
+                    .Where(clc => clc.Campaign.SyndicateId == syndicateId)
+                    .ToList()
+                    .Select(clc => clc.CampaignLoot)
                     .Select(l => new LootItemViewModel
                     {
                         Loot = l,
                         ShowApplyButton = showLootApplyButton,
                         ShowEditControls = showLootEditControls,
+                        ShowAwardButton = showAwardButton,
+                        RequestExists = l.Requests.Any(r => r.RequestedForId == playerId),
+                        Request = l.Requests.SingleOrDefault(r => r.RequestedForId == playerId),
                         LootStatuses = EnumExtensions.ToDictionary<int>(typeof(CampaignLoot.CampaignLootStatus)),
                         Players = players,
-                        AllRequests = l.Requests.Select(r => new
+                        AllRequests = l.Requests
+                            .Where(r => r.RequestedFor.SyndicateId == syndicateId)
+                            .Select(r => new
                             {
                                 Player = r.RequestedFor,
-                                Position = playerPositions.IndexOf(r.RequestedForId) + 1,
+                                Position = activePlayerPositions.IndexOf(r.RequestedForId) + 1,
                             })
                             .OrderBy(pp => pp.Position)
                             .ToDictionary(
                                 pp => pp.Position,
                                 pp => pp.Player.Name
                             ),
-                    }),
+                        SpecialRequests = l.Requests
+                            .Where(r => r.RequestedFor.SyndicateId == syndicateId)
+                            .Where(r => !String.IsNullOrEmpty(r.SpecialOfferDescription))
+                            .Select(r => new
+                            {
+                                Offer = r.SpecialOfferDescription,
+                                Position = activePlayerPositions.IndexOf(r.RequestedForId) + 1,
+                            })
+                            .OrderBy(pp => pp.Position)
+                            .ToDictionary(
+                                pp => pp.Position,
+                                pp => pp.Offer
+                            ),
+                        TierRestriction = l.Item.Tier > currentPlayer.Tier,
+                    })
+                    .ToList(),
                 MySignups = _dbContext.CampaignSignup
                     .Where(cs => cs.PlayerId == playerId)
                     .ToDictionary(cs => cs.CampaignId, cs => 1),
                 MyAttendance = _dbContext.CampaignAttendance
                     .Where(a => a.PlayerId == playerId)
                     .ToDictionary( a => a.CampaignId, a => 1),
-                MyPosition = playerPositions.IndexOf(playerId) + 1,
+                MyPosition = activePlayerPositions.IndexOf(playerId) + 1,
+                LootStatuses = EnumExtensions.ToDictionary<int>(typeof(CampaignLoot.CampaignLootStatus)),
+                PlayerId = playerId
             };
             return model;
         }
 
-        public CampaignDetailsViewModel GetCampaignById(int id, bool showLootApplyButton = false, bool showLootEditControls = false)
+        public CampaignDetailsViewModel GetCampaignById(int id, bool showLootApplyButton, bool showLootEditControls, int syndicateId)
         {
-            var campaign =  _dbContext.Campaign.SingleOrDefault(c => c.Id == id);
-            return campaign == null ? null : GetExtendedCampaign(campaign, showLootApplyButton, showLootEditControls);
+            var campaign =  _dbContext.Campaign
+                .Include(c => c.Signups)
+                .Include(c => c.Loot)
+                .SingleOrDefault(c => c.Id == id);
+            if (campaign == null || campaign.SyndicateId != syndicateId) return null;
+            return GetExtendedCampaign(campaign, showLootApplyButton, showLootEditControls);
         }
 
         public CampaignDetailsViewModel GetExtendedCampaign(Campaign campaign, bool showLootApplyButton = false, bool showLootEditControls = false)
         {
-            var players = _dbContext.Player.OrderBy(p => p.Name).AsEnumerable();
+            var players = _dbContext.Player.Where(p => p.SyndicateId == campaign.SyndicateId).OrderBy(p => p.Name).AsEnumerable();
             var model = new CampaignDetailsViewModel
             {
                 Campaign = campaign,
@@ -102,8 +153,10 @@ namespace TauManager.BusinessLogic
             return model;
         }
 
-        public async Task<Campaign> CreateOrEditCampaign(Campaign campaign)
+        public async Task<Campaign> CreateOrEditCampaign(Campaign campaign, int syndicateId)
         {
+            if (campaign.SyndicateId == null) campaign.SyndicateId = syndicateId;
+            if (campaign.SyndicateId != syndicateId) return null;
             if (campaign.ManagerId.HasValue && campaign.ManagerId.Value == 0)
             {
                 campaign.ManagerId = null;
@@ -112,6 +165,8 @@ namespace TauManager.BusinessLogic
             {
                 _dbContext.Add(campaign);
             } else {
+                var campaignExists = _dbContext.Campaign.Any(c => c.Id == campaign.Id && c.SyndicateId == syndicateId);
+                if (!campaignExists) return null;
                 _dbContext.Update(campaign);
             }
             await _dbContext.SaveChangesAsync();
@@ -125,7 +180,7 @@ namespace TauManager.BusinessLogic
             {
                 return null;
             }
-            var itemData = await TauHead.GetItemData(url);
+            var itemData = await _tauHead.GetItemData(url);
             if (itemData == null) // Failed to parse TauHead data or no connection
             {
                 return null;
@@ -145,7 +200,7 @@ namespace TauManager.BusinessLogic
             };
             await _dbContext.AddAsync(campaignLootItem);
             await _dbContext.SaveChangesAsync();
-            var players = _dbContext.Player.OrderBy(p => p.Name).AsEnumerable();
+            var players = _dbContext.Player.Where(p => p.SyndicateId == campaign.SyndicateId).OrderBy(p => p.Name).AsEnumerable();
             var model = new LootItemViewModel{
                 Loot = campaignLootItem,
                 ShowApplyButton = showApplyButton,
@@ -156,7 +211,7 @@ namespace TauManager.BusinessLogic
             return model;
         }
 
-        public CampaignDetailsViewModel GetNewCampaign()
+        public CampaignDetailsViewModel GetNewCampaign(int syndicateId)
         {
             var campaign = new Campaign{
                 Difficulty = Campaign.CampaignDifficulty.Easy,
@@ -164,6 +219,7 @@ namespace TauManager.BusinessLogic
                 Tiers = 0,
                 ManagerId = null,
                 Loot = new List<CampaignLoot>(),
+                SyndicateId = syndicateId
             };
             return GetExtendedCampaign(campaign);
         }
@@ -178,66 +234,80 @@ namespace TauManager.BusinessLogic
             document.LoadHtml(fileContents);
             var epicImages = document.DocumentNode.SelectNodes("//div[contains(concat(\" \",normalize-space(@class),\" \"),\" epic \")]/img");
             var leaderboardLines = document.DocumentNode.SelectNodes("//div[@id=\"campaign-result-leaderboard\"]/table/tbody/tr");
-            foreach (var epicNode in epicImages)
+            if (epicImages != null)
             {
-                var linkifyLinks = epicNode.ParentNode.ParentNode.NextSibling.NextSibling.Descendants("a");
-                if (linkifyLinks.Count() > 0)
+                foreach (var epicNode in epicImages)
                 {
-                    var url = linkifyLinks.First().Attributes["href"].Value;
-                    var urlParts = url.Split('/');
-                    var slug = urlParts.Last();
-                    var epic = _dbContext.Item.SingleOrDefault(i => i.Slug == slug);
-                    if (epic == null) 
+                    var countBlock = epicNode.ParentNode.ParentNode.NextSibling.NextSibling;
+                    var countLine = countBlock.Descendants("#text").FirstOrDefault().InnerText.Trim().TrimEnd(' ', 'x');
+                    var count = 1;
+                    if (!int.TryParse(countLine, out count))
                     {
-                        var tauHeadUrl = TauHead.UrlBase + "/" + urlParts.TakeLast(2).Aggregate((result, item) => result + "/" + item);
-                        epic = await TauHead.GetItemData(tauHeadUrl);
-                        await _dbContext.AddAsync(epic);
+                        count = 1;
                     }
-                    if (epic != null)
+                    var linkifyLinks = countBlock.Descendants("a");
+                    if (linkifyLinks.Count() > 0)
                     {
-                        if (epic.Type == Item.ItemType.Armor || epic.Type == Item.ItemType.Weapon)
+                        var url = linkifyLinks.First().Attributes["href"].Value;
+                        var urlParts = url.Split('/');
+                        var slug = urlParts.Last();
+                        var epic = _dbContext.Item.SingleOrDefault(i => i.Slug == slug);
+                        if (epic == null) 
                         {
-                            var existingLoot = _dbContext.CampaignLoot.Any(cl => cl.ItemId == epic.Id && cl.CampaignId == campaignId);
-                            if (!existingLoot)
+                            var tauHeadUrl = TauHead.UrlBase + "/" + urlParts.TakeLast(2).Aggregate((result, item) => result + "/" + item);
+                            epic = await _tauHead.GetItemData(tauHeadUrl);
+                            await _dbContext.AddAsync(epic);
+                        }
+                        if (epic != null)
+                        {
+                            if (epic.Type == Item.ItemType.Armor || epic.Type == Item.ItemType.Weapon)
                             {
-                                var loot = new CampaignLoot{
-                                    CampaignId = campaignId,
-                                    Status = CampaignLoot.CampaignLootStatus.Undistributed,
-                                    ItemId = epic.Id,
-                                };
-                                await _dbContext.AddAsync(loot);
-                                // TODO: log successfully added loot
+                                var existingLootCount = _dbContext.CampaignLoot.Count(cl => cl.ItemId == epic.Id && cl.CampaignId == campaignId);
+                                while (existingLootCount < count)
+                                {
+                                    var loot = new CampaignLoot{
+                                        CampaignId = campaignId,
+                                        Status = CampaignLoot.CampaignLootStatus.Undistributed,
+                                        ItemId = epic.Id,
+                                    };
+                                    await _dbContext.AddAsync(loot);
+                                    existingLootCount++;
+                                    // TODO: log successfully added loot
+                                }
+                            } else {
+                                // TODO: log non-armor, non-weapon epic
                             }
                         } else {
-                            // TODO: log non-armor, non-weapon epic
+                            // TODO: log incorrect slug
                         }
                     } else {
-                        // TODO: log incorrect slug
+                        // TODO: log item without linkify URL
                     }
-                } else {
-                    // TODO: log item without linkify URL
                 }
             }
-            foreach (var playerLine in leaderboardLines)
+            if (leaderboardLines != null)
             {
-                var cells = playerLine.Descendants("td").ToArray();
-                var player = _dbContext.Player.SingleOrDefault(p => p.Name == cells[2].InnerText);
-                if (player != null)
+                foreach (var playerLine in leaderboardLines)
                 {
-                    var attendance = _dbContext.CampaignAttendance.SingleOrDefault(a => a.PlayerId == player.Id && a.CampaignId == campaignId);
-                    if (attendance == null)
+                    var cells = playerLine.Descendants("td").ToArray();
+                    var player = _dbContext.Player.SingleOrDefault(p => p.Name == cells[2].InnerText);
+                    if (player != null)
                     {
-                        attendance = new CampaignAttendance{
-                            CampaignId = campaignId,
-                            PlayerId = player.Id,
-                        };
-                        await _dbContext.AddAsync(attendance);
+                        var attendance = _dbContext.CampaignAttendance.SingleOrDefault(a => a.PlayerId == player.Id && a.CampaignId == campaignId);
+                        if (attendance == null)
+                        {
+                            attendance = new CampaignAttendance{
+                                CampaignId = campaignId,
+                                PlayerId = player.Id,
+                            };
+                            await _dbContext.AddAsync(attendance);
+                        }
+                    } else {
+                        // TODO: Handle non-existing player
                     }
-                } else {
-                    // TODO: Handle non-existing player
                 }
             }
-
+            campaign.Status = Campaign.CampaignStatus.Completed;
             await _dbContext.SaveChangesAsync();
             return model;
         }
@@ -246,6 +316,8 @@ namespace TauManager.BusinessLogic
         {
             var campaign = _dbContext.Campaign.SingleOrDefault(c => c.Id == campaignId);
             if (campaign == null) return false;
+            var playerExists = _dbContext.Player.Any(p => p.Id == playerId);
+            if (!playerExists) return false;
             var signup = _dbContext.CampaignSignup.SingleOrDefault(s => s.PlayerId == playerId && s.CampaignId == campaignId);
             if (signup == null)
             {
@@ -263,39 +335,39 @@ namespace TauManager.BusinessLogic
             return true;
         }
 
-        public async Task<bool> ParseAttendanceCSV(string fileContents)
-        {
-            var lines = fileContents.Split("\n");
-            var headerLine = lines[0].Split(',');
-            foreach (var playerLine in lines.Skip(1))
-            {
-                var cells = playerLine.Split(',');
-                var playerName = cells[0];
-                var player = _dbContext.Player.SingleOrDefault(p => p.Name == playerName);
-                if (player == null) continue;
-                for (int i = 1; i < headerLine.Count(); i++)
-                {
-                    if (cells[i] == "1")
-                    {
-                        var campaignId = headerLine[i];
-                        var campaign = _dbContext.Campaign.SingleOrDefault(c => c.Id.ToString() == campaignId);
-                        if (campaign == null) continue;
-                        var attendance = _dbContext.CampaignAttendance.SingleOrDefault(a => a.CampaignId == campaign.Id && a.PlayerId == player.Id);
-                        if (attendance == null) {
-                            attendance = new CampaignAttendance{
-                                PlayerId = player.Id,
-                                CampaignId = campaign.Id
-                            };
-                            await _dbContext.AddAsync(attendance);
-                        }
-                    }
-                }
-            }
-            await _dbContext.SaveChangesAsync();
-            return true;
-        }
+        // public async Task<bool> ParseAttendanceCSV(string fileContents)
+        // {
+        //     var lines = fileContents.Split("\n");
+        //     var headerLine = lines[0].Split(',');
+        //     foreach (var playerLine in lines.Skip(1))
+        //     {
+        //         var cells = playerLine.Split(',');
+        //         var playerName = cells[0];
+        //         var player = _dbContext.Player.SingleOrDefault(p => p.Name == playerName);
+        //         if (player == null) continue;
+        //         for (int i = 1; i < headerLine.Count(); i++)
+        //         {
+        //             if (cells[i] == "1")
+        //             {
+        //                 var campaignId = headerLine[i];
+        //                 var campaign = _dbContext.Campaign.SingleOrDefault(c => c.Id.ToString() == campaignId);
+        //                 if (campaign == null) continue;
+        //                 var attendance = _dbContext.CampaignAttendance.SingleOrDefault(a => a.CampaignId == campaign.Id && a.PlayerId == player.Id);
+        //                 if (attendance == null) {
+        //                     attendance = new CampaignAttendance{
+        //                         PlayerId = player.Id,
+        //                         CampaignId = campaign.Id
+        //                     };
+        //                     await _dbContext.AddAsync(attendance);
+        //                 }
+        //             }
+        //         }
+        //     }
+        //     await _dbContext.SaveChangesAsync();
+        //     return true;
+        // }
 
-        public AttendanceViewModel GetCampaignAttendance(int? playerId)
+        public AttendanceViewModel GetCampaignAttendance(int? playerId, int syndicateId)
         {
             var model = new AttendanceViewModel();
             if (playerId.HasValue)
@@ -309,7 +381,7 @@ namespace TauManager.BusinessLogic
                 }
             }
             var attendanceData = _dbContext.Player
-                .Where(p => !playerId.HasValue || p.Id == playerId.Value)
+                .Where(p => (!playerId.HasValue || p.Id == playerId.Value) && p.SyndicateId == syndicateId)
                 .Join(
                     _dbContext.CampaignAttendance, 
                     p => p.Id, 
@@ -326,6 +398,8 @@ namespace TauManager.BusinessLogic
                         Player = p.Player,
                         Campaign = c
                     })
+                .Where(pc => pc.Campaign.SyndicateId == syndicateId)
+                .ToList()
                 .GroupBy(p => p.Player)
                 .Select(
                     g => new {
@@ -336,28 +410,124 @@ namespace TauManager.BusinessLogic
                     p => p.Player.Id,
                     v => v.Camapaigns
                 );
-            var totalCampaignCount = _dbContext.Campaign.Count();
-            var last10T5HardCampaigns = _dbContext.Campaign
+            var totalCampaignCount = _dbContext.Campaign.Count(c => c.SyndicateId == syndicateId);
+            var allT5HardCampaigns = _dbContext.Campaign
                 .OrderByDescending(c => c.UTCDateTime)
                 .Where(c => (c.Difficulty == Campaign.CampaignDifficulty.Hard ||
                     c.Difficulty == Campaign.CampaignDifficulty.Extreme) &&
                     c.Tiers.HasValue && c.Tiers.Value > 15 &&
-                    (c.Status == Campaign.CampaignStatus.Completed || c.Status == Campaign.CampaignStatus.Failed))
-                .Select(c => c.Id)
+                    (c.Status == Campaign.CampaignStatus.Completed || c.Status == Campaign.CampaignStatus.Failed) &&
+                    c.SyndicateId == syndicateId)
+                .Select(c => c.Id);
+            var T5HardCampaigns = allT5HardCampaigns
+                .ToDictionary(
+                    c => c,
+                    c => 1
+                );
+            var last10T5HardCampaigns = allT5HardCampaigns
                 .Take(10)
                 .ToDictionary(
                     c => c,
                     c => 1
                 );
+
             model.TotalAttendance = attendanceData.ToDictionary(
                 entry => entry.Key,
-                entry => entry.Value.Count() * 100 / totalCampaignCount
+                entry => totalCampaignCount == 0 ? 0 : entry.Value.Count() * 100 / totalCampaignCount
+            );
+            model.T5HardAttendance = attendanceData.ToDictionary(
+                entry => entry.Key,
+                entry => T5HardCampaigns.Count() == 0 ? 0 : entry.Value.Count(e => T5HardCampaigns.ContainsKey(e)) * 100 / T5HardCampaigns.Count()
             );
             model.Last10T5HardAttendance = attendanceData.ToDictionary(
                 entry => entry.Key,
-                entry => entry.Value.Count(e => last10T5HardCampaigns.ContainsKey(e)) * 100 / last10T5HardCampaigns.Count() // Last number should be 10, but you never know :-D
+                entry => last10T5HardCampaigns.Count() == 0 ? 0 : entry.Value.Count(e => last10T5HardCampaigns.ContainsKey(e)) * 100 / last10T5HardCampaigns.Count()
             );
             return model;
        }
+
+        public bool PlayerCanEditCampaign(int? playerId, int campaignId)
+        {
+            if (!playerId.HasValue) return false;
+            var playerExists = _dbContext.Player.Any(p => p.Id == playerId.Value && p.Active);
+            if (!playerExists) return false;
+            var campaignExists = _dbContext.Campaign.Any(c => c.ManagerId == playerId && c.Id == campaignId);
+            return campaignExists;
+        }
+
+        public bool PlayerCanVolunteerForCampaign(int? playerId, int campaignId)
+        {
+            return PlayerCanVolunteerForCampaign(playerId, campaignId, out _, out _);
+        }
+
+        private bool PlayerCanVolunteerForCampaign(int? playerId, int campaignId, out Player player, out Campaign campaign)
+        {
+            campaign = null;
+            player = null;
+            if (!playerId.HasValue) return false;
+            player = _dbContext.Player.SingleOrDefault(p => p.Id == playerId);
+            if (player == null) return false;
+            var syndicateId = player.SyndicateId;
+            campaign = _dbContext.Campaign.SingleOrDefault(c => c.Id == campaignId && 
+                    c.SyndicateId == syndicateId && 
+                    c.ManagerId == null && 
+                    (c.Status == Campaign.CampaignStatus.Planned || c.Status == Campaign.CampaignStatus.Unknown));
+            return !(campaign == null);
+        }
+
+        public async Task<bool> VolunteerForCampaign(int? playerId, int campaignId)
+        {
+            Player player; Campaign campaign;
+            var canVolunteer = PlayerCanVolunteerForCampaign(playerId, campaignId, out player, out campaign);
+            if (!canVolunteer) return false;
+            campaign.ManagerId = playerId;
+            await _dbContext.SaveChangesAsync();
+            return true;
+        }
+
+        public LeaderboardViewModel GetLeaderboard(int? playerId)
+        {
+            var player = _dbContext.Player.SingleOrDefault(p => p.Id == playerId.Value);
+            if (player == null) return new LeaderboardViewModel();
+            var syndicateId = player.SyndicateId;
+            var attendance = GetCampaignAttendance(null, syndicateId.Value);
+            var allPlayers = _dbContext.Player.Where(p => p.SyndicateId == syndicateId).ToDictionary(p => p.Id, p => p);
+            var allCampaignsPositions = attendance.TotalAttendance.AsEnumerable()
+                .OrderByDescending(k => k.Value)
+                .ThenBy(k => allPlayers[k.Key].Name)
+                .Select(k => k.Key)
+                .ToList();
+            var allCampaignsPositionsDict =
+                allCampaignsPositions.Where(p => p == playerId.Value || allCampaignsPositions.IndexOf(p) < 10)
+                .ToDictionary(p => allCampaignsPositions.IndexOf(p) + 1, p => p);
+            var allT5HardPositions = attendance.T5HardAttendance.AsEnumerable()
+                .OrderByDescending(k => k.Value)
+                .ThenByDescending(k => attendance.TotalAttendance[k.Key])
+                .ThenBy(k => allPlayers[k.Key].Name)
+                .Select(k => k.Key)
+                .ToList();
+            var allT5HardPositionsDict =
+                allT5HardPositions.Where(p => p == playerId.Value || allT5HardPositions.IndexOf(p) < 10)
+                .ToDictionary(p => allT5HardPositions.IndexOf(p) + 1, p => p);
+            var last10T5HardPositions = attendance.Last10T5HardAttendance.AsEnumerable()
+                .OrderByDescending(k => k.Value)
+                .ThenByDescending(k => attendance.T5HardAttendance[k.Key])
+                .ThenByDescending(k => attendance.TotalAttendance[k.Key])
+                .ThenBy(k => allPlayers[k.Key].Name)
+                .Select(k => k.Key)
+                .ToList();
+            var last10T5HardPositionsDict =
+                last10T5HardPositions.Where(p => p == playerId.Value || last10T5HardPositions.IndexOf(p) < 10)
+                .ToDictionary(p => last10T5HardPositions.IndexOf(p) + 1, p => p);
+            var leaderboard = new LeaderboardViewModel{
+                AllPlayers = allPlayers,
+                Attendance = attendance,
+                TotalLeaderboardPositions = allCampaignsPositionsDict,
+                T5HardLeaderboardPositions = allT5HardPositionsDict,
+                Last10T5HardLeaderboardPositions = last10T5HardPositionsDict,
+                PlayerToCompare = player,
+            };
+            return leaderboard;
+        }
     }
 }

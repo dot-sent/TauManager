@@ -1,0 +1,439 @@
+@model TauManager.ViewModels.MarketIndexViewModel
+@using TauManager.ViewModels
+@using TauManager.Models
+
+@{
+    ViewData["Title"] = "Syndicate Market";
+}
+
+<div class="container border rounded p-0">
+    <div class="row m-0 mb-2 p-2">
+        <div class="col-md-3"><h3>Syndicate Market</h3></div>
+        <div class="col-md-9">
+            <div class="float-right row bg-secondary text-white p-2 rounded w-100">
+                <h5 class="text-center col-md-3">Your ads:</h5>
+                <div class="col-md-2">@Model.OwnActiveAds active</div>
+                <div class="col-md-2">@Model.OwnInactiveAds inactive</div>
+                <div class="col-md-2">@Model.OwnAdReactions reaction(s)</div>
+                <div class="col-md-3"><a asp-action="MyAds" class="btn btn-success w-100">My ads</a></div>
+            </div>
+        </div>
+    </div>
+    <div class="row m-0 mb-1 p-2 border-top">
+        <div class="col-md-12">
+            <h5 class="filter-line">Filters and display parameters <i class="fas fa-chevron-right filter-control@(Model.Filters.FilterTabPinned.HasValue && Model.Filters.FilterTabPinned.Value ? " d-none" : "")"></i><i class="fas fa-chevron-down filter-control@(Model.Filters.FilterTabPinned.HasValue && Model.Filters.FilterTabPinned.Value ? "" : " d-none")"></i></h5>
+        </div>
+    </div>
+    <form method="POST" class="row m-0 mb-2 p-2 border@(@Model.Filters.FilterTabPinned.HasValue && Model.Filters.FilterTabPinned.Value ? "" : " d-none")" id="form_filters">
+        <div class="col-md-3">
+            <h5>General filters</h5>
+            <div class="control-group">
+                <label for="input_name_part">Search:</label>
+                <input type="text" class="form-control" name="namePart" id="input_name_part" placeholder="Enter search term..." value="@(Model.Filters.NamePart == null ? "" : Model.Filters.NamePart)"/>
+            </div>
+            <div class="control-group">
+                <label for="select_ad_type">Ad type:</label>
+                <select id="select_ad_type" name="adTypes[]" class="form-control">
+                    <!option value="-1" @(Model.Filters.AdTypes == null || Model.Filters.AdTypes.Count() == 0 ? "selected" : "")>Any</!option>
+                    <!option value="@MarketAd.AdType.Sell" @(Model.Filters.AdTypes != null && Model.Filters.AdTypes.Contains(MarketAd.AdType.Sell) ? "selected" : "")>Sell</!option>
+                    <!option value="@MarketAd.AdType.Buy" @(Model.Filters.AdTypes != null && Model.Filters.AdTypes.Contains(MarketAd.AdType.Buy) ? "selected" : "")>Buy</!option>
+                    <!option value="@MarketAd.AdType.Lend" @(Model.Filters.AdTypes != null && Model.Filters.AdTypes.Contains(MarketAd.AdType.Lend) ? "selected" : "")>Lend</!option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="select_item_type">Item type:</label>
+                <select id="select_item_type" name="itemTypes[]" class="form-control">
+                    <!option value="-1" @(Model.Filters.ItemTypes == null || Model.Filters.ItemTypes.Count() == 0 ? "selected" : "")>Any</!option>
+                    @foreach(var itemType in Model.ItemTypes.Keys)
+                    {
+                        <!option value="@itemType"@(Model.Filters.ItemTypes != null && Model.Filters.ItemTypes.Any(it => (int)it == itemType) ? " selected" : "")>@Model.ItemTypes[itemType]</!option>
+                    }
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="input_min_tier">Tier: from</label>
+                <input type="number" min="1" max="5" style="w-10" class="form-control" id="input_min_tier" name="minTier" value="@(Model.Filters.MinTier.HasValue ? Model.Filters.MinTier.Value.ToString() : "1")"/>
+                <label for="input max_tier">to</label>
+                <input type="number" min="1" max="5" style="w-10" class="form-control" id="input_max_tier" name="maxTier" value="@(Model.Filters.MaxTier.HasValue ? Model.Filters.MaxTier.Value.ToString() : "5")"/>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <h5>Armor and weapon filters</h5>
+            <div class="control-group">
+                <label for="select_weapon_type">Weapon Type</label>
+                <select name="weaponTypes[]" id="select_weapon_type" class="form-control">
+                    <!option value="-1"@(Model.Filters.WeaponTypes == null || Model.Filters.WeaponTypes.Count() == 0 ? "selected" : "")>Any</!option>
+                    @foreach(var weaponType in Model.WeaponTypes.Keys)
+                    {
+                        <!option value="@weaponType"@(Model.Filters.WeaponTypes != null && Model.Filters.WeaponTypes.Any(wt => (int)wt == weaponType) ? " selected" : "")>@Model.WeaponTypes[weaponType]</!option>
+                    }
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="input_min_energy">Min. Energy damage/protection</label>
+                <input type="number" min="0" style="w-10" class="form-control" id="input_min_energy" name="minEnergy" value="@(Model.Filters.MinEnergy.HasValue ? Model.Filters.MinEnergy.Value.ToString() : "0")"/>
+            </div>
+            <div class="control-group">
+                <label for="input_min_impact">Min. Impact damage/protection</label>
+                <input type="number" min="0" style="w-10" class="form-control" id="input_min_impact" name="minImpact" value="@(Model.Filters.MinImpact.HasValue ? Model.Filters.MinImpact.Value.ToString() : "0")"/>
+            </div>
+            <div class="control-group">
+                <label for="input_min_piercing">Min. Piercing damage/protection</label>
+                <input type="number" min="0" style="w-10" class="form-control" id="input_min_piercing" name="minPiercing" value="@(Model.Filters.MinPiercing.HasValue ? Model.Filters.MinPiercing.Value.ToString() : "0")"/>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <h5>Sort & display</h5>
+            <div class="form-group">
+                <label>View type</label>
+                <div class="form-check">
+                    <input type="radio" class="form-check-input" name="view" value="0"@(Model.Filters.View == MarketIndexParamsViewModel.ViewKind.Tiles ? " checked" : "")> 
+                    <label class="form-check-label @(Model.Filters.View == MarketIndexParamsViewModel.ViewKind.Tiles ? " active" : "")">
+                        <i class="fas fa-grip-horizontal"></i> Tiles
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input type="radio" class="form-check-input" name="view" value="1"@(Model.Filters.View == MarketIndexParamsViewModel.ViewKind.Table ? " checked" : "")> 
+                    <label class="form-check-label @(Model.Filters.View == MarketIndexParamsViewModel.ViewKind.Table ? " active" : "")">
+                        <i class="fas fa-table"></i> Table
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input type="radio" class="form-check-input" name="view" value="2"@(Model.Filters.View == MarketIndexParamsViewModel.ViewKind.Cards ? " checked" : "")> 
+                    <label class="form-check-label @(Model.Filters.View == MarketIndexParamsViewModel.ViewKind.Cards ? " active" : "")">
+                        <i class="fas fa-file-invoice"></i> Cards
+                    </label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Sorting</label>
+                <div class="form-check">
+                    <input type="radio" class="form-check-input" name="sort" value="1"@(Model.Filters.Sort == MarketIndexParamsViewModel.SortOrder.DateDescending ? " checked" : "")>
+                    <label class="form-check-label @(Model.Filters.Sort == MarketIndexParamsViewModel.SortOrder.DateDescending ? " active" : "")">
+                        Date, newest first
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input type="radio" class="form-check-input" name="sort" value="0"@(Model.Filters.Sort == MarketIndexParamsViewModel.SortOrder.DateAscending ? " checked" : "")>
+                    <label class="form-check-label @(Model.Filters.Sort == MarketIndexParamsViewModel.SortOrder.DateAscending ? " active" : "")">
+                        Date, oldest first
+                    </label>
+                </div>
+            </div>
+            <div class="form-group">
+                <input type="hidden" id="hidden_filter_tab_pinned" name="filterTabPinned" value="@Model.Filters.FilterTabPinned.ToString()" />
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="checkbox_filter_tab_pinned" @(Model.Filters.FilterTabPinned.HasValue && Model.Filters.FilterTabPinned.Value ? " checked" : "") />
+                    <label class="form-check-label">Keep filter pane open</label>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <button class="btn btn-primary w-100 h-100" id="btn_apply_filter">Apply</button>
+        </div>
+    </form>
+
+    <nav>
+        <div class="nav nav-tabs" id="nav-tab" role="tablist">
+            <a class="nav-item nav-link active" id="nav-offer-tab" data-toggle="tab" href="#nav-offer" role="tab" aria-controls="nav-offer" aria-selected="true">Offers (@Model.OfferAds.Count())</a>
+            <a class="nav-item nav-link" id="nav-ask-tab" data-toggle="tab" href="#nav-ask" role="tab" aria-controls="nav-ask" aria-selected="false">Asks (@Model.AskAds.Count())</a>
+        </div>
+    </nav>
+    <div class="tab-content" id="nav-tabContent">
+        <div class="tab-pane fade show active container p-0" id="nav-offer" role="tabpanel" aria-labelledby="nav-offer-tab">
+        @if(Model.Filters.View == MarketIndexParamsViewModel.ViewKind.Tiles)
+        {   var ix = 0;
+            <div class="row m-2 mb-4">
+                @foreach(var ad in Model.OfferAds)
+                { ix++;
+                    if ((ix-1) % 6 == 0 && ix > 1)
+                    {
+            @:</div>
+            @:<div class="row m-2 mb-4 border-top">
+                    }
+                    <div class="col-md-2 text-center">
+                        <div>@ad.AdType</div>
+                        <div>@ad.Caption</div>
+                        <div><img src="@ad.ImageUrl" class="rounded img-fluid"/></div>
+                        <div>@ad.AskingPrice</div>
+                        @if(!String.IsNullOrWhiteSpace(ad.Description))
+                        {
+                            <div class="text-primary font-weight-bold">@ad.Description</div>
+                        }
+                        <div class="font-italic"><i class="fas fa-user"></i> @ad.AuthorName <a href="https://alpha.taustation.space/email/write/@(ad.AuthorName.ToLower())"><i class="far fa-envelope"></i></a></div>
+                    </div>                
+                }
+            </div>
+        } else if (Model.Filters.View == MarketIndexParamsViewModel.ViewKind.Table)
+        {
+            <div class="table-responsive">
+                <table class="table table-condensed table-striped table-bordered mb-0">
+                    <thead>
+                        <th>Date</th>
+                        <th>Author</th>
+                        <th>Type</th>
+                        <th>Offer</th>
+                        <th>Ask</th>
+                        <th>Note</th>
+                    </thead>
+                    <tbody>
+                @foreach(var ad in Model.OfferAds)
+                {
+                        <tr>
+                            <td>@ad.PlacementDate.ToString("yyyy-MM-dd")</td>
+                            <td>@ad.AuthorName <a href="https://alpha.taustation.space/email/write/@(ad.AuthorName.ToLower())"><i class="far fa-envelope"></i></a></td>
+                            <td>@ad.AdType</td>
+                            <td>@ad.OfferString</td>
+                            <td>@ad.RequestString</td>
+                            <td>@ad.Description</td>
+                        </tr>
+                }                        
+                    </tbody>
+                </table>
+            </div>
+        } else if (Model.Filters.View == MarketIndexParamsViewModel.ViewKind.Cards)
+        {   var ix = 0;
+            <div class="card-columns card-columns-market m-1 mb-2">
+                @foreach(var ad in Model.OfferAds)
+                {   ix = (ix + 1) % 6;
+                    var hasImage = ad.ImageUrl != "#";
+                    <div class="card card-bg-@ix">
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">
+                                <div class="row">
+                                @if (hasImage)
+                                {
+                                    <div class="col-md-3"><img src="@ad.ImageUrl" class="card-img"/></div>
+                                }
+                                    <div class="col-md-@(hasImage ? "9" : "12")">
+                                        <div class="card-body">
+                                            <h5 class="card-title">@ad.Caption</h5>
+                                            <dl class="row card-text">
+                                                <dt class="col-sm-4">Ad type</dt>
+                                                <dd class="col-sm-8">@ad.AdType</dd>
+                                                <dt class="col-sm-4">Price</dt>
+                                                <dd class="col-sm-8">@ad.AskingPrice</dd>
+                                                <dt class="col-sm-4">Author</dt>
+                                                <dd class="font-italic col-sm-8"><i class="fas fa-user"></i> @ad.AuthorName <a href="https://alpha.taustation.space/email/write/@(ad.AuthorName.ToLower())"><i class="far fa-envelope"></i></a></dd>
+                                            </dl>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                        @if (ad.Item != null)
+                        {
+                            <li class="list-group-item">
+                                <!--div class="text-center font-weight-bold">Item params</div-->
+                                <dl class="row mb-0">
+                                    <dt class="col-sm-3">Type</dt>
+                                    <dd class="col-sm-3">@ad.Item.Type</dd>
+                            @if(ad.Item.Type == Item.ItemType.Ration || ad.Item.Type == Item.ItemType.Weapon || ad.Item.Type == Item.ItemType.Armor || ad.Item.Type == Item.ItemType.Medical)
+                            {
+                                    <dt class="col-sm-3">Tier</dt>
+                                    <dd class="col-sm-3">@ad.Item.Tier</dd>
+                            }
+                                </dl>
+                            </li>
+                            @if(ad.Item.Type == Item.ItemType.Weapon)
+                            {
+                            <li class="list-group-item">
+                                <dl class="row mb-0">
+                                    <dt class="col-sm-3">Weapon type</dt>
+                                    <dd class="col-sm-3">@ad.Item.WeaponType</dd>
+                                    <dt class="col-sm-3">Energy</dt>
+                                    <dd class="col-sm-3">@ad.Item.Energy</dd>
+                                    <dt class="col-sm-3">Accuracy</dt>
+                                    <dd class="col-sm-3">@ad.Item.Accuracy</dd>
+                                    <dt class="col-sm-3">Impact</dt>
+                                    <dd class="col-sm-3">@ad.Item.Impact</dd>
+                                    <dt class="col-sm-3">Mass</dt>
+                                    <dd class="col-sm-3">@ad.Item.Weight</dd>
+                                    <dt class="col-sm-3">Piercing</dt>
+                                    <dd class="col-sm-3">@ad.Item.Piercing</dd>
+                                </dl>
+                            </li>
+                            } else if (ad.Item.Type == Item.ItemType.Armor)
+                            {
+                            <li class="list-group-item">
+                                <dl class="row mb-0">
+                                    <dt class="col-sm-3">Mass</dt>
+                                    <dd class="col-sm-3">@ad.Item.Weight</dd>
+                                    <dt class="col-sm-3">Energy</dt>
+                                    <dd class="col-sm-3">@ad.Item.Energy</dd>
+                                    <dt class="col-sm-3">Impact</dt>
+                                    <dd class="col-sm-3">@ad.Item.Impact</dd>
+                                    <dt class="col-sm-3">Piercing</dt>
+                                    <dd class="col-sm-3">@ad.Item.Piercing</dd>
+                                </dl>
+                            </li>
+                            }
+                        }
+                        @if(!String.IsNullOrWhiteSpace(ad.Description))
+                        {
+                            <li class="list-group-item text-primary font-weight-bold p-2 pl-3 pr-3">@ad.Description</li>
+                        }
+                            <!--li class="list-group-item"><a class="btn btn-primary" href="https://alpha.taustation.space/email/write/@(ad.AuthorName.ToLower())">Contact author</a></li-->
+                        </ul>
+                    </div>
+                }
+            </div>
+        } else {
+            <i>Unrecognized view type, please report this to Dotsent.</i>
+        }
+        </div>
+        <div class="tab-pane fade container p-0" id="nav-ask" role="tabpanel" aria-labelledby="nav-ask-tab">
+        @if(Model.Filters.View == MarketIndexParamsViewModel.ViewKind.Tiles)
+        { var ix = 0;
+            <div class="row m-2 mb-4">
+                @foreach(var ad in Model.AskAds)
+                { ix++;
+                    if ((ix-1) % 6 == 0 && ix > 1)
+                    {
+            @:</div>
+            @:<div class="row m-2 mb-4 border-top">
+                    }
+                    <div class="col-md-2 text-center">
+                        <div>@ad.AdType</div>
+                        <div>@ad.Caption</div>
+                        <div><img src="@ad.ImageUrl" class="rounded img-fluid"/></div>
+                        <div>@ad.AskingPrice</div>
+                        @if(!String.IsNullOrWhiteSpace(ad.Description))
+                        {
+                            <div class="text-primary font-weight-bold">@ad.Description</div>
+                        }
+                        <div class="font-italic"><i class="fas fa-user"></i> @ad.AuthorName <a href="https://alpha.taustation.space/email/write/@(ad.AuthorName.ToLower())"><i class="far fa-envelope"></i></a></div>
+                    </div>                
+                }
+            </div>
+        } else if (Model.Filters.View == MarketIndexParamsViewModel.ViewKind.Table)
+        {
+            <div class="table-responsive">
+                <table class="table table-condensed table-striped table-bordered mb-0">
+                    <thead>
+                        <th>Date</th>
+                        <th>Author</th>
+                        <th>Type</th>
+                        <th>Offer</th>
+                        <th>Ask</th>
+                        <th>Note</th>
+                    </thead>
+                    <tbody>
+                @foreach(var ad in Model.AskAds)
+                {
+                        <tr>
+                            <td>@ad.PlacementDate.ToString("yyyy-MM-dd")</td>
+                            <td>@ad.AuthorName <a href="https://alpha.taustation.space/email/write/@(ad.AuthorName.ToLower())"><i class="far fa-envelope"></i></a></td>
+                            <td>@ad.AdType</td>
+                            <td>@ad.OfferString</td>
+                            <td>@ad.RequestString</td>
+                            <td>@ad.Description</td>
+                        </tr>
+                }                        
+                    </tbody>
+                </table>
+            </div>
+        } else if (Model.Filters.View == MarketIndexParamsViewModel.ViewKind.Cards)
+        {   var ix = 0;
+            <div class="card-columns card-columns-market m-1 mb-2">
+                @foreach(var ad in Model.AskAds)
+                {   ix = (ix + 1) % 6;
+                    var hasImage = ad.ImageUrl != "#";
+                    <div class="card card-bg-@ix">
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">
+                                <div class="row">
+                                @if (hasImage)
+                                {
+                                    <div class="col-md-3"><img src="@ad.ImageUrl" class="card-img"/></div>
+                                }
+                                    <div class="col-md-@(hasImage ? "9" : "12")">
+                                        <div class="card-body">
+                                            <h5 class="card-title">@ad.Caption</h5>
+                                            <dl class="row card-text">
+                                                <dt class="col-sm-4">Ad type</dt>
+                                                <dd class="col-sm-8">@ad.AdType</dd>
+                                                <dt class="col-sm-4">Price</dt>
+                                                <dd class="col-sm-8">@ad.AskingPrice</dd>
+                                                <dt class="col-sm-4">Author</dt>
+                                                <dd class="font-italic col-sm-8"><i class="fas fa-user"></i> @ad.AuthorName <a href="https://alpha.taustation.space/email/write/@(ad.AuthorName.ToLower())"><i class="far fa-envelope"></i></a></dd>
+                                            </dl>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                        @if (ad.Item != null)
+                        {
+                            <li class="list-group-item">
+                                <!--div class="text-center font-weight-bold">Item params</div-->
+                                <dl class="row mb-0">
+                                    <dt class="col-sm-3">Type</dt>
+                                    <dd class="col-sm-3">@ad.Item.Type</dd>
+                            @if(ad.Item.Type == Item.ItemType.Ration || ad.Item.Type == Item.ItemType.Weapon || ad.Item.Type == Item.ItemType.Armor || ad.Item.Type == Item.ItemType.Medical)
+                            {
+                                    <dt class="col-sm-3">Tier</dt>
+                                    <dd class="col-sm-3">@ad.Item.Tier</dd>
+                            }
+                                </dl>
+                            </li>
+                            @if(ad.Item.Type == Item.ItemType.Weapon)
+                            {
+                            <li class="list-group-item">
+                                <dl class="row mb-0">
+                                    <dt class="col-sm-3">Weapon type</dt>
+                                    <dd class="col-sm-3">@ad.Item.WeaponType</dd>
+                                    <dt class="col-sm-3">Energy</dt>
+                                    <dd class="col-sm-3">@ad.Item.Energy</dd>
+                                    <dt class="col-sm-3">Accuracy</dt>
+                                    <dd class="col-sm-3">@ad.Item.Accuracy</dd>
+                                    <dt class="col-sm-3">Impact</dt>
+                                    <dd class="col-sm-3">@ad.Item.Impact</dd>
+                                    <dt class="col-sm-3">Mass</dt>
+                                    <dd class="col-sm-3">@ad.Item.Weight</dd>
+                                    <dt class="col-sm-3">Piercing</dt>
+                                    <dd class="col-sm-3">@ad.Item.Piercing</dd>
+                                </dl>
+                            </li>
+                            } else if (ad.Item.Type == Item.ItemType.Armor)
+                            {
+                            <li class="list-group-item">
+                                <dl class="row mb-0">
+                                    <dt class="col-sm-3">Mass</dt>
+                                    <dd class="col-sm-3">@ad.Item.Weight</dd>
+                                    <dt class="col-sm-3">Energy</dt>
+                                    <dd class="col-sm-3">@ad.Item.Energy</dd>
+                                    <dt class="col-sm-3">Impact</dt>
+                                    <dd class="col-sm-3">@ad.Item.Impact</dd>
+                                    <dt class="col-sm-3">Piercing</dt>
+                                    <dd class="col-sm-3">@ad.Item.Piercing</dd>
+                                </dl>
+                            </li>
+                            }
+                        }
+                        @if(!String.IsNullOrWhiteSpace(ad.Description))
+                        {
+                            <li class="list-group-item text-primary font-weight-bold p-2 pl-3 pr-3">@ad.Description</li>
+                        }
+                            <!--li class="list-group-item"><a class="btn btn-primary" href="https://alpha.taustation.space/email/write/@(ad.AuthorName.ToLower())">Contact author</a></li-->
+                        </ul>
+                    </div>
+                }
+            </div>
+        } else {
+            <i>Unrecognized view type, please report this to Dotsent.</i>
+        }
+        </div>
+    </div>
+</div>
+
+@section Scripts
+{
+    <script type="text/javascript">
+        $('.filter-line').click(function(evt) {
+            $('.filter-control, #form_filters').toggleClass('d-none');
+        });
+        $('#checkbox_filter_tab_pinned').change(function(evt) {
+            var $cb = $(evt.target);
+            $('#hidden_filter_tab_pinned').val($cb.is(':checked'));
+        })
+    </script>
+}

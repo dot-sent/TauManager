@@ -1,5 +1,8 @@
 @model TauManager.ViewModels.PlayerDetailsViewModel
 
+@using static TauManager.Utils.EnumExtensions
+@using static TauManager.Utils.DictionaryExtensions
+
 <h2 class="text-center">@Html.DisplayFor(m => m.Player.Name)</h2>
 
 @if(Model.LastActivityId == -1)
@@ -9,67 +12,178 @@
 {
     <div class="alert alert-warning">Last activity more than 2 weeks ago, <a asp-action="PlayerDetails" asp-route-id="@Model.Player.Id" asp-route-loadAll="true">load @Model.MoreRows more row(s)</a> to see it.</div>
 }
+<div class="container">
+    <div class="card mb-3">
+        <div class="card-header">
+            <h5>Stats</h5>
+        </div>
+        <dl class="row card-body mb-0">
+            <dt class="col-sm-2">@Html.LabelFor(m => m.Player.Level)</dt>
+            <dd class="col-sm-4">@Html.DisplayFor(m => m.Player.Level)</dd>
+            <dt class="col-sm-2 physical-stat">@Html.LabelFor(m => m.Player.StatTotal)</dt>
+            <dd class="col-sm-4 physical-stat">@Html.DisplayFor(m => m.Player.StatTotal)</dd>
+            <dt class="col-sm-2">@Html.LabelFor(m => m.Player.Bank)</dt>
+            <dd class="col-sm-4">@Html.DisplayFor(m => m.Player.BankString)</dd>
+            <dt class="col-sm-2 physical-stat">@Html.LabelFor(m => m.Player.Strength)</dt>
+            <dd class="col-sm-4 physical-stat">@Html.DisplayFor(m => m.Player.Strength)</dd>
+            <dt class="col-sm-2">@Html.LabelFor(m => m.Player.Bonds)</dt>
+            <dd class="col-sm-4">@Html.DisplayFor(m => m.Player.Bonds)</dd>
+            <dt class="col-sm-2 physical-stat">@Html.LabelFor(m => m.Player.Agility)</dt>
+            <dd class="col-sm-4 physical-stat">@Html.DisplayFor(m => m.Player.Agility)</dd>
+            <dt class="col-sm-2">@Html.LabelFor(m => m.Player.LastUpdate)</dt>
+            <dd class="col-sm-4">@(Model.Player.LastUpdate.ToString("yyyy-MM-dd hh:mm:ss"))</dd>
+            <dt class="col-sm-2 physical-stat">@Html.LabelFor(m => m.Player.Stamina)</dt>
+            <dd class="col-sm-4 physical-stat">@Html.DisplayFor(m => m.Player.Stamina)</dd>
+            <dt class="col-sm-2 mental-stat">@Html.LabelFor(m => m.Player.Intelligence)</dt>
+            <dd class="col-sm-4 mental-stat">@Html.DisplayFor(m => m.Player.Intelligence)</dd>
+            <dt class="col-sm-2 mental-stat">@Html.LabelFor(m => m.Player.Social)</dt>
+            <dd class="col-sm-4 mental-stat">@Html.DisplayFor(m => m.Player.Social)</dd>
+        </dl>
+    </div>
 
-<dl class="row">
-   <dt class="col-sm-2">@Html.LabelFor(m => m.Player.Level)</dt>
-   <dd class="col-sm-4">@Html.DisplayFor(m => m.Player.Level)</dd>
-   <dt class="col-sm-2 physical-stat">@Html.LabelFor(m => m.Player.StatTotal)</dt>
-   <dd class="col-sm-4 physical-stat">@Html.DisplayFor(m => m.Player.StatTotal)</dd>
-   <dt class="col-sm-2">@Html.LabelFor(m => m.Player.Bank)</dt>
-   <dd class="col-sm-4">@Html.DisplayFor(m => m.Player.BankString)</dd>
-   <dt class="col-sm-2 physical-stat">@Html.LabelFor(m => m.Player.Strength)</dt>
-   <dd class="col-sm-4 physical-stat">@Html.DisplayFor(m => m.Player.Strength)</dd>
-   <dt class="col-sm-2">@Html.LabelFor(m => m.Player.Bonds)</dt>
-   <dd class="col-sm-4">@Html.DisplayFor(m => m.Player.Bonds)</dd>
-   <dt class="col-sm-2 physical-stat">@Html.LabelFor(m => m.Player.Agility)</dt>
-   <dd class="col-sm-4 physical-stat">@Html.DisplayFor(m => m.Player.Agility)</dd>
-   <dt class="col-sm-2">@Html.LabelFor(m => m.Player.LastUpdate)</dt>
-   <dd class="col-sm-4">@(Model.Player.LastUpdate.ToString("yyyy-MM-dd hh:mm:ss"))</dd>
-   <dt class="col-sm-2 physical-stat">@Html.LabelFor(m => m.Player.Stamina)</dt>
-   <dd class="col-sm-4 physical-stat">@Html.DisplayFor(m => m.Player.Stamina)</dd>
-   <dt class="col-sm-2 mental-stat">@Html.LabelFor(m => m.Player.Intelligence)</dt>
-   <dd class="col-sm-4 mental-stat">@Html.DisplayFor(m => m.Player.Intelligence)</dd>
-   <dt class="col-sm-2 mental-stat">@Html.LabelFor(m => m.Player.Social)</dt>
-   <dd class="col-sm-4 mental-stat">@Html.DisplayFor(m => m.Player.Social)</dd>
-</dl>
+    <div class="card mb-3">
+        <div class="card-header">
+            <h5>Graphs</h5>
+        </div>
+        <div class="card-body mb-0">
+            @await Html.PartialAsync("_PlayerGraphPartial")
+        </div>
+    </div>
 
-<h4 class="text-center">Player history</h4>
-<table class="table table-condensed table-striped">
-    <thead>
-        <tr>
-            <th>Recorded At</th>
-            <th>Level</th>
-            <th>Stats Total</th>
-            <th>Str</th>
-            <th>Agi</th>
-            <th>Sta</th>
-            <th>Int</th>
-            <th>Soc</th>
-            <th>Credits</th>
-            <th>Bonds</th>
-        </tr>
-    </thead>
-    <tbody>
-    @foreach (var playerHistory in Model.History)
-    {
-        <tr class="@(Model.LastActivityId == playerHistory.Id ? "font-weight-bold" : "")">
-            <td>@playerHistory.RecordedAt.ToString("yyyy-MM-dd hh:mm:ss")</td>
-            <td>@playerHistory.Level</td>
-            <td>@playerHistory.StatTotal</td>
-            <td>@playerHistory.Strength</td>
-            <td>@playerHistory.Agility</td>
-            <td>@playerHistory.Stamina</td>
-            <td>@playerHistory.Intelligence</td>
-            <td>@playerHistory.Social</td>
-            <td>@playerHistory.Bank</td>
-            <td>@playerHistory.Bonds</td>
-        </tr>
-    }
-    @if (Model.MoreRows > 0)
-    {
-        <tr>
-            <td class="text-center" colspan="10"><a asp-action="PlayerDetails" asp-route-id="@Model.Player.Id" asp-route-loadAll="true">Load @Model.MoreRows more row(s)</a></td>
-        </tr>
-    }
-    </tbody>
-</table>
+    <div class="card mb-3">
+        <div class="card-header">
+            <h5>Campaign participation</h5>
+        </div>
+        <dl class="card-body row mb-0">
+            <dt class="col-sm-2">Overall</dt>
+            <dd class="col-sm-2">@Model.Attendance.TotalAttendance.SingleOrGiven(Model.Player.Id, 0)%</dd>
+            <dt class="col-sm-2">All T5 Hard+</dt>
+            <dd class="col-sm-2">@Model.Attendance.T5HardAttendance.SingleOrGiven(Model.Player.Id, 0)%</dd>
+            <dt class="col-sm-2">Last 10 T5 Hard+</dt>
+            <dd class="col-sm-2">@Model.Attendance.Last10T5HardAttendance.SingleOrGiven(Model.Player.Id, 0)%</dd>
+        </dl>
+    </div>
+
+    <div class="card mb-3 table-responsive">
+        <div class="card-header">
+            <h5>Loot awarded</h5>
+        </div>
+        @if (!Model.Player.LootRequests.Any(lr => lr.Status == LootRequest.LootRequestStatus.Awarded))
+        {
+            <i class=" card-body text-center">None so far</i>
+        } else {
+        <table class="card-body table table-striped">
+            <thead>
+                <tr>
+                    <th>Campaign</th>
+                    <th>Date</th>
+                    <th>Item</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach(var loot in Model.Player.LootRequests.Where(lr => lr.Status == LootRequest.LootRequestStatus.Awarded).OrderByDescending(lr => lr.Loot.CampaignId).Select(lr => lr.Loot))
+                {
+                    <tr>
+                        <td>@(loot.Campaign.Name)</td>
+                        <td>@(loot.Campaign.GCTDateString)</td>
+                        <td><a target="_blank" href="@(loot.Item.Url)">@(loot.Item.Name)</a></td>
+                        <td>@(loot.Item.Caption)</td>
+                        <td>@(loot.Status.ToStringSplit())</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        }
+    </div>
+
+    <div class="card mb-3 table-responsive">
+        <div class="card-header">
+            <h5>Loot held or on loan</h5>
+        </div>
+        @if (!Model.Player.HeldCampaignLoot.Any(l => l.Status != CampaignLoot.CampaignLootStatus.PermanentlyAwarded))
+        {
+            <i class=" card-body text-center">None so far</i>
+        } else {
+        <table class="card-body table table-striped">
+            <thead>
+                <tr>
+                    <th>Campaign</th>
+                    <th>Date</th>
+                    <th>Item</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach(var loot in Model.Player.HeldCampaignLoot
+                    .Where(l => l.Status != CampaignLoot.CampaignLootStatus.PermanentlyAwarded)
+                    .OrderByDescending(l => l.CampaignId))
+                {
+                    <tr>
+                        <td>@(loot.Campaign.Name)</td>
+                        <td>@(loot.Campaign.GCTDateString)</td>
+                        <td><a target="_blank" href="@(loot.Item.Url)">@(loot.Item.Name)</a></td>
+                        <td>@(loot.Item.Caption)</td>
+                        <td>@(loot.Status.ToStringSplit())</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        }
+    </div>
+
+    <div class="card mb-3 table-responsive">
+        <div class="card-header">
+            <h5>Player history</h5>
+        </div>
+        <table class="card-body table table-striped">
+            <thead>
+                <tr>
+                    <th>Recorded At</th>
+                    <th>Level</th>
+                    <th>Stats Total</th>
+                    <th>Str</th>
+                    <th>Agi</th>
+                    <th>Sta</th>
+                    <th>Int</th>
+                    <th>Soc</th>
+                    <th>Credits</th>
+                    <th>Bonds</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var playerHistory in Model.History)
+            {
+                <tr class="@(Model.LastActivityId == playerHistory.Id ? "font-weight-bold" : "")">
+                    <td>@playerHistory.RecordedAt.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                    <td>@playerHistory.Level</td>
+                    <td>@playerHistory.StatTotal</td>
+                    <td>@playerHistory.Strength</td>
+                    <td>@playerHistory.Agility</td>
+                    <td>@playerHistory.Stamina</td>
+                    <td>@playerHistory.Intelligence</td>
+                    <td>@playerHistory.Social</td>
+                    <td>@playerHistory.Bank</td>
+                    <td>@playerHistory.Bonds</td>
+                </tr>
+            }
+            @if (Model.MoreRows > 0)
+            {
+                <tr>
+                    <td class="text-center" colspan="10"><a asp-action="PlayerDetails" asp-route-id="@Model.Player.Id" asp-route-loadAll="true">Load @Model.MoreRows more row(s)</a></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts
+{
+    @await Html.PartialAsync("_PlayerGraphPartialScripts", new TauManager.ViewModels.PlayerChartParamsViewModel{
+        Player = Model.Player,
+        UseManagementUrl = true
+     })
+}

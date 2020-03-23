@@ -1,4 +1,7 @@
 @model TauManager.ViewModels.CampaignDetailsViewModel
+@{
+    ViewData["Title"] = Model.Campaign.Id == 0 ? "Create Campaign" : "Editing: " + Model.Campaign.Name;
+}
 
 <div class="text-center">
 @if(Model.Campaign.Id == 0)
@@ -53,7 +56,7 @@
                         <label for="campaign_datetime">Date and time:</label>
                         <div class="input-group date"  id="datetimepicker_campaign" data-target-input="nearest">
                             <input class="form-control datetimepicker-input" type="text" id="campaign_datetime" data-target="#datetimepicker_campaign"
-                                name="UTCDateTime" value="@(Model.Campaign.UTCDateTime.Value.ToString("yyyy-MM-dd HH:mm"))">
+                                name="UTCDateTime" value="@(Model.Campaign.UTCDateTime.HasValue ? Model.Campaign.UTCDateTime.Value.ToString("yyyy-MM-dd HH:mm"): "1964-01-22 00:00:28")">
                             <div class="input-group-append" data-target="#datetimepicker_campaign" data-toggle="datetimepicker">
                                 <div class="input-group-text"><i class="fa fa-calendar"></i></div>
                             </div>
@@ -169,29 +172,31 @@
     {
         <i>No data has been uploaded yet</i>
     } else {
-        <table class="table table-striped table-bordered">
-            <thead class="text-center">
-                <th>Name</th>
-                <th>Signed up</th>
-                <th>Participated</th>
-            </thead>
-            <tbody>
-            @foreach (var player in Model.Players)
-            {
-                <tr>
-                    <td>@player.Name</td>
-                    <td class="text-center">@if (Model.Campaign.SignupsDict.ContainsKey(player.Id))
-                        {
-                            <i class="fa fa-check"></i>
-                        }
-                    <td class="text-center">@if (Model.Campaign.AttendanceDict.ContainsKey(player.Id))
-                        {
-                            <i class="fa fa-check"></i>
-                        }
-                </tr>
-            }
-            </tbody>
-        </table>
+        <div class="table-responsive">
+            <table class="table table-striped table-bordered">
+                <thead class="text-center">
+                    <th>Name</th>
+                    <th>Signed up</th>
+                    <th>Participated</th>
+                </thead>
+                <tbody>
+                @foreach (var player in Model.Players)
+                {
+                    <tr>
+                        <td>@player.Name</td>
+                        <td class="text-center">@if (Model.Campaign.SignupsDict.ContainsKey(player.Id))
+                            {
+                                <i class="fa fa-check"></i>
+                            }
+                        <td class="text-center">@if (Model.Campaign.AttendanceDict.ContainsKey(player.Id))
+                            {
+                                <i class="fa fa-check"></i>
+                            }
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
     }
     </div>
 </div>

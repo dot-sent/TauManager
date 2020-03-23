@@ -30,15 +30,35 @@
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex flex-sm-row-reverse">
                     <ul class="navbar-nav flex-grow-1">
+@if(User.IsInRole(TauManager.Areas.Identity.Data.ApplicationRoleManager.MultiSyndicate))
+{
+                        <li class="nav-item dropdown" id="li_syndicate_switcher">
+                            <a class="nav-link text-dark dropdown-toggle" href="#" id="link_toggle_syndicate_switcher_dropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Loading...</a>
+                            <div class="dropdown-menu" aria-labelledby="link_toggle_syndicate_switcher_dropdown" id="div_syndicate_switcher_dropdown">
+                                <a class="dropdown-item" asp-controller="Users" asp-action="SetSyndicateOverride" id="a_set_default_syndicate">Default</a>
+                            </div>
+                        </li>
+}
 @if(User.IsInRole(TauManager.Areas.Identity.Data.ApplicationRoleManager.Officer)
     || User.IsInRole(TauManager.Areas.Identity.Data.ApplicationRoleManager.Leader)
     || User.IsInRole(TauManager.Areas.Identity.Data.ApplicationRoleManager.Administrator))
 {
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Users" asp-action="Index">Users</a>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link text-dark dropdown-toggle" href="#" id="link_toggle_admin_dropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Admin</a>
+                            <div class="dropdown-menu" aria-labelledby="link_toggle_admin_dropdown">
+    @if(User.IsInRole(TauManager.Areas.Identity.Data.ApplicationRoleManager.MultiSyndicate))
+    {
+                                <a class="dropdown-item" asp-controller="Syndicates" asp-action="UserAssignment">Player-syndicate relations</a>
+    }
+                                <a class="dropdown-item" asp-area="" asp-controller="Users" asp-action="Index">Users</a>
+                            </div>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="SyndicateManagement" asp-action="Index">Management</a>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link text-dark dropdown-toggle" href="#" id="link_toggle_management_dropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Management</a>
+                            <div class="dropdown-menu" aria-labelledby="link_toggle_management_dropdown">
+                                <a class="dropdown-item" asp-controller="SyndicateManagement" asp-action="Index">Overview</a>
+                                <a class="dropdown-item" asp-controller="SyndicateManagement" asp-action="SkillsOverview">Skills</a>
+                            </div>
                         </li>
 }
 @if(User.Identity.IsAuthenticated)
@@ -47,9 +67,13 @@
                             <a class="nav-link text-dark dropdown-toggle" href="#" id="link_toggle_campaigns_dropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Campaigns</a>
                             <div class="dropdown-menu" aria-labelledby="link_toggle_campaigns_dropdown">
                                 <a class="dropdown-item" asp-controller="Campaigns" asp-action="Index">Overview</a>
+                                <a class="dropdown-item" asp-controller="Campaigns" asp-action="Leaderboards">Leaderboards <span class="text-danger">(new, but old)</span></a>
                                 <a class="dropdown-item" asp-controller="Campaigns" asp-action="Loot">Loot items and history</a>
                                 <a class="dropdown-item" asp-controller="Campaigns" asp-action="LootDistributionList">Loot Distribution List</a>
                             </div>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-controller="Market" asp-action="Index">Market</a>
                         </li>
 }
                     </ul>
@@ -65,12 +89,9 @@
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
+    <footer class="footer">
         <div class="container">
-            &copy; 2019 - TauManager - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a><br/>
-            This website is a private project and not an official offer by the creators of Tau Station. Visit the official game website at <a href="https://taustation.space">https://taustation.space</a>.<br/>
-            Tau Station pictures by courtesy of Makes Dreams Happen SASU, France.<br/>
-            Thanks to <a href="https://www.tauhead.com/">https://www.tauhead.com/</a> for the item data API.
+            <span class="text-muted">&copy; 2020 - TauManager - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a> - <a asp-area="" asp-controller="Home" asp-action="Acknowledgements">Acknowledgements</a>@(User.Identity.IsAuthenticated ? Html.Raw(" - <a href=\"https://trello.com/invite/b/ERfuuUOk/4b0ea4b0e6e77d2dc68f1b9404fc8ff6/taumanager\" target=\"_blank\">Issue tracker</a>") : Html.Raw("") )</span>
         </div>
     </footer>
 
@@ -95,5 +116,32 @@
     <script src="~/js/site.js" asp-append-version="true"></script>
 
     @RenderSection("Scripts", required: false)
+@if(User.IsInRole(TauManager.Areas.Identity.Data.ApplicationRoleManager.MultiSyndicate))
+{
+    <script type="text/javascript">
+        $(function(){
+            $.get('/Syndicates/GetAll', undefined, function(data){
+                if (data.currentOverride.key == 0) { // No override, default syndicate set
+                    $('#link_toggle_syndicate_switcher_dropdown').html(data.currentOverride.value + ' - ' + data.defaultSyndicate.value);
+                } else {
+                    $('#link_toggle_syndicate_switcher_dropdown').html(data.currentOverride.value);
+                }
+                $('#a_set_default_syndicate').html('default - ' + data.defaultSyndicate.value);
+                Object.keys(data.allSyndicates).forEach(function(element){
+                    $('#div_syndicate_switcher_dropdown').append(
+                        '<a class="dropdown-item" href="/Users/SetSyndicateOverride?syndicateId=' + element + '">' + data.allSyndicates[element] + '</a>'
+                    );
+                })
+                $('#div_syndicate_switcher_dropdown a').click(function(e) {
+                    e.preventDefault();
+                    var url = $(e.target).attr('href');
+                    $.get(url, undefined, function(data){
+                        location.reload(false);
+                    });
+                });
+            })
+        });
+    </script>
+}
 </body>
 </html>

@@ -4,6 +4,7 @@ using TauManager.Models;
 
 namespace TauManager.ViewModels
 {
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     public class SyndicateMetricsViewModel
     {
         public class TierStatistics
@@ -58,11 +59,11 @@ namespace TauManager.ViewModels
         }
         public Dictionary<int, List<Player>> Players { get; set; }
         public Dictionary<int, TierStatistics> PlayerStats { get; set; }
-
-        public Dictionary<string, int> PlayerCountByStatTotal { get; set; }
+        public Dictionary<KeyValuePair<int, int>, int> PlayerCountByStatTotal { get; set; }
         public int MaxTier { get; set; }
         public Dictionary<int, LastPlayerActivity> LastActivity { get; set; }
         public AttendanceViewModel Attendance { get; set; }
         public Player PlayerToCompare { get; set; }
+        public bool IncludeInactive { get; set; }
     }
 }

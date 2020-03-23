@@ -9,6 +9,7 @@ using TauManager.Areas.Identity;
 namespace TauManager.Migrations
 {
     [DbContext(typeof(TauManagerIdentityDbContext))]
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     partial class TauManagerIdentityDbContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)
@@ -16,7 +17,7 @@ namespace TauManager.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
-                .HasAnnotation("ProductVersion", "2.2.3-servicing-35854")
+                .HasAnnotation("ProductVersion", "2.2.6-servicing-10079")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -147,6 +148,12 @@ namespace TauManager.Migrations
 
                     b.Property<DateTimeOffset?>("LockoutEnd");
 
+                    b.Property<bool?>("MarketIsViewPinned");
+
+                    b.Property<byte?>("MarketSort");
+
+                    b.Property<byte?>("MarketView");
+
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256);
 
@@ -161,7 +168,11 @@ namespace TauManager.Migrations
 
                     b.Property<int>("PlayerId");
 
+                    b.Property<string>("PlayerPageUploadToken");
+
                     b.Property<string>("SecurityStamp");
+
+                    b.Property<int?>("SyndicateOverride");
 
                     b.Property<bool>("TwoFactorEnabled");
 

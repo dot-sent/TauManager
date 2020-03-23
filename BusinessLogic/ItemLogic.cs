@@ -11,9 +11,11 @@ namespace TauManager.BusinessLogic
     public class ItemLogic : IItemLogic
     {
         private TauDbContext _dbContext { get; set; }
-        public ItemLogic(TauDbContext dbContext)
+        private ITauHeadClient _tauHead { get; set; }
+        public ItemLogic(TauDbContext dbContext, ITauHeadClient tauHead)
         {
             _dbContext = dbContext;
+            _tauHead = tauHead;
         }
 
         public async Task<string[]> BulkImportFromTauHead(string urls)
@@ -24,7 +26,7 @@ namespace TauManager.BusinessLogic
             {
                 if (Uri.TryCreate(url, UriKind.Absolute, out _))
                 {
-                    var item = await TauHead.GetItemData(url);
+                    var item = await _tauHead.GetItemData(url);
                     if (item == null)
                     {
                         status.Add(url + " - import error!");

@@ -1,9 +1,9 @@
 using System.Collections.Generic;
-using System.Linq;
 using TauManager.Models;
 
 namespace TauManager.ViewModels
 {
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     public class LootDistributionListModel
     {
         public IEnumerable<Player> CurrentOrder { get; set; }
@@ -17,5 +17,6 @@ namespace TauManager.ViewModels
         public bool IncludeInactive { get; set; }
         public Dictionary<int, int> TotalAttendanceRate { get; set; }
         public Dictionary<int, int> HardT5AttendanceRate { get; set; }
+        public Player CurrentPlayer { get; set; }
     }
 }

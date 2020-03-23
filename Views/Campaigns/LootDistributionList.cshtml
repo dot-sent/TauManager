@@ -12,7 +12,7 @@
     <h2 class="text-center">Current distribution list</h2>
 </div>
 <div class="text-center">
-    <form class="form-inline align-items-center" id="form_filter" asp-action="SetLootDistributionListParams">
+    <form class="form-inline" id="form_filter" asp-action="SetLootDistributionListParams">
         <input type="hidden" id="hidden_includeInactive" name="includeInactive">
         <input type="hidden" id="hidden_undistributedLootOnly" name="undistributedLootOnly">
 
@@ -20,13 +20,21 @@
             <input type="checkbox" class="form-check-input" id="cb_filter_includeInactive"@(Model.IncludeInactive ? " checked": "")>
             <label for="cb_filter_includeInactive" class="form-check-label">Include inactive players</label>
         </div>
-        <div class="form-check mb-2 mr-sm-2">
+        <div class="form-check mb-2 mr-sm-4">
             <input type="checkbox" class="form-check-input" id="cb_filter_undistributedLootOnly"@(Model.UndistributedLootOnly ? " checked": "")>
             <label for="cb_filter_undistributedLootOnly" class="form-check-label">Show undistributed loot only</label>
         </div>
-        <div class="form-group mb-2 mr-sm-2">
-            <input type="submit" class="btn btn-sm btn-primary form-control form-control-sm mb-2 mr-sm-2" id="btn_filter_apply" value="Apply">
+        <div class="input-group mb-2 mr-sm-2">
+            <label for="cb_filter_campaign_id" class="mr-sm-1">Show campaign:</label>
+            <select class="form-control" id="cb_filter_campaign_id" name="id">
+                <!option value="0"@(Model.CampaignId.HasValue ? "" : " selected")>-- All campaigns --</!option>
+            @foreach(var campaignId in Model.AllCampaigns.Keys.OrderByDescending(k => k))
+            {
+                <!option value="@campaignId"@(Model.CampaignId.HasValue ? Model.CampaignId.Value == campaignId ? " selected" : "" : "")>@(Model.AllCampaigns[campaignId].Name) - @(Model.AllCampaigns[campaignId].Station), T@(String.Join("", Model.AllCampaigns[campaignId].TiersList)), @(Model.AllCampaigns[campaignId].Loot.Count()) epic(s)</!option>
+            }
+            </select>
         </div>
+        <input type="submit" class="btn btn-sm btn-primary form-control form-control-sm mb-2 mr-sm-2" id="btn_filter_apply" value="Apply">
     </form>
 </div>
 
@@ -34,75 +42,92 @@
 {
     <div class="text-center"><i>No players in distribution list yet. Fresh setup?</i></div>
 } else { var index = 1;
-    <table class="table table-sm table-striped table-bordered m-1">
-        <thead class="text-center m-1">
-            <tr>
-                <th rowspan="2">Position</th>
-                <th rowspan="2">Player</th>
-                <th rowspan="2">Active?</th>
-                <th rowspan="2">Att% T5H+</th>
-            @foreach(var campaignId in allCampaignIds)
-            {
-                <th colspan="@(Model.AllCampaignLoot[campaignId].Count())"><a href="/Campaigns/Details/@campaignId" target="_blank">@(Model.AllCampaigns[campaignId].Name)</a></th>
-            }
-            </tr>
-            <tr>
-            @foreach(var campaignId in allCampaignIds)
-            {
-                foreach(var campaignLoot in Model.AllCampaignLoot[campaignId])
+    <div class="table-responsive">
+        <table class="table table-sm table-striped table-bordered m-1">
+            <thead class="text-center m-1">
+                <tr>
+                    <th rowspan="2">Position</th>
+                    <th rowspan="2">Player</th>
+                    <th rowspan="2">T</th>
+                    <th rowspan="2">Active?</th>
+                    <th rowspan="2">Att% T5H+</th>
+                @foreach(var campaignId in allCampaignIds)
                 {
-                    <th id="th_cl_@campaignLoot.Id">@(campaignLoot.Item.Name)</th>
+                    <th colspan="@(Model.AllCampaignLoot[campaignId].Count())"><a href="/Campaigns/View/@campaignId" target="_blank">@(Model.AllCampaigns[campaignId].Name)</a></th>
                 }
-            }
-            </tr>
-        </thead>
-        <tbody>
-        @foreach (var player in Model.CurrentOrder)
-        {
-            <tr class="@(player.Active ? "" : "text-muted")">
-                <th>
-                    @(player.Active ? "" : "(")@(index++)@(player.Active ? "" : ")")
-                </th>
-                <th id="th_pl_@player.Id">@(player.Name)</th>
-            @if(userHasEditRights)
-            {
-                <th><input type="checkbox" class="cb-player-active" data-player-id="@player.Id"@(player.Active ? "checked=\"checked\"" : "")/></th>
-            } else {
-                <th>@(player.Active ? "Yes" : "No")</th>
-            }
-                <th>@(Model.HardT5AttendanceRate.ContainsKey(player.Id) ? Model.HardT5AttendanceRate[player.Id].ToString() : "0")%</th>
-            @foreach(var campaignId in allCampaignIds)
-            {
-                foreach(var campaignLoot in Model.AllCampaignLoot[campaignId])
-                { 
-                    var requestStatus = -1;
-                    var comment = "";
-                    if (Model.AllLootRequests.ContainsKey(player.Id) && Model.AllLootRequests[player.Id].ContainsKey(campaignLoot.Id))
+                </tr>
+                <tr>
+                @foreach(var campaignId in allCampaignIds)
+                {
+                    foreach(var campaignLoot in Model.AllCampaignLoot[campaignId])
                     {
-                        requestStatus = (int)Model.AllLootRequests[player.Id][campaignLoot.Id].Status;
-                        comment = Model.AllLootRequests[player.Id][campaignLoot.Id].SpecialOfferDescription;
+                        <th id="th_cl_@campaignLoot.Id"><a target="_blank" href="@(campaignLoot.Item.Url)">@(campaignLoot.Item.Name)</a> - @(campaignLoot.Item.LDLCaption)</th>
                     }
+                }
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var player in Model.CurrentOrder)
+            {
+                var isCurrent = Model.CurrentPlayer != null && Model.CurrentPlayer.Id == player.Id;
+                <tr class="@(player.Active ? "" : "text-muted")">
+                    <th class="@(isCurrent ? "text-success" : "")">
+                        @(player.Active ? "" : "(")@(index++)@(player.Active ? "" : ")")@(isCurrent ? " (you)" : "")
+                    </th>
+                    <th id="th_pl_@player.Id" class="@(isCurrent ? "text-success" : "")">@(player.Name)</th>
+                    <th>@(player.Tier)</th>
                     
-                    <td class="text-center">
-                        @if (comment == null || comment == "") 
+                @if(userHasEditRights)
+                {
+                    <th><input type="checkbox" class="cb-player-active" data-player-id="@player.Id"@(player.Active ? "checked=\"checked\"" : "")/></th>
+                } else {
+                    <th>@(player.Active ? "Yes" : "No")</th>
+                }
+                    <th>@(Model.HardT5AttendanceRate.ContainsKey(player.Id) ? Model.HardT5AttendanceRate[player.Id].ToString() : "0")%</th>
+                @foreach(var campaignId in allCampaignIds)
+                {
+                    foreach(var campaignLoot in Model.AllCampaignLoot[campaignId])
+                    { 
+                        var requestStatus = -1;
+                        var comment = "";
+                        if (Model.AllLootRequests.ContainsKey(player.Id) && Model.AllLootRequests[player.Id].ContainsKey(campaignLoot.Id))
                         {
-                            <span>@(requestStatus == -1 ? "" : Model.AllLootRequests[player.Id][campaignLoot.Id].Status.ToString())</span>
-                        } else {
-                            <span title="@comment">@(requestStatus == -1 ? "" : Model.AllLootRequests[player.Id][campaignLoot.Id].Status.ToString())</span>
+                            requestStatus = (int)Model.AllLootRequests[player.Id][campaignLoot.Id].Status;
+                            comment = Model.AllLootRequests[player.Id][campaignLoot.Id].SpecialOfferDescription;
+                        }
+                        var cellClass = " ldl-ok";
+                        if (player.Tier < campaignLoot.Item.Tier - 1)
+                        {
+                            cellClass = " ldl-blocked";
+                        } else if (player.Tier == campaignLoot.Item.Tier - 1) {
+                            cellClass = " ldl-warn";
                         }
                         
-                    @if(userHasEditRights)
-                    {
-                        <input type="button" class="btn btn-xs btn-display-lr-editor" class="btn btn-primary" data-toggle="modal" data-target="#modal_edit_lr" value="(edit)"
-                             data-player-id="@player.Id" data-loot-id="@campaignLoot.Id" data-status="@requestStatus" data-comment="@comment">
+                        <td class="text-center@(cellClass)">
+                            @if (Model.AllCampaigns[campaignId].Attendance.Any(a => a.PlayerId == player.Id)) 
+                            {
+                                <i class="fas fa-user-check text-secondary"></i>
+                            }
+                            @if (comment == null || comment == "") 
+                            {
+                                <span>@(requestStatus == -1 ? "" : Model.AllLootRequests[player.Id][campaignLoot.Id].Status.ToString())</span>
+                            } else {
+                                <span title="@comment">@(requestStatus == -1 ? "" : Model.AllLootRequests[player.Id][campaignLoot.Id].Status.ToString())</span>
+                            }
+                            
+                        @if(userHasEditRights)
+                        {
+                            <input type="button" class="btn btn-xs btn-display-lr-editor" data-toggle="modal" data-target="#modal_edit_lr" value="(edit)"
+                                data-player-id="@player.Id" data-loot-id="@campaignLoot.Id" data-status="@requestStatus" data-comment="@comment">
+                        }
+                        </td>
                     }
-                    </td>
                 }
+                </tr>
             }
-            </tr>
-        }
-        </tbody>
-    </table>
+            </tbody>
+        </table>
+    </div>
 }
 
 @if(userHasEditRights)

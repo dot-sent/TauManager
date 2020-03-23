@@ -3,6 +3,7 @@ using TauManager.Models;
 
 namespace TauManager.ViewModels
 {
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     public class CampaignDetailsViewModel
     {
         public IEnumerable<Player> Players { get; set; }

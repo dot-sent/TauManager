@@ -16,33 +16,48 @@ namespace TauManager.Migrations.TauDb
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
-                .HasAnnotation("ProductVersion", "2.2.3-servicing-35854")
+                .HasAnnotation("ProductVersion", "3.1.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             modelBuilder.Entity("TauManager.Models.Campaign", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd();
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn);
 
-                    b.Property<string>("Comments");
+                    b.Property<string>("Comments")
+                        .HasColumnType("text");
 
-                    b.Property<byte?>("Difficulty");
+                    b.Property<byte?>("Difficulty")
+                        .HasColumnType("smallint");
 
-                    b.Property<int?>("ManagerId");
+                    b.Property<int?>("ManagerId")
+                        .HasColumnType("integer");
 
-                    b.Property<string>("Name");
+                    b.Property<string>("Name")
+                        .HasColumnType("text");
 
-                    b.Property<string>("Station");
+                    b.Property<string>("Station")
+                        .HasColumnType("text");
 
-                    b.Property<byte>("Status");
+                    b.Property<byte>("Status")
+                        .HasColumnType("smallint");
 
-                    b.Property<int?>("Tiers");
+                    b.Property<int?>("SyndicateId")
+                        .HasColumnType("integer");
 
-                    b.Property<DateTime?>("UTCDateTime");
+                    b.Property<int?>("Tiers")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("UTCDateTime")
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
                     b.HasIndex("ManagerId");
+
+                    b.HasIndex("SyndicateId");
 
                     b.ToTable("Campaign");
                 });
@@ -50,11 +65,15 @@ namespace TauManager.Migrations.TauDb
             modelBuilder.Entity("TauManager.Models.CampaignAttendance", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd();
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn);
 
-                    b.Property<int>("CampaignId");
+                    b.Property<int>("CampaignId")
+                        .HasColumnType("integer");
 
-                    b.Property<int>("PlayerId");
+                    b.Property<int>("PlayerId")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -68,17 +87,27 @@ namespace TauManager.Migrations.TauDb
             modelBuilder.Entity("TauManager.Models.CampaignLoot", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd();
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn);
 
-                    b.Property<int>("CampaignId");
+                    b.Property<bool?>("AvailableToOtherSyndicates")
+                        .HasColumnType("boolean");
 
-                    b.Property<string>("Comments");
+                    b.Property<int>("CampaignId")
+                        .HasColumnType("integer");
 
-                    b.Property<int?>("HolderId");
+                    b.Property<string>("Comments")
+                        .HasColumnType("text");
 
-                    b.Property<int>("ItemId");
+                    b.Property<int?>("HolderId")
+                        .HasColumnType("integer");
 
-                    b.Property<byte>("Status");
+                    b.Property<int>("ItemId")
+                        .HasColumnType("integer");
+
+                    b.Property<byte>("Status")
+                        .HasColumnType("smallint");
 
                     b.HasKey("Id");
 
@@ -94,13 +123,18 @@ namespace TauManager.Migrations.TauDb
             modelBuilder.Entity("TauManager.Models.CampaignSignup", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd();
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn);
 
-                    b.Property<bool?>("Attending");
+                    b.Property<bool?>("Attending")
+                        .HasColumnType("boolean");
 
-                    b.Property<int>("CampaignId");
+                    b.Property<int>("CampaignId")
+                        .HasColumnType("integer");
 
-                    b.Property<int>("PlayerId");
+                    b.Property<int>("PlayerId")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -114,40 +148,58 @@ namespace TauManager.Migrations.TauDb
             modelBuilder.Entity("TauManager.Models.Item", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd();
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn);
 
-                    b.Property<decimal?>("Accuracy");
+                    b.Property<decimal?>("Accuracy")
+                        .HasColumnType("numeric");
 
-                    b.Property<string>("Description");
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
 
-                    b.Property<decimal?>("Energy");
+                    b.Property<decimal?>("Energy")
+                        .HasColumnType("numeric");
 
-                    b.Property<bool?>("HandToHand");
+                    b.Property<bool?>("HandToHand")
+                        .HasColumnType("boolean");
 
-                    b.Property<string>("ImageUrl");
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("text");
 
-                    b.Property<decimal?>("Impact");
+                    b.Property<decimal?>("Impact")
+                        .HasColumnType("numeric");
 
                     b.Property<string>("Name")
-                        .IsRequired();
+                        .IsRequired()
+                        .HasColumnType("text");
 
-                    b.Property<decimal?>("Piercing");
+                    b.Property<decimal?>("Piercing")
+                        .HasColumnType("numeric");
 
-                    b.Property<decimal>("Price");
+                    b.Property<decimal>("Price")
+                        .HasColumnType("numeric");
 
-                    b.Property<byte>("Rarity");
+                    b.Property<byte>("Rarity")
+                        .HasColumnType("smallint");
 
-                    b.Property<string>("Slug");
+                    b.Property<string>("Slug")
+                        .HasColumnType("text");
 
-                    b.Property<int>("Tier");
+                    b.Property<int>("Tier")
+                        .HasColumnType("integer");
 
-                    b.Property<byte>("Type");
+                    b.Property<byte>("Type")
+                        .HasColumnType("smallint");
 
-                    b.Property<byte?>("WeaponRange");
+                    b.Property<byte?>("WeaponRange")
+                        .HasColumnType("smallint");
 
-                    b.Property<byte?>("WeaponType");
+                    b.Property<byte?>("WeaponType")
+                        .HasColumnType("smallint");
 
-                    b.Property<decimal>("Weight");
+                    b.Property<decimal>("Weight")
+                        .HasColumnType("numeric");
 
                     b.HasKey("Id");
 
@@ -157,17 +209,24 @@ namespace TauManager.Migrations.TauDb
             modelBuilder.Entity("TauManager.Models.LootRequest", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd();
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn);
 
-                    b.Property<int>("LootId");
+                    b.Property<int>("LootId")
+                        .HasColumnType("integer");
 
-                    b.Property<int>("RequestedById");
+                    b.Property<int>("RequestedById")
+                        .HasColumnType("integer");
 
-                    b.Property<int>("RequestedForId");
+                    b.Property<int>("RequestedForId")
+                        .HasColumnType("integer");
 
-                    b.Property<string>("SpecialOfferDescription");
+                    b.Property<string>("SpecialOfferDescription")
+                        .HasColumnType("text");
 
-                    b.Property<byte>("Status");
+                    b.Property<byte>("Status")
+                        .HasColumnType("smallint");
 
                     b.HasKey("Id");
 
@@ -180,36 +239,175 @@ namespace TauManager.Migrations.TauDb
                     b.ToTable("LootRequest");
                 });
 
+            modelBuilder.Entity("TauManager.Models.MarketAd", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn);
+
+                    b.Property<bool>("Active")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("AuthorId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("ExpiryDate")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<byte>("OfferType")
+                        .HasColumnType("smallint");
+
+                    b.Property<DateTime>("PlacementDate")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<byte>("RequestType")
+                        .HasColumnType("smallint");
+
+                    b.Property<byte>("Type")
+                        .HasColumnType("smallint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AuthorId");
+
+                    b.ToTable("MarketAd");
+                });
+
+            modelBuilder.Entity("TauManager.Models.MarketAdBundle", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn);
+
+                    b.Property<int>("AdId")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("Credits")
+                        .HasColumnType("numeric");
+
+                    b.Property<byte>("Type")
+                        .HasColumnType("smallint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AdId");
+
+                    b.ToTable("MarketAdBundle");
+                });
+
+            modelBuilder.Entity("TauManager.Models.MarketAdBundleItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn);
+
+                    b.Property<int>("BundleId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ItemId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BundleId");
+
+                    b.HasIndex("ItemId");
+
+                    b.ToTable("MarketAdBundleItem");
+                });
+
+            modelBuilder.Entity("TauManager.Models.MarketAdReaction", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn);
+
+                    b.Property<int>("AdId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("InterestedId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Message")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("ReactionDate")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AdId");
+
+                    b.HasIndex("InterestedId");
+
+                    b.ToTable("MarketAdReaction");
+                });
+
             modelBuilder.Entity("TauManager.Models.Player", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd();
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn);
 
-                    b.Property<bool>("Active");
+                    b.Property<bool>("Active")
+                        .HasColumnType("boolean");
 
-                    b.Property<decimal>("Agility");
+                    b.Property<decimal>("Agility")
+                        .HasColumnType("numeric");
 
-                    b.Property<decimal>("Bank");
+                    b.Property<decimal>("Bank")
+                        .HasColumnType("numeric");
 
-                    b.Property<int>("Bonds");
+                    b.Property<int>("Bonds")
+                        .HasColumnType("integer");
 
-                    b.Property<decimal>("Intelligence");
+                    b.Property<DateTime?>("GauleVisaExpiry")
+                        .HasColumnType("timestamp without time zone");
 
-                    b.Property<DateTime>("LastUpdate");
+                    b.Property<decimal>("Intelligence")
+                        .HasColumnType("numeric");
 
-                    b.Property<decimal>("Level");
+                    b.Property<DateTime>("LastUpdate")
+                        .HasColumnType("timestamp without time zone");
 
-                    b.Property<string>("Name");
+                    b.Property<decimal>("Level")
+                        .HasColumnType("numeric");
 
-                    b.Property<decimal>("Social");
+                    b.Property<string>("Name")
+                        .HasColumnType("text");
 
-                    b.Property<decimal>("Stamina");
+                    b.Property<decimal>("Social")
+                        .HasColumnType("numeric");
 
-                    b.Property<decimal>("Strength");
+                    b.Property<decimal>("Stamina")
+                        .HasColumnType("numeric");
 
-                    b.Property<decimal>("Wallet");
+                    b.Property<decimal>("Strength")
+                        .HasColumnType("numeric");
+
+                    b.Property<int?>("SyndicateId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("UniCourseDate")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<decimal>("Wallet")
+                        .HasColumnType("numeric");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("SyndicateId");
 
                     b.ToTable("Player");
                 });
@@ -217,29 +415,42 @@ namespace TauManager.Migrations.TauDb
             modelBuilder.Entity("TauManager.Models.PlayerHistory", b =>
                 {
                     b.Property<long>("Id")
-                        .ValueGeneratedOnAdd();
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn);
 
-                    b.Property<decimal>("Agility");
+                    b.Property<decimal>("Agility")
+                        .HasColumnType("numeric");
 
-                    b.Property<decimal>("Bank");
+                    b.Property<decimal>("Bank")
+                        .HasColumnType("numeric");
 
-                    b.Property<int>("Bonds");
+                    b.Property<int>("Bonds")
+                        .HasColumnType("integer");
 
-                    b.Property<decimal>("Intelligence");
+                    b.Property<decimal>("Intelligence")
+                        .HasColumnType("numeric");
 
-                    b.Property<decimal>("Level");
+                    b.Property<decimal>("Level")
+                        .HasColumnType("numeric");
 
-                    b.Property<int>("PlayerId");
+                    b.Property<int>("PlayerId")
+                        .HasColumnType("integer");
 
-                    b.Property<DateTime>("RecordedAt");
+                    b.Property<DateTime>("RecordedAt")
+                        .HasColumnType("timestamp without time zone");
 
-                    b.Property<decimal>("Social");
+                    b.Property<decimal>("Social")
+                        .HasColumnType("numeric");
 
-                    b.Property<decimal>("Stamina");
+                    b.Property<decimal>("Stamina")
+                        .HasColumnType("numeric");
 
-                    b.Property<decimal>("Strength");
+                    b.Property<decimal>("Strength")
+                        .HasColumnType("numeric");
 
-                    b.Property<decimal>("Wallet");
+                    b.Property<decimal>("Wallet")
+                        .HasColumnType("numeric");
 
                     b.HasKey("Id");
 
@@ -251,23 +462,106 @@ namespace TauManager.Migrations.TauDb
             modelBuilder.Entity("TauManager.Models.PlayerListPositionHistory", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd();
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn);
 
-                    b.Property<string>("Comment");
+                    b.Property<string>("Comment")
+                        .HasColumnType("text");
 
-                    b.Property<DateTime>("CreatedAt");
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
 
-                    b.Property<int?>("LootRequestId");
+                    b.Property<int?>("LootRequestId")
+                        .HasColumnType("integer");
 
-                    b.Property<int>("PlayerId");
+                    b.Property<int>("PlayerId")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("LootRequestId");
+                    b.HasIndex("LootRequestId")
+                        .IsUnique();
 
                     b.HasIndex("PlayerId");
 
                     b.ToTable("PlayerListPositionHistory");
+                });
+
+            modelBuilder.Entity("TauManager.Models.PlayerSkill", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn);
+
+                    b.Property<int>("PlayerId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("SkillId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("SkillLevel")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PlayerId");
+
+                    b.HasIndex("SkillId");
+
+                    b.ToTable("PlayerSkill");
+                });
+
+            modelBuilder.Entity("TauManager.Models.Skill", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn);
+
+                    b.Property<string>("Name")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Skill");
+                });
+
+            modelBuilder.Entity("TauManager.Models.SkillGroup", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn);
+
+                    b.Property<string>("Name")
+                        .HasColumnType("text");
+
+                    b.Property<int>("SkillId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SkillId")
+                        .IsUnique();
+
+                    b.ToTable("SkillGroup");
+                });
+
+            modelBuilder.Entity("TauManager.Models.Syndicate", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn);
+
+                    b.Property<string>("Tag")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Syndicate");
                 });
 
             modelBuilder.Entity("TauManager.Models.Campaign", b =>
@@ -275,6 +569,10 @@ namespace TauManager.Migrations.TauDb
                     b.HasOne("TauManager.Models.Player", "Manager")
                         .WithMany()
                         .HasForeignKey("ManagerId");
+
+                    b.HasOne("TauManager.Models.Syndicate", "Syndicate")
+                        .WithMany()
+                        .HasForeignKey("SyndicateId");
                 });
 
             modelBuilder.Entity("TauManager.Models.CampaignAttendance", b =>
@@ -282,12 +580,14 @@ namespace TauManager.Migrations.TauDb
                     b.HasOne("TauManager.Models.Campaign", "Campaign")
                         .WithMany("Attendance")
                         .HasForeignKey("CampaignId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("TauManager.Models.Player", "Player")
-                        .WithMany()
+                        .WithMany("Attendance")
                         .HasForeignKey("PlayerId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("TauManager.Models.CampaignLoot", b =>
@@ -295,16 +595,18 @@ namespace TauManager.Migrations.TauDb
                     b.HasOne("TauManager.Models.Campaign", "Campaign")
                         .WithMany("Loot")
                         .HasForeignKey("CampaignId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("TauManager.Models.Player", "Holder")
-                        .WithMany()
+                        .WithMany("HeldCampaignLoot")
                         .HasForeignKey("HolderId");
 
                     b.HasOne("TauManager.Models.Item", "Item")
                         .WithMany()
                         .HasForeignKey("ItemId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("TauManager.Models.CampaignSignup", b =>
@@ -312,12 +614,14 @@ namespace TauManager.Migrations.TauDb
                     b.HasOne("TauManager.Models.Campaign", "Campaign")
                         .WithMany("Signups")
                         .HasForeignKey("CampaignId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("TauManager.Models.Player", "Player")
                         .WithMany()
                         .HasForeignKey("PlayerId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("TauManager.Models.LootRequest", b =>
@@ -325,17 +629,75 @@ namespace TauManager.Migrations.TauDb
                     b.HasOne("TauManager.Models.CampaignLoot", "Loot")
                         .WithMany("Requests")
                         .HasForeignKey("LootId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("TauManager.Models.Player", "RequestedBy")
                         .WithMany()
                         .HasForeignKey("RequestedById")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("TauManager.Models.Player", "RequestedFor")
-                        .WithMany()
+                        .WithMany("LootRequests")
                         .HasForeignKey("RequestedForId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TauManager.Models.MarketAd", b =>
+                {
+                    b.HasOne("TauManager.Models.Player", "Author")
+                        .WithMany()
+                        .HasForeignKey("AuthorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TauManager.Models.MarketAdBundle", b =>
+                {
+                    b.HasOne("TauManager.Models.MarketAd", "Ad")
+                        .WithMany("Bundles")
+                        .HasForeignKey("AdId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TauManager.Models.MarketAdBundleItem", b =>
+                {
+                    b.HasOne("TauManager.Models.MarketAdBundle", "Bundle")
+                        .WithMany("Items")
+                        .HasForeignKey("BundleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TauManager.Models.Item", "Item")
+                        .WithMany()
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TauManager.Models.MarketAdReaction", b =>
+                {
+                    b.HasOne("TauManager.Models.MarketAd", "Ad")
+                        .WithMany("Reactions")
+                        .HasForeignKey("AdId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TauManager.Models.Player", "Interested")
+                        .WithMany()
+                        .HasForeignKey("InterestedId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TauManager.Models.Player", b =>
+                {
+                    b.HasOne("TauManager.Models.Syndicate", "Syndicate")
+                        .WithMany()
+                        .HasForeignKey("SyndicateId");
                 });
 
             modelBuilder.Entity("TauManager.Models.PlayerHistory", b =>
@@ -343,19 +705,45 @@ namespace TauManager.Migrations.TauDb
                     b.HasOne("TauManager.Models.Player", "Player")
                         .WithMany("History")
                         .HasForeignKey("PlayerId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("TauManager.Models.PlayerListPositionHistory", b =>
                 {
                     b.HasOne("TauManager.Models.LootRequest", "LootRequest")
-                        .WithMany()
-                        .HasForeignKey("LootRequestId");
+                        .WithOne("HistoryEntry")
+                        .HasForeignKey("TauManager.Models.PlayerListPositionHistory", "LootRequestId");
 
                     b.HasOne("TauManager.Models.Player", "Player")
                         .WithMany()
                         .HasForeignKey("PlayerId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TauManager.Models.PlayerSkill", b =>
+                {
+                    b.HasOne("TauManager.Models.Player", "Player")
+                        .WithMany("PlayerSkills")
+                        .HasForeignKey("PlayerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TauManager.Models.Skill", "Skill")
+                        .WithMany("PlayerRelations")
+                        .HasForeignKey("SkillId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TauManager.Models.SkillGroup", b =>
+                {
+                    b.HasOne("TauManager.Models.Skill", "Skill")
+                        .WithOne("Groups")
+                        .HasForeignKey("TauManager.Models.SkillGroup", "SkillId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

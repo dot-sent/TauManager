@@ -1,0 +1,86 @@
+@model TauManager.ViewModels.LeaderboardViewModel
+@{
+    ViewData["Title"] = "Campaign leaderboards";
+}
+<div class="row card mb-3">
+    <div class="card-header text-center">
+        <h3>Campaign Leaderboards</h3>
+    </div>
+    <div class="card-body row">
+        <div class="col-md-4 table-responsive">
+            <div class="text-center">
+                <h4>All campaigns</h4>
+            </div>
+            <table class="table table-condensed table-striped table-bordered">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Player</th>
+                        <th>Attendance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach(var key in Model.TotalLeaderboardPositions.Keys)
+                {
+                    var playerId = Model.TotalLeaderboardPositions[key];
+                    <tr class="@(Model.PlayerToCompare != null && playerId == Model.PlayerToCompare.Id ? "text-success" : "")">
+                        <td>@key</td>
+                        <td>@Model.AllPlayers[playerId].Name</td>
+                        <td>@(Model.Attendance.TotalAttendance[playerId])%</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+        <div class="col-md-4 table-responsive">
+            <div class="text-center">
+                <h4>All Hard with T5</h4>
+            </div>
+            <table class="table table-condensed table-striped table-bordered">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Player</th>
+                        <th>Attendance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach(var key in Model.T5HardLeaderboardPositions.Keys)
+                {
+                    var playerId = Model.T5HardLeaderboardPositions[key];
+                    <tr class="@(Model.PlayerToCompare != null && playerId == Model.PlayerToCompare.Id ? "text-success" : "")">
+                        <td>@key</td>
+                        <td>@Model.AllPlayers[playerId].Name</td>
+                        <td>@(Model.Attendance.T5HardAttendance[playerId])%</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+        <div class="col-md-4 table-responsive">
+            <div class="text-center">
+                <h4>Last 10 Hard with T5</h4>
+            </div>
+            <table class="table table-condensed table-striped table-bordered">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Player</th>
+                        <th>Attendance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach(var key in Model.Last10T5HardLeaderboardPositions.Keys)
+                {
+                    var playerId = Model.Last10T5HardLeaderboardPositions[key];
+                    <tr class="@(Model.PlayerToCompare != null && playerId == Model.PlayerToCompare.Id ? "text-success" : "")">
+                        <td>@key</td>
+                        <td>@Model.AllPlayers[playerId].Name</td>
+                        <td>@(Model.Attendance.Last10T5HardAttendance[playerId])%</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

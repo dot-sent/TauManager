@@ -1,6 +1,10 @@
 @model TauManager.ViewModels.LootOverviewViewModel
 @{
     ViewData["Title"] = "Loot Overview";
+    var userHasEditRights = 
+        User.IsInRole(TauManager.Areas.Identity.Data.ApplicationRoleManager.Administrator)
+        || User.IsInRole(TauManager.Areas.Identity.Data.ApplicationRoleManager.Leader)
+        || User.IsInRole(TauManager.Areas.Identity.Data.ApplicationRoleManager.Officer);
 }
 
 <div class="text-center">
@@ -18,7 +22,7 @@
     </form>
 </div>
 
-<div class="card mb-3 text-center">
+<div class="card mb-3 text-center table-responsive">
     <div class="card-header">
         <h4>Syndicate Campaigns Loot items and history</h4>
     </div>
@@ -32,20 +36,38 @@
                 <th>Description</th>
                 <th>Status</th>
                 <th>Holder/Owner</th>
-                <th>Stats (P/I/E, Accuracy, Weight, Value)</th>
+                <th>Stats (P/I/E, Accuracy, Weight)</th>
             </tr>
         </thead>
         <tbody>
         @foreach (var loot in Model.AllLoot)
         {
             <tr>
-                <td>@loot.Campaign.Name</td>
-                <td>@loot.Item.Name</td>
+                <td><a target="_blank" asp-controller="Campaigns" asp-action="View" asp-route-id="@loot.Campaign.Id">@loot.Campaign.Name</a></td>
+                <td><a target="_blank" href="@loot.Item.Url">@loot.Item.Name</a></td>
                 <td>@loot.Item.Caption</td>
                 <td>@loot.Status</td>
-                <td>@(loot.HolderId.HasValue ? loot.Holder.Name : "-Undefined-")</td>
                 <td>
-                    @loot.Item.Piercing.Value.ToString("N0")/@loot.Item.Impact.Value.ToString("N0")/@loot.Item.Energy.Value.ToString("N0"), @(loot.Item.Type == Item.ItemType.Weapon ? loot.Item.Accuracy.ToString() + ", " : "")@loot.Item.Weight kg, @loot.Item.Price cr
+                    @if (loot.HolderId.HasValue)
+                    {
+                        if (userHasEditRights) 
+                        {
+                            <a target="_blank" asp-controller="SyndicateManagement" asp-action="PlayerDetails" asp-route-id="@loot.Holder.Id">@loot.Holder.Name</a>
+                        } else {
+                            @:@loot.Holder.Name
+                        }
+                    } else {
+                        @:-Undefined-
+                    }
+                </td>
+                <td>
+                    @if(loot.Item.Type == Item.ItemType.Weapon || 
+                        loot.Item.Type == Item.ItemType.Armor)
+                    {
+                        <span>@loot.Item.Piercing.Value.ToString("N0")/@loot.Item.Impact.Value.ToString("N0")/@loot.Item.Energy.Value.ToString("N0"), @(loot.Item.Type == Item.ItemType.Weapon ? loot.Item.Accuracy.ToString() + ", " : "")@loot.Item.Weight kg</span>
+                    } else {
+                        <i>Not applicable</i>
+                    }
                 </td>
             </tr>            
         }
@@ -57,3 +79,48 @@
     </div>
 }
 </div>
+
+@if(userHasEditRights)
+{
+<div class="card mb-3 text-center table-responsive">
+    <div class="card-header">
+        <h4>Loot available from different syndicates (officers-only)</h4>
+    </div>
+@if(Model.OtherSyndicatesLoot != null && Model.OtherSyndicatesLoot.Count() > 0)
+{
+    <table class="card-body table table-condensed table-bordered table-striped mb-0">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Stats (P/I/E, Accuracy, Weight)</th>
+                <th>Syndicate</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var loot in Model.OtherSyndicatesLoot)
+        {
+            <tr>
+                <td><a target="_blank" href="@loot.Item.Url">@loot.Item.Name</a></td>
+                <td>@loot.Item.Caption</td>
+                <td>
+                    @if(loot.Item.Type == Item.ItemType.Weapon || 
+                        loot.Item.Type == Item.ItemType.Armor)
+                    {
+                        <span>@loot.Item.Piercing.Value.ToString("N0")/@loot.Item.Impact.Value.ToString("N0")/@loot.Item.Energy.Value.ToString("N0"), @(loot.Item.Type == Item.ItemType.Weapon ? loot.Item.Accuracy.ToString() + ", " : "")@loot.Item.Weight kg</span>
+                    } else {
+                        <i>Not applicable</i>
+                    }
+                </td>
+                <td>[@loot.Campaign.Syndicate.Tag]</td>
+            </tr>            
+        }
+        </tbody>
+    </table>
+} else {
+    <div class="card-body">
+        <i class="text-center">None at this moment</i>
+    </div>
+}
+</div>
+}

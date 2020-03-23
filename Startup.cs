@@ -1,27 +1,29 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
+using StackExchange.Redis;
 using TauManager.BusinessLogic;
+using TauManager.Utils;
 
 namespace TauManager
 {
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     public class Startup
     {
-        public Startup(IConfiguration configuration)
+        public Startup(IConfiguration configuration, IWebHostEnvironment env)
         {
             Configuration = configuration;
+            _env = env;
         }
 
         public IConfiguration Configuration { get; }
+        private readonly IWebHostEnvironment _env;
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
@@ -38,15 +40,38 @@ namespace TauManager
                         .UseLazyLoadingProxies()
                         .UseNpgsql(Configuration.GetConnectionString("TauDbContextConnection")));
 
-            services.AddDistributedMemoryCache();
+            if (_env.IsProduction())
+            {
+                var redis = ConnectionMultiplexer
+                    .Connect(Configuration.GetConnectionString("Redis"));
 
+                services
+                    .AddDataProtection()
+                    .PersistKeysToStackExchangeRedis(redis, "DataProtectionKeys");
+                
+                services.AddStackExchangeRedisCache(option =>
+                {
+                    option.Configuration = Configuration.GetConnectionString("Redis");
+                    option.InstanceName = "TauManagerRedisInstance";
+                });
+            } else {
+                services.AddDistributedMemoryCache();
+            }
+            
             services.AddSession(options =>
             {
                 options.IdleTimeout = TimeSpan.FromHours(1);
                 options.Cookie.HttpOnly = true;
             });
 
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+            var mvcBuilder = services.AddRazorPages().AddNewtonsoftJson();
+
+#if DEBUG
+            if (_env.IsDevelopment())
+            {
+                mvcBuilder.AddRazorRuntimeCompilation();
+            }
+#endif
 
             #region Business logic services registration
             services.AddScoped<ICampaignLogic, CampaignLogic>();
@@ -54,11 +79,18 @@ namespace TauManager
             services.AddScoped<IPlayerLogic, PlayerLogic>();
             services.AddScoped<ILootLogic, LootLogic>();
             services.AddScoped<IUserLogic, UserLogic>();
+            services.AddScoped<ISyndicateLogic, SyndicateLogic>();
+            services.AddScoped<IMarketLogic, MarketLogic>();
+            services.AddScoped<IInternalLogic, InternalLogic>();
+            #endregion
+
+            #region Util services registration
+            services.AddScoped<ITauHeadClient, TauHead>();
             #endregion
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
             {
@@ -73,17 +105,19 @@ namespace TauManager
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
+            app.UseRouting();
             app.UseCookiePolicy();
             app.UseAuthentication();
             app.UseStatusCodePagesWithReExecute("/Error/{0}");
             
             app.UseSession();
 
-            app.UseMvc(routes =>
+            app.UseAuthorization();
+
+            app.UseEndpoints(endpoints =>
             {
-                 routes.MapRoute(
-                    name: "default",
-                    template: "{controller=Home}/{action=Index}/{id?}");
+                endpoints.MapDefaultControllerRoute();
+                endpoints.MapRazorPages();
             });
         }
     }

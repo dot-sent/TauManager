@@ -1,0 +1,21 @@
+@model TauManager.ViewModels.ActionResponseViewModel
+
+@{
+    ViewData["Title"] = "Import item list from TauHead";
+}
+
+<div>
+    <form method="POST" enctype="multipart/form-data">
+        <input type="file" name="inputFile" accept=".json,application/json" />
+        <input type="submit" value="Upload JSON"/>
+    </form>
+</div>
+
+@if(Model != null)
+{
+<div class="row mt-1">
+    <div class="col-md-12" style="white-space: pre-line">
+        @Model.Message
+    </div>
+</div>
+}

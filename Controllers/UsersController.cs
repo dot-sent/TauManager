@@ -1,29 +1,24 @@
-using System.Collections.Specialized;
-using System.Linq;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using TauManager.Areas.Identity.Data;
 using TauManager.Areas.Identity;
-using System.Collections.Generic;
-using TauManager.Models;
 using System.Threading.Tasks;
-using TauManager.ViewModels;
 using TauManager.BusinessLogic;
 
 namespace TauManager.Controllers
 {
     [AuthorizeRoles(ApplicationRoleManager.Administrator, ApplicationRoleManager.Leader, ApplicationRoleManager.Officer)]
-    public class UsersController : Controller
+    public class UsersController : SyndicateControllerBase
     {
         private IUserLogic _userLogic { get; set; }
-        public UsersController(IUserLogic userLogic)
+        public UsersController(IUserLogic userLogic, ApplicationIdentityUserManager userManager, ISyndicateLogic syndicateLogic): base(syndicateLogic, userManager)
         {
             _userLogic = userLogic;
         }
 
         public async Task<IActionResult> Index()
         {
-            var model = await _userLogic.GetUserList(User);
+            var syndicate = await GetSyndicate();
+            var model = await _userLogic.GetUserList(User, syndicate);
             return View(model);
         }
 
@@ -38,7 +33,7 @@ namespace TauManager.Controllers
 
         public async Task<IActionResult> SetPlayer(string userId, int playerId)
         {
-            var result = await _userLogic.SetUserPlayerAssociation(userId, playerId);
+            var result = await _userLogic.SetUserPlayerAssociation(User, userId, playerId);
             if (!result) return Conflict();
             return Ok();
         }
@@ -48,6 +43,22 @@ namespace TauManager.Controllers
             var result = await _userLogic.SetUserActive(User, userId, status);
             if (!result) return Conflict();
             return Ok();
+        }
+
+        [AuthorizeRoles(ApplicationRoleManager.MultiSyndicate)]
+        public async Task<IActionResult> SetSyndicateOverride(int? syndicateId)
+        {
+            var result = await _userLogic.SetSyndicateOverride(User, syndicateId);
+            if (!result) return Conflict();
+            return Ok();
+        }
+
+        [AuthorizeRoles(ApplicationRoleManager.Administrator)]
+        public async Task<IActionResult> ResetPassword(string userId)
+        {
+            var newPassword = await _userLogic.ResetPassword(userId);
+            if (newPassword == null) return Conflict();
+            return Json(new { newPassword = newPassword });
         }
     }
 }

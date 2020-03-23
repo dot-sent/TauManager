@@ -1,22 +1,59 @@
-﻿@model TauManager.ViewModels.SyndicateMetricsViewModel
+﻿@model TauManager.ViewModels.HomePageViewModel
 @{
     ViewData["Title"] = "[TAU] syndicate homepage";
 }
 
-@if (User.Identity.IsAuthenticated){
+@if (User.Identity.IsAuthenticated)
+{
+@if (Model.Announcements != null && Model.Announcements.Count() > 0)
+{
+@foreach(var announcement in Model.Announcements)
+{
+<div class="row">
+    <div class="col-md-12 alert alert-@(announcement.Style.ToString().ToLower())">
+        Message from <b>@(announcement.FromId.HasValue ? announcement.From.Name : "System")</b>:<br/>
+        @announcement.Text
+    </div>
+</div>
+}
+}
+
 <div class="text-center">
     <h2>Welcome, @(User.Identity.Name)!</h2>
     <p>
-        What enemy do you want to smash today?
+        What enemy do you want to smash today? <a asp-controller="Campaigns" asp-action="Index">All of them!</a>
     </p>
 </div>
-<div class="text-center">
-    <h3>Syndicate metrics</h3>
+if (@Model.Metrics != null)
+{
+<div class="card mb-3">
+    <div class="card-header text-center">
+        <h3>Syndicate metrics</h3>
+    </div>
+    <div class="card-body">
+        @await Html.PartialAsync("_SyndicateSummaryPartial", Model.Metrics)
+    </div>
 </div>
-@await Html.PartialAsync("_SyndicateSummaryPartial", Model);
+
+<div class="card mb-3">
+    <div class="card-header text-center">
+        <h3>Personal graphs</h3>
+    </div>
+    <div class="card-body">
+        @await Html.PartialAsync("_PlayerGraphPartial")
+    </div>
+</div>
+        @section Scripts
+        {
+            @await Html.PartialAsync("_PlayerGraphPartialScripts", new TauManager.ViewModels.PlayerChartParamsViewModel{
+                Player = Model.Metrics.PlayerToCompare,
+                UseManagementUrl = false
+            })
+        }
+    }
 } else {
 <div class="text-center">
-    <h2>Welcome [TAU] members!</h2>
+    <h2>Welcome [TAU] and [TTU] members!</h2>
     <p>
         If you have an account, please <a id="login" asp-area="Identity" asp-page="/Account/Login">login</a>.
     </p>

@@ -1,0 +1,173 @@
+@model TauManager.Models.MarketAd
+
+@{
+    ViewData["Title"] = "Editing ad - Syndicate Market";
+}
+
+<div class="container bg-dark text-white border rounded p-2">
+    <div class="row">
+        <div class="col-md-12">
+            <h3 class="text-center">@(Model == null ? "Creating" : Model.Id == 0 ? "Creating": "Editing") a Market Ad</h3>
+            <div class="bg-secondary text-white border rounded p-2 m-1">
+                <h5>Preview:</h5>
+                <span id="span_ad_preview"><i>No ad preview available</i></span>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <ul class="nav nav-pills nav-green mb-3" id="adTabs" role="tablist">
+                <li class="nav-item p-1">
+                    <a class="nav-link active" id="adtype-tab" data-toggle="pill" href="#adtype" role="tab" aria-controls="adtype" aria-selected="true">I want to</a>
+                </li>
+                <li class="nav-item p-1">
+                    <a class="nav-link" id="offer-tab" data-toggle="pill" href="#offer" role="tab" aria-controls="offer" aria-selected="false">I offer</a>
+                </li>
+                <li class="nav-item p-1">
+                    <a class="nav-link" id="request-tab" data-toggle="pill" href="#request" role="tab" aria-controls="request" aria-selected="false">I request</a>
+                </li>
+            </ul>
+            <div class="tab-content p-2" id="myTabContent">
+                <div class="tab-pane fade show active" id="adtype" role="tabpanel" aria-labelledby="adtype-tab">
+                    <div class="control-group mb-2">
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input preview-trigger" type="radio" id="adType_radio_sell" name="adType" data-preview="sell" value="0"/>
+                            <label class="form-check-label" for="adType_radio_sell">Sell</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input preview-trigger" type="radio" id="adType_radio_buy" name="adType" data-preview="buy" value="1"/>
+                            <label class="form-check-label" for="adType_radio_buy">Buy</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input preview-trigger" type="radio" id="adType_radio_lend" name="adType" data-preview="lend" value="2"/>
+                            <label class="form-check-label" for="adType_radio_lend">Lend</label>
+                        </div>
+                    </div>
+                    <div>
+                        <button class="btn btn-primary btn-switch-tab" data-next-tab='#offer-tab' id="button_adtype_next" >Next step <i class="fas fa-arrow-right"></i></button>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="offer" role="tabpanel" aria-labelledby="offer-tab">
+                    <div class="control-group mb-2">
+                        <div class="form-check">
+                            <input class="form-check-input preview-trigger" type="radio" id="offer_type_radio_nothing" name="offerType" data-preview="free/nothing" value="1"/>
+                            <label class="form-check-label" for="offer_type_radio_nothing"> Nothing (looking for a freebie)</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input preview-trigger" type="radio" id="offer_type_radio_bid" name="offerType" data-preview="any price (bid)" value="2"/>
+                            <label class="form-check-label" for="offer_type_radio_bid"> Bid (name your price)</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input preview-trigger" type="radio" id="offer_type_radio_specific" name="offerType" data-preview="" value="0"/>
+                            <label class="form-check-label" for="offer_type_radio_specific"> Something specific, namely:</label>
+                            <div class="control-group">
+                                <div class="form-check">
+                                    <input class="form-check-input preview-trigger" type="checkbox" id="offer_specific_credits" name="offerSpecificCredits"/>
+                                    <label class="form-check-label"><input class="form-control-sm preview-trigger" type="text" name="offerSpecificCreditsAmount" id="offer_specific_credits_amount" placeholder="0"/> credit(s)</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input preview-trigger" type="checkbox" id="offer_specific_items" name="offerSpecificItems"/>
+                                    <label class="form-check-label">Item: <input class="form-control-sm preview-trigger" type="text" name="offerSpecificItemURL" id="offer_specific_item_url" placeholder="TauHead URL"/> x <input class="form-control-sm preview-trigger" type="text" name="offerSpecificItemQuantity" id="offer_specific_item_quantity" placeholder="1"/></label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <button class="btn btn-primary btn-switch-tab" data-next-tab='#adtype-tab' id="button_offer_prev" ><i class="fas fa-arrow-left"></i> Previous step</button>
+                        <button class="btn btn-primary btn-switch-tab" data-next-tab='#request-tab' id="button_offer_next" >Next step <i class="fas fa-arrow-right"></i></button>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="request" role="tabpanel" aria-labelledby="request-tab">
+                    <div class="control-group mb-2">
+                        <div class="form-check">
+                            <input class="form-check-input preview-trigger" type="radio" id="request_type_radio_nothing" name="requestType" data-preview="Nothing" value="1"/>
+                            <label class="form-check-label" for="request_type_radio_nothing">Nothing (giving away)</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input preview-trigger" type="radio" id="request_type_radio_bid" name="requestType" value="2"/>
+                            <label class="form-check-label" for="request_type_radio_bid">Bid (make me an offer)</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input preview-trigger" type="radio" id="request_type_radio_specific" name="requestType" value="0"/>
+                            <label class="form-check-label" for="request_type_radio_specific">Something specific, namely:</label>
+                            <div class="control-group">
+                                <div class="form-check">
+                                    <input class="form-check-input preview-trigger" type="checkbox" id="request_specific_credits" name="requestSpecificCredits"/>
+                                    <label class="form-check-label"><input class="form-control-sm preview-trigger" type="text" name="requestSpecificCreditsAmount" id="request_specific_credits_amount" placeholder="0"/> credit(s)</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input preview-trigger" type="checkbox" id="request_specific_items" name="requestSpecificItems"/>
+                                    <label class="form-check-label">Item: <input class="form-control-sm preview-trigger" type="text" name="requestSpecificItemURL" id="request_specific_item_url" placeholder="TauHead URL"/> x <input class="form-control-sm preview-trigger" type="text" name="requestSpecificItemQuantity" id="request_specific_item_quantity" placeholder="1"/></label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <button class="btn btn-primary btn-switch-tab" data-next-tab='#offer-tab' id="button_request_prev" ><i class="fas fa-arrow-left"></i> Previous step</button>
+                        <button class="btn btn-success" id="button_submit_ad">Place ad</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts
+{
+    <script type="text/javascript">
+        $('.btn-switch-tab').click(function(evt) {
+            evt.preventDefault();
+            $($(evt.target).data('next-tab')).tab('show');
+        });
+
+        function updatePreviewText() {
+            var result = "<i>No ad preview available</i>";
+            var $adTypeChecked = $('input[name="adType"]:checked');
+            if ($adTypeChecked.length > 0){
+                result = "I want to <b>" + $adTypeChecked.data('preview') + '</b> ';
+                var offerText = "?";
+                var requestText = "?";
+                var $offerTypeChecked = $('input[name="offerType"]:checked');
+                if ($offerTypeChecked.length > 0){
+                    offerText = $offerTypeChecked.data('preview');
+                    if ($offerTypeChecked.val() == 0) {
+                        if ($('#offer_specific_credits').prop('checked')) {
+                            offerText = $('#offer_specific_credits_amount').val() + ' credit(s)';
+                            if ($('#offer_specific_items').prop('checked')) {
+                                offerText += ' and ' + $('#offer_specific_item_url').val() + ' x' + $('#offer_specific_item_quantity').val();
+                            }
+                        } else if ($('#offer_specific_items').prop('checked')) {
+                            offerText = $('#offer_specific_item_url').val() + ' x' + $('#offer_specific_item_quantity').val();
+                        }
+                    }
+                }
+                var $requestTypeChecked = $('input[name="requestType"]:checked');
+                if ($requestTypeChecked.length > 0){
+                    requestText = $requestTypeChecked.data('preview');
+                    if ($requestTypeChecked.val() == 0) {
+                        if ($('#request_specific_credits').prop('checked')) {
+                            requestText = $('#request_specific_credits_amount').val() + ' credit(s)';
+                            if ($('#request_specific_items').prop('checked')) {
+                                offerText += ' and ' + $('#request_specific_item_url').val() + ' x' + $('#request_specific_item_quantity').val();
+                            }
+                        } else if ($('#request_specific_items').prop('checked')) {
+                            requestText = $('#request_specific_item_url').val() + ' x' + $('#request_specific_item_quantity').val();
+                        }
+                    }
+                }
+                if ($adTypeChecked.val() == 1) {
+                    result +=  "<b>" + requestText + "</b> for <b>" + offerText + "</b>";
+                } else {
+                    result +=  "<b>" + offerText + "</b> for <b>" + requestText + "</b>";
+                }
+            }
+            $('#span_ad_preview').html(result);
+        }
+
+        updatePreviewText();
+        $('.preview-trigger').change(updatePreviewText);
+        $('#button_submit_ad').click(function(evt, target) {
+            
+        });
+    </script>
+}

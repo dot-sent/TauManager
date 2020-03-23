@@ -1,0 +1,250 @@
+@model TauManager.ViewModels.PlayerAdsViewModel
+
+@using System
+
+@{
+    ViewData["Title"] = "My ads - Syndicate Market";
+}
+
+<div class="float-left pl-3"><a asp-action="Index" class="btn btn-primary">Back to Market</a></div>
+<div class="text-center">
+    <h3>Your ads <button id="button_add_ad" class="btn btn-success btn-sm">Add</button></h3>
+</div>
+
+<div class="text-center m-2">
+    <form class="form" action="ImportMarketCSV" method="POST" enctype="multipart/form-data">
+        <input type="file" name="inputFile" accept=".csv,text/csv" />
+        <input type="submit" value="Upload CSV"/>
+    </form>
+</div>
+
+@if(!String.IsNullOrWhiteSpace(Model.Messages))
+{
+<div class="w-100 m-2">
+    <h5 class="text-center">Import results:</h5>
+    <div style="white-space: pre-line;">@Model.Messages</div>
+</div>
+}
+
+<div class="container table-responsive">
+    <table class="table table-bordered table-striped mb-1">
+        <thead>
+            <tr>
+                <th>Type</th>
+                <th>Description (optional)</th>
+                <th>Offer</th>
+                <th>Ask</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="tbody_ads_list">
+            <tr class="table-success d-none" data-id="0" id="tr_new_ad_template">
+                <td>
+                    <span class="view-control d-none" data-name="adType" data-value="0"></span>
+                    <select class="edit-control" data-name="adType">
+                        <!option value="0" data-display="Sell" selected>Sell</!option>
+                        <!option value="1" data-display="Buy">Buy</!option>
+                        <!option value="2" data-display="Lend">Lend</!option>
+                    </select>
+                </td>
+                <td>
+                    <div class="edit-control text-secondary">Freeform description</div>
+                    <span class="view-control d-none" data-name="description"></span>
+                    <input class="edit-control" data-name="description" value="" />
+                </td>
+                <td>
+                    <div class="edit-hint edit-hint-0 text-secondary">What do you want to sell?</div>
+                    <div class="edit-hint edit-hint-1 d-none text-secondary">What are you willing to pay?</div>
+                    <div class="edit-hint edit-hint-2 d-none text-secondary">What do you want to lend?</div>
+                    <span class="view-control d-none" data-name="offer"></span>
+                    <input class="edit-control" data-name="offer" value="" />
+                </td>
+                <td>
+                    <div class="edit-hint edit-hint-0 text-secondary">How much do you want to get?</div>
+                    <div class="edit-hint edit-hint-1 d-none text-secondary">What do you want to buy?</div>
+                    <div class="edit-hint edit-hint-2 d-none text-secondary">How much do you want to get?</div>
+                    <span class="view-control d-none" data-name="request"></span>
+                    <input class="edit-control" data-name="request" value="" />
+                </td>
+                <td>
+                    <input type="hidden" class="edit-control" data-name="id" value="0"/>
+                    <input type="hidden" class="edit-control" data-name="active" value="true"/>
+                    <button class="btn btn-primary view-control btn-sm button-edit d-none">Edit</button>
+                    <button class="btn btn-secondary view-control btn-sm button-deactivate d-none">Deactivate</button>
+                    <button class="btn btn-success view-control btn-sm button-activate d-none">Activate</button>
+                    <button class="btn btn-danger view-control btn-sm button-delete d-none">Delete</button>
+                    <button class="btn btn-success btn-sm edit-control button-save">Save</button>
+                    <button class="btn btn-secondary btn-sm edit-control button-cancel" button-cancel>Cancel</button>
+                </td>
+            </tr>
+        @foreach (var ad in Model.Ads.OrderByDescending(ad => ad.PlacementDate))
+        {
+            <tr class="@(ad.Active ? "table-success" : "table-secondary")" data-id="@ad.Id">
+                <td>
+                    <span class="view-control" data-name="adType" data-value="@((int)ad.Type)">@ad.Type</span>
+                    <select class="edit-control d-none" data-name="adType">
+                        <!option value="0" data-display="Sell"@(ad.Type == MarketAd.AdType.Sell ? "selected" : "")>Sell</!option>
+                        <!option value="1" data-display="Buy"@(ad.Type == MarketAd.AdType.Buy ? "selected" : "")>Buy</!option>
+                        <!option value="2" data-display="Lend"@(ad.Type == MarketAd.AdType.Lend ? "selected" : "")>Lend</!option>
+                    </select>
+                </td>
+                <td>
+                    <div class="edit-control d-none text-secondary">Freeform description</div>
+                    <span class="view-control" data-name="description">@ad.Description</span>
+                    <input class="edit-control d-none" data-name="description" value="@ad.Description" />
+                </td>
+                <td>
+                    <div class="edit-hint edit-hint-0 d-none text-secondary">What do you want to sell?</div>
+                    <div class="edit-hint edit-hint-1 d-none text-secondary">What are you willing to pay?</div>
+                    <div class="edit-hint edit-hint-2 d-none text-secondary">What do you want to lend?</div>
+                    <span class="view-control" data-name="offer">@ad.OfferString</span>
+                    <input class="edit-control d-none" data-name="offer" value="@ad.OfferString" />
+                </td>
+                <td>
+                    <div class="edit-hint edit-hint-0 d-none text-secondary">How much do you want to get?</div>
+                    <div class="edit-hint edit-hint-1 d-none text-secondary">What do you want to buy?</div>
+                    <div class="edit-hint edit-hint-2 d-none text-secondary">How much do you want to get?</div>
+                    <span class="view-control" data-name="request">@ad.RequestString</span>
+                    <input class="edit-control d-none" data-name="request" value="@ad.RequestString" />
+                </td>
+                <td>
+                    <input type="hidden" class="edit-control" data-name="id" value="@ad.Id"/>
+                    <input type="hidden" class="edit-control" data-name="active" value="@(ad.Active.ToString())"/>
+                    <button class="btn btn-primary view-control btn-sm button-edit">Edit</button>
+                    <button class="btn btn-secondary view-control btn-sm button-deactivate@(ad.Active ? "" : " d-none")">Deactivate</button>
+                    <button class="btn btn-success view-control btn-sm button-activate@(ad.Active ? " d-none" : "")">Activate</button>
+                    <button class="btn btn-danger view-control btn-sm button-delete">Delete</button>
+                    <button class="btn btn-success btn-sm d-none edit-control button-save">Save</button>
+                    <button class="btn btn-secondary btn-sm d-none edit-control button-cancel" button-cancel>Cancel</button>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts
+{
+<script type="text/javascript">
+    function onSave(evt) {
+        var $button = $(evt.target);
+        var $parent_tr = $button.parents('tr');
+        var data = {};
+        $parent_tr.find('.edit-control[data-name]').each(function(ix, el) {
+            data[$(el).data('name')] = $(el).val();
+        });
+        $.post('/Market/EditAd', data, function(data) {
+            if (data.result) {
+                $parent_tr.find('.view-control[data-name]').each(function(ix, el) {
+                    var $editControl = $(el).next('.edit-control');
+                    var displayText = $editControl.find('option:selected').data('display');
+                    $(el).text(displayText != undefined && displayText != '' ? displayText : $editControl.val());
+                });
+                $parent_tr.find('.view-control, .edit-control').toggleClass('d-none');
+                $parent_tr.find('.edit-hint').addClass('d-none');
+                var active = ($parent_tr.find('.edit-control[data-name="active"]').val().toLowerCase() == 'true');
+                if (active) {
+                    $parent_tr.find('.button-deactivate').removeClass('d-none');
+                    $parent_tr.find('.button-activate').addClass('d-none');
+                } else {
+                    $parent_tr.find('.button-activate').removeClass('d-none');
+                    $parent_tr.find('.button-deactivate').addClass('d-none');
+                }
+                $parent_tr.find('.edit-control[data-name="id"]').val(data.id);
+                $parent_tr.find('.button-cancel').off('click').on('click', onCancel);
+            } else {
+                alert("Error editing ad: " + data.message);
+            }
+        })
+    }
+
+    function onEdit(evt) {
+        var $button = $(evt.target);
+        var $parent_tr = $button.parents('tr');
+        $parent_tr.find('.view-control, .edit-control').toggleClass('d-none');
+        $parent_tr.find('.button-deactivate, .button-activate').addClass('d-none');
+        $parent_tr.find('.edit-hint').addClass('d-none');
+        var $control = $parent_tr.find('.edit-control[data-name="adType"]');
+        $parent_tr.find('.edit-hint-' + $control.val()).removeClass('d-none');
+    }
+
+    function onCancel(evt) {
+        var $button = $(evt.target);
+        var $parent_tr = $button.parents('tr');
+        $parent_tr.find('.view-control, .edit-control').toggleClass('d-none');
+        $parent_tr.find('.edit-hint').addClass('d-none');
+        $parent_tr.find('.view-control[data-name]').each(function(ix, el) {
+            var value = $(el).data('value') == undefined ? $(el).text() : $(el).data('value');
+            $(el).next('.edit-control').val(value);
+        });
+        var active = ($parent_tr.find('.edit-control[data-name="active"]').val().toLowerCase() == 'true');
+        if (active) {
+            $parent_tr.find('.button-deactivate').removeClass('d-none');
+            $parent_tr.find('.button-activate').addClass('d-none');
+        } else {
+            $parent_tr.find('.button-activate').removeClass('d-none');
+            $parent_tr.find('.button-deactivate').addClass('d-none');
+        }
+    }
+
+    function onActivateToggle(evt) {
+        var $button = $(evt.target);
+        var $parent_tr = $button.parents('tr');
+        var id = $parent_tr.find('.edit-control[data-name="id"]').val();
+        var newActive = ($parent_tr.find('.edit-control[data-name="active"]').val().toLowerCase() == 'false');
+        $.post('/Market/SetAdActive', { id : id, active: newActive},
+            function(data) {
+                if (data.result) {
+                    $parent_tr.find('.edit-control[data-name="active"]').val(newActive);
+                    $parent_tr.toggleClass('table-success');
+                    $parent_tr.toggleClass('table-secondary');
+                    $parent_tr.find('.button-activate, .button-deactivate').toggleClass('d-none');
+                } else {
+                    alert("Error (de)activating an ad: " + data.message);
+                }
+            });
+    }
+
+    function onRemove(evt) {
+        var $button = $(evt.target);
+        var $parent_tr = $button.parents('tr');
+        var id = $parent_tr.find('.edit-control[data-name="id"]').val();
+        $.post('/Market/RemoveAd', {id: id}, 
+            function(data) {
+                if (data.result) {
+                    $parent_tr.remove();
+                } else {
+                    alert("Error deleting ad: " + data.message);
+                }
+            });
+    }
+
+    function displayHints(evt) {
+        var $control = $(evt.target);
+        var $parent_tr = $control.parents('tr');
+        $parent_tr.find('.edit-hint').addClass('d-none');
+        $parent_tr.find('.edit-hint-' + $control.val()).removeClass('d-none');
+    }
+
+    $('.button-edit').click(onEdit);
+    $('.button-cancel').click(onCancel);
+    $('.button-save').click(onSave);
+    $('.button-activate, .button-deactivate').click(onActivateToggle);
+    $('.button-delete').click(onRemove);
+    $('.edit-control[data-name="adType"]').change(displayHints);
+    $('#button_add_ad').click(function(evt) {
+        var $new_tr = $('#tr_new_ad_template').clone();
+        $new_tr.attr('id', '');
+        $new_tr.removeClass('d-none');
+        $new_tr.find('.button-save').click(onSave);
+        $new_tr.find('.button-edit').click(onEdit);
+        $new_tr.find('.button-activate, .button-deactivate').click(onActivateToggle);
+        $new_tr.find('.button-delete').click(onRemove);
+        $new_tr.find('.button-cancel').click(function(evt){
+            $(evt.target).parents('tr').remove();
+        });
+        $new_tr.find('.edit-control[data-name="adType"]').change(displayHints);
+        $('#tbody_ads_list').prepend($new_tr);
+    });
+</script>
+}

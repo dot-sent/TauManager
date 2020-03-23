@@ -3,47 +3,61 @@
 <div class="text-center">
     <h2>Current users</h2>
 </div>
-
-<table class="table table-condensed table-striped">
-    <thead>
-        <tr>
-            <td>UserName</td>
-            <td>Associated player</td>
-            <td>Roles</td>
-            <td>Active?</td>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var userModel in Model.Users)
-{
-        <tr>
-            <td>@(userModel.User.UserName)</td>
-            <td>
-                <select class="sel-user-player" data-user-id="@userModel.User.Id" id="sel_player_@(userModel.User.NormalizedUserName)">
-                    <!option value="0"@(userModel.User.PlayerId == 0 ? " selected" : "")>--Unassigned--</!option>
-                @foreach (var player in Model.Players)
-                {
-                    <!option value="@player.Id"@(userModel.User.PlayerId == player.Id ? " selected" : "")>@player.Name</!option>
-                }
-                </select>
-            </td>
-            <td>
-                @foreach (var role in Model.Roles.Keys)
-                {
-                    <div>
-                        <input type="checkbox" class="cb-user-role" data-user-id="@userModel.User.Id" data-role-name="@role" id="cb_@(userModel.User.NormalizedUserName + role)"@(userModel.Roles[role] ? " checked" : "")@(Model.Roles[role] ? "" : " disabled")>
-                        <label for="cb_@(userModel.User.NormalizedUserName + role)">@(role)</label>
+<div class="table-responsive">
+    <table class="table table-condensed table-striped">
+        <thead>
+            <tr>
+                <td>UserName</td>
+                <td>Associated player</td>
+                <td>Roles</td>
+                <td>Active?</td>
+    @if(User.IsInRole(TauManager.Areas.Identity.Data.ApplicationRoleManager.Administrator))  
+    {
+                <td>Password reset</td>
+    }
+            </tr>
+        </thead>
+        <tbody>
+    @foreach (var userModel in Model.Users)
+    {
+            <tr>
+                <td>@(userModel.User.UserName)</td>
+                <td>
+                    <select class="sel-user-player" data-user-id="@userModel.User.Id" id="sel_player_@(userModel.User.NormalizedUserName)">
+                        <!option value="0"@(userModel.User.PlayerId == 0 ? " selected" : "")>--Unassigned--</!option>
+                    @foreach (var player in Model.Players)
+                    {
+                        <!option value="@player.Id"@(userModel.User.PlayerId == player.Id ? " selected" : "")>@player.Name</!option>
+                    }
+                    </select>
+                </td>
+                <td>
+                    @foreach (var role in Model.Roles.Keys)
+                    {
+                        <div>
+                            <input type="checkbox" class="cb-user-role" data-user-id="@userModel.User.Id" data-role-name="@role" id="cb_@(userModel.User.NormalizedUserName + role)"@(userModel.Roles[role] ? " checked" : "")@(Model.Roles[role] ? "" : " disabled")>
+                            <label for="cb_@(userModel.User.NormalizedUserName + role)">@(role)</label>
+                        </div>
+                    }
+                </td>
+                <td>
+                    <input type="checkbox" class="cb-user-active" data-user-id="@userModel.User.Id" id="cbactive_@(userModel.User.NormalizedUserName)"@(userModel.User.IsApproved ? " checked" : "")@(userModel.AllowActivation ? "" : " disabled")>
+                </td>
+        @if(User.IsInRole(TauManager.Areas.Identity.Data.ApplicationRoleManager.Administrator))  
+        {
+                <td>
+                    <a class="link-reset-pw-ui-trigger" href="#">Reset password</a>
+                    <div class="d-none">
+                        <div></div>
+                        <a class="link-reset-pw btn btn-danger" data-user-id="@userModel.User.Id" href="#">Reset password for @(userModel.User.UserName)?</a>
                     </div>
-                }
-            </td>
-            <td>
-                <input type="checkbox" class="cb-user-active" data-user-id="@userModel.User.Id" id="cbactive_@(userModel.User.NormalizedUserName)"@(userModel.User.IsApproved ? " checked" : "")@(userModel.AllowActivation ? "" : " disabled")>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
-
+                </td>
+        }
+            </tr>
+    }
+        </tbody>
+    </table>
+</div>
 @section Scripts {
     <script type="text/javascript">
         configureControlPostback('.cb-user-role', '/Users/ChangeRole', 
@@ -65,5 +79,32 @@
                 status : '#checked'
             }
         );
+        $(function() {
+            $('.link-reset-pw-ui-trigger').click(function(evt){
+                $(evt.target).next().toggleClass('d-none');
+            });
+            $('.link-reset-pw').click(function(evt){
+                var $link = $(evt.target);
+                var userId = $link.data('user-id');
+                var $span = $link.prev('div');
+                $span.empty();
+                $.ajax({
+                    url: '/Users/ResetPassword',
+                    method: 'POST',
+                    cache: false,
+                    data: {
+                        userId : userId
+                    },
+                    success: function(data) {
+                        $span.addClass('text-success');
+                        $span.append('Success! New password: <b>' + data.newPassword + '</b>');
+                    },
+                    error: function(jqXHR, textStatus, errorThrown){
+                        $span.addClass('text-danger');
+                        $span.append('Error! Status message: ' + textStatus + ', error: ' + errorThrown);
+                    }
+                });
+            });
+        });
     </script>
 }

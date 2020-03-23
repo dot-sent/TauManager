@@ -3,6 +3,7 @@ using TauManager.Models;
 
 namespace TauManager.ViewModels
 {
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     public class UserListViewModel
     {
         public IEnumerable<UserViewModel> Users { get; set; }

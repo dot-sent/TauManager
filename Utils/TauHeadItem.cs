@@ -2,6 +2,7 @@ using System.Collections.Generic;
 
 namespace TauManager.Utils
 {
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     public class TauHeadItem
     {
         public class ItemComponentArmor

@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel;
 using System.Globalization;
 using System.Data;
@@ -7,10 +8,13 @@ using System.ComponentModel.DataAnnotations;
 
 namespace TauManager.Models
 {
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     public class Player
     {
         public int Id { get; set; }
         public string Name { get; set; }
+        public int? SyndicateId { get; set; }
+        public virtual Syndicate Syndicate { get; set; }
         [DefaultValue(true)]
         public bool Active { get; set; }
         [DisplayFormat(DataFormatString = "{0:N3}")]
@@ -48,6 +52,60 @@ namespace TauManager.Models
                 return LastUpdate.ToString("yyyy-MM-dd");
             }
         }
+        public DateTime? UniCourseDate { get; set; }
+        public bool UniCourseActive
+        { 
+            get
+            {
+                return UniCourseDate.HasValue ?
+                    UniCourseDate.Value.Date >= DateTime.Today :
+                    false;
+            }
+        }
+        public string UniCourseDateString { 
+            get
+            {
+                if (!UniCourseDate.HasValue) return "No data";
+                var diff = DateTime.Today - UniCourseDate.Value;
+                if (diff.Days >= 7) return UniCourseDate.Value.ToString("yyyy-MM-dd");
+                if (diff.Days > 1 && diff.Days < 7) return "Last week";
+                if (diff.Days == 1) return "Yesterday";
+                if (diff.Days == 0) return "Due today";
+                if (diff.Days == -1) return "Due tomorrow";
+                return String.Format("Due in {0} days", 0-diff.Days);
+            }
+        }
+        public DateTime? GauleVisaExpiry { get; set; }
+        public bool GauleVisaExpired { 
+            get
+            {
+                return GauleVisaExpiry.HasValue ? 
+                    GauleVisaExpiry < DateTime.Now :
+                    true;
+            }
+        }
+        public bool GauleVisaExpiring {
+            get
+            {
+                return GauleVisaExpiry.HasValue ? 
+                    GauleVisaExpiry <= DateTime.Now.AddDays(3) :
+                    false;
+            }
+        }
+        public string GauleVisaExpiryString {
+            get
+            {
+                if (!GauleVisaExpiry.HasValue) return "Player never had a visa";
+                var diff = DateTime.Today - GauleVisaExpiry.Value;
+                if (diff.Days >= 7) return GauleVisaExpiry.Value.ToString("yyyy-MM-dd");
+                if (diff.Days > 1 && diff.Days < 7) return "last week";
+                if (diff.Days == 1) return "yesterday";
+                if (diff.Days == 0) return "expires today";
+                if (diff.Days == -1) return "expires tomorrow";
+                return String.Format("expires in {0} days", 0-diff.Days);
+            }
+        }
+
         public virtual ICollection<PlayerHistory> History { get; set; }
 
         public void Update(PlayerHistory p)
@@ -81,6 +139,22 @@ namespace TauManager.Models
             }
         }
 
+        public string LevelString 
+        { 
+            get
+            {
+                var intPart = (int)Math.Floor(Level);
+                var fracPart = Level - intPart;
+                return intPart.ToString() + "@" + fracPart.ToString("#0.0%");
+            }
+        }
+
         public virtual IEnumerable<CampaignAttendance> Attendance { get; set; }
+        public virtual IEnumerable<PlayerSkill> PlayerSkills { get; set; }
+        [InverseProperty(nameof(LootRequest.RequestedFor))]
+        public virtual IEnumerable<LootRequest> LootRequests { get; set; }
+        // [InverseProperty("RequestedById")]
+        // public virtual IEnumerable<LootRequest> LootRequestsForOthers { get; set; }
+        public virtual IEnumerable<CampaignLoot> HeldCampaignLoot { get; set; }
     }
 }

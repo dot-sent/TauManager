@@ -2,6 +2,7 @@
 
 namespace TauManager.Migrations
 {
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     public partial class AddUserIsApprovedFlag : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)

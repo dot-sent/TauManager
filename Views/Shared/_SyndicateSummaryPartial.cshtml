@@ -1,6 +1,6 @@
 @model TauManager.ViewModels.SyndicateMetricsViewModel
 <div class="row">
-    <div class="col-md-4">
+    <div class="col-md-4 table-responsive">
         <div class="text-center">
             <h4>Count by stats total</h4>
         </div>
@@ -12,17 +12,20 @@
                 </tr>
             </thead>
             <tbody class="text-right">
-            @foreach (var statCategory in Model.PlayerCountByStatTotal.Keys)
+            @foreach (var statCategory in Model.PlayerCountByStatTotal.Keys.Reverse())
             {
-                <tr>
+                var highlight = Model.PlayerToCompare != null && 
+                    Model.PlayerToCompare.StatTotal >= statCategory.Key &&
+                    Model.PlayerToCompare.StatTotal < statCategory.Value;
+                <tr class="@(highlight ? "text-success font-weight-bold" : "")">
                     <td>@statCategory</td>
-                    <td>@Model.PlayerCountByStatTotal[statCategory]</td>
+                    <td>@(highlight ? (Model.PlayerCountByStatTotal[statCategory] - 1).ToString() + " + you" : Model.PlayerCountByStatTotal[statCategory].ToString())</td>
                 </tr>
             }
             </tbody>
         </table>
     </div>
-    <div class="col-md-8">
+    <div class="col-md-8 table-responsive">
         <div class="text-center">
             <h4>Averages by player tier</h4>
         </div>

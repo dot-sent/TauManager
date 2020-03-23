@@ -2,6 +2,7 @@
 
 namespace TauManager.Migrations.TauDb
 {
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     public partial class RenamedItemUrlToSlug : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)

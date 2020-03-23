@@ -1,0 +1,85 @@
+@model TauManager.ViewModels.SyndicatePlayerViewModel
+@{
+    ViewData["Title"] = "Syndicate-player assignment";
+}
+
+<div class="row">
+    <div class="col-md-12 table-responsive">
+        <div class="text-center">
+            <h2>Player-syndicate assignment</h2>
+        </div>
+        <table id="table_users" class="table table-striped table-bordered">
+            <thead>
+                <tr>
+                    <th>Player</th>
+                    <th>Set syndicate</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach(var syndicateId in Model.SyndicatePlayers.Keys)
+            {
+                @foreach (var player in Model.SyndicatePlayers[syndicateId])
+                {
+                <tr>
+                    <td>@player.Name</td>
+                    <td>
+                        <div class="input-group player-syndicate-input-group" id="div_player_syndicate_@(player.Id)" data-player-id="@(player.Id)">
+                            <label class="form-control @(player.SyndicateId.HasValue ? "": " active")">
+                                <input type="radio" class="radio-player-syndicate" name="radio_player_syndicate_@(player.Id)" value="0"@(player.SyndicateId.HasValue ? "" : " checked")> &lt;Not set&gt;
+                            </label>
+                        @foreach (var syndicate in Model.AllSyndicates)
+                        {
+                            bool checkedValue = (player.SyndicateId == syndicate.Id);
+                            <label class="form-control @(checkedValue ? " active" : "")">
+                                <input type="radio" class="radio-player-syndicate" name="radio_player_syndicate_@(player.Id)" value="@(syndicate.Id)"@(checkedValue ? " checked" : "")> @(syndicate.Tag)
+                            </label>
+                        }
+                        </div>
+                    </td>
+                </tr>
+                }
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts
+{
+    <script type="text/javascript">
+        $(function() {
+            const feedbackHtml = '\
+                <div class="spinner-border spinner-border-sm text-success d-none" role="status">\
+                    <span class="sr-only">Loading...</span>\
+                </div>\
+                <span class="text-success update-success d-none">&#10003;</span>\
+                <span class="text-error update-error d-none">&#10006;</span>\
+            ';
+            $('.player-syndicate-input-group').after(feedbackHtml);
+            $('.radio-player-syndicate').change(function(evt){
+                var $div = $(evt.target).parent().parent();
+                $div.siblings('.spinner-border').removeClass('d-none');
+                $div.siblings('.update-success').addClass('d-none');
+                $div.siblings('.update-error').addClass('d-none');
+                var playerId = $div.data('player-id');
+                var syndicateId = $(evt.target).val();
+                $.ajax({
+                    method: 'POST',
+                    url: '/Syndicates/SetPlayerSyndicate',
+                    data: {
+                        playerId: playerId,
+                        syndicateId: syndicateId
+                    },
+                    success: function(data){
+                        $div.siblings('.spinner-border').addClass('d-none');
+                        $div.siblings('.update-success').removeClass('d-none');
+                    },
+                    error: function(data){
+                        $div.siblings('.spinner-border').addClass('d-none');
+                        $div.siblings('.update-error').removeClass('d-none');
+                    }
+                })
+            })
+        });
+    </script>
+}

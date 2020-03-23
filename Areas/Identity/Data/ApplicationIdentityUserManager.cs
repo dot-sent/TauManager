@@ -33,5 +33,12 @@ namespace TauManager.Areas.Identity.Data
             if (appUser == null) return null;
             return appUser.PlayerId;
         }
+
+        public async Task<int?> GetSyndicateOverrideAsync(ClaimsPrincipal user)
+        {
+            var appUser = await this.GetUserAsync(user);
+            if (appUser == null) return null;
+            return appUser.SyndicateOverride;
+        }
     }
 }

@@ -12,7 +12,7 @@ using TauManager.Utils;
 namespace TauManager.Controllers
 {
     [Authorize]
-    public class CampaignsController : Controller
+    public class CampaignsController : SyndicateControllerBase
     {
         #region session keys
         private const string KeyIncludeInactive = "LootDistributionList_IncludeInactive";
@@ -22,13 +22,10 @@ namespace TauManager.Controllers
 
         private ICampaignLogic _campaignLogic { get; set; }
         private ILootLogic _lootLogic { get; set; }
-        public ApplicationIdentityUserManager _userManager { get; set; }
-
-        public CampaignsController(ICampaignLogic logic, ILootLogic lootLogic, ApplicationIdentityUserManager userManager)
+        public CampaignsController(ICampaignLogic logic, ILootLogic lootLogic, ApplicationIdentityUserManager userManager, ISyndicateLogic syndicateLogic): base(syndicateLogic, userManager)
         {
             _campaignLogic = logic;
             _lootLogic = lootLogic;
-            _userManager = userManager;
         }
 
         [HttpGet]
@@ -38,32 +35,52 @@ namespace TauManager.Controllers
             var model = _campaignLogic.GetCampaignOverview(
                 playerId ?? 0,
                 true,
-                User.IsInRole(ApplicationRoleManager.Leader) || User.IsInRole(ApplicationRoleManager.Officer));
+                false,
+                User.IsInRole(ApplicationRoleManager.Leader) || User.IsInRole(ApplicationRoleManager.Officer),
+                (await GetSyndicate()).Id);
             return View(model);
         }
 
         [AuthorizeRoles(ApplicationRoleManager.Leader, ApplicationRoleManager.Officer)]
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            var model = _campaignLogic.GetNewCampaign();
+            var model = _campaignLogic.GetNewCampaign((await GetSyndicate()).Id);
             return View("Details", model);
         }
 
-        [AuthorizeRoles(ApplicationRoleManager.Leader, ApplicationRoleManager.Officer)]
-        public IActionResult Details(int id, string alert = null)
+        [Authorize]
+        public async Task<IActionResult> Details(int id, string alert = null)
         {
-            var model = _campaignLogic.GetCampaignById(id, false, true);
+            var user = await _userManager.GetUserAsync(User);
+            var canEdit = _campaignLogic.PlayerCanEditCampaign(await _userManager.GetPlayerIdAsync(User), id) ||
+                await _userManager.IsInRoleAsync(user, ApplicationRoleManager.Officer) ||
+                await _userManager.IsInRoleAsync(user, ApplicationRoleManager.Leader);
+            if (!canEdit) return Forbid();
+            var model = _campaignLogic.GetCampaignById(id, false, true, (await GetSyndicate()).Id);
             if (model == null || model.Campaign == null) return NotFound();
             model.Alert = alert;
             return View(model);
         }
 
+        public async Task<IActionResult> View(int id)
+        {
+            var model = _campaignLogic.GetCampaignById(id, false, false, (await GetSyndicate()).Id);
+            if (model == null || model.Campaign == null) return NotFound();
+            return View(model);
+        }
+
         [HttpPost]
-        [AuthorizeRoles(ApplicationRoleManager.Leader, ApplicationRoleManager.Officer)]
+        [Authorize]
         public async Task<IActionResult> Edit(Campaign model)
         {
+            var user = await _userManager.GetUserAsync(User);
+            var canEdit = _campaignLogic.PlayerCanEditCampaign(await _userManager.GetPlayerIdAsync(User), model.Id) ||
+                await _userManager.IsInRoleAsync(user, ApplicationRoleManager.Officer) ||
+                await _userManager.IsInRoleAsync(user, ApplicationRoleManager.Leader);
+            if (!canEdit) return Forbid();
             var isNew = model.Id == 0;
-            var newModel = await _campaignLogic.CreateOrEditCampaign(model);
+            var newModel = await _campaignLogic.CreateOrEditCampaign(model, (await GetSyndicate()).Id);
+            if (newModel == null) return Forbid();
             return RedirectToAction("Details", new {id = newModel.Id, alert = @"Campaign #" + newModel.Id + " successfully " + (isNew ? "created" : "updated") + "."});
         }
 
@@ -76,18 +93,18 @@ namespace TauManager.Controllers
             return PartialView("_LootCardPartial", model);
         }
 
-        public IActionResult Loot(int[] display = null)
+        public async Task<IActionResult> Loot(int[] display = null)
         {
-            var model = _lootLogic.GetOverview(display);
+            var model = _lootLogic.GetOverview(display, (await GetSyndicate()).Id);
             return View(model);
         }
 
-        public IActionResult LootDistributionList()
+        public async Task<IActionResult> LootDistributionList()
         {
             var id = HttpContext.Session.Get<int?>(KeyCampaignId, null);
-            var includeInactive = HttpContext.Session.Get<bool>(KeyIncludeInactive, true);
+            var includeInactive = HttpContext.Session.Get<bool>(KeyIncludeInactive, false);
             var undistributedLootOnly = HttpContext.Session.Get<bool>(KeyUndistributedLootOnly, true);
-            var model = _lootLogic.GetCurrentDistributionOrder(campaignId: id, includeInactive, undistributedLootOnly);
+            var model = _lootLogic.GetCurrentDistributionOrder(campaignId: id, includeInactive, undistributedLootOnly, (await GetSyndicate()).Id, await _userManager.GetPlayerIdAsync(User));
             return View(model);
         }
 
@@ -135,10 +152,10 @@ namespace TauManager.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> ApplyForLoot(int id, string comments, bool specialOffer)
+        public async Task<IActionResult> ApplyForLoot(int id, string comments, bool specialOffer, bool deleteRequest = false)
         {
             var currentPlayerId = await _userManager.GetPlayerIdAsync(User);
-            var newModel = await _lootLogic.ApplyForLoot(id, currentPlayerId ?? 0, comments, currentPlayerId, specialOffer);
+            var newModel = await _lootLogic.ApplyForLoot(id, currentPlayerId ?? 0, comments, currentPlayerId, specialOffer, deleteRequest);
             return View("LootApplicationStatus", newModel);
         }
 
@@ -163,7 +180,7 @@ namespace TauManager.Controllers
             string fileContents = reader.ReadToEnd();
             reader.Close();
             var model = await _campaignLogic.ParseCampaignPage(fileContents, campaignId);
-            return RedirectToAction("Details", new{ id = campaignId, alert = "Campaign results imported successfully."});
+            return RedirectToAction("Details", new{ id = campaignId, alert = "Campaign results imported successfully. Campaign status set to Completed."});
         }
 
         [HttpPost]
@@ -182,15 +199,49 @@ namespace TauManager.Controllers
             return View();
         }
 
-        [HttpPost]
-        [AuthorizeRoles(ApplicationRoleManager.Administrator)]
-        public async Task<IActionResult> ImportAttendanceCSV(IFormFile csvFile)
+        // [HttpPost]
+        // [AuthorizeRoles(ApplicationRoleManager.Administrator)]
+        // public async Task<IActionResult> ImportAttendanceCSV(IFormFile csvFile)
+        // {
+        //     var reader = new StreamReader(csvFile.OpenReadStream());
+        //     string fileContents = reader.ReadToEnd();
+        //     reader.Close();
+        //     var result = await _campaignLogic.ParseAttendanceCSV(fileContents);
+        //     return View(result);
+        // }
+
+        [HttpGet]
+        [AuthorizeRoles(ApplicationRoleManager.Leader, ApplicationRoleManager.Officer)]
+        public IActionResult GetLootRequestsJson(int id)
         {
-            var reader = new StreamReader(csvFile.OpenReadStream());
-            string fileContents = reader.ReadToEnd();
-            reader.Close();
-            var result = await _campaignLogic.ParseAttendanceCSV(fileContents);
-            return View(result);
+            var model = _lootLogic.GetLootRequestsInfo(id);
+            return Json(model);
+        }
+
+        [HttpPost]
+        [AuthorizeRoles(ApplicationRoleManager.Leader, ApplicationRoleManager.Officer)]
+        public async Task<IActionResult> AwardLoot(int lootId, int? lootRequestId, CampaignLoot.CampaignLootStatus status, bool? lootAvailableToOtherSyndicates)
+        {
+            var result = await _lootLogic.AwardLoot(lootId, lootRequestId, status, lootAvailableToOtherSyndicates);
+            if (!result) return Conflict();
+            return Ok();
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Volunteer(int campaignId)
+        {
+            var playerId = await _userManager.GetPlayerIdAsync(User);
+            var result = await _campaignLogic.VolunteerForCampaign(playerId, campaignId);
+            if (!result) return Conflict();
+            return RedirectToAction("Index");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Leaderboards()
+        {
+            var playerId = await _userManager.GetPlayerIdAsync(User);
+            var model = _campaignLogic.GetLeaderboard(playerId);
+            return View(model);
         }
     }
 }

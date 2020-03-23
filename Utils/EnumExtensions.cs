@@ -17,5 +17,11 @@ namespace TauManager.Utils
             }
             return result;
         }
+
+        public static string ToStringSplit(this Enum thisEnum)
+        {
+            var thisEnumString = thisEnum.ToString();
+            return System.Text.RegularExpressions.Regex.Replace(thisEnumString, "(?<=[a-z])([A-Z])", " $1", System.Text.RegularExpressions.RegexOptions.Compiled).Trim();
+        }
     }
 }

@@ -1,0 +1,104 @@
+@model TauManager.ViewModels.CampaignDetailsViewModel
+@{
+    ViewData["Title"] = @Html.DisplayFor(m => m.Campaign.Name);
+    var userHasEditRights = 
+        User.IsInRole(TauManager.Areas.Identity.Data.ApplicationRoleManager.Administrator)
+        || User.IsInRole(TauManager.Areas.Identity.Data.ApplicationRoleManager.Leader)
+        || User.IsInRole(TauManager.Areas.Identity.Data.ApplicationRoleManager.Officer);
+}
+
+<div class="text-center">
+    <h2>
+        @Html.DisplayFor(m => m.Campaign.Name)
+    @if(userHasEditRights)
+    {
+        @:(
+        <a asp-action="Details" asp-route-id="@Model.Campaign.Id">edit</a>
+        @:)
+    }
+    </h2>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header"><h5>Campaign details</h5></div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <dl>
+                    <dt>Campaign name</dt>
+                    <dd>@(Model.Campaign.Name)</dd>
+                    <dt>Manager</dt>
+                    <dd>@(Model.Campaign.ManagerId.HasValue ? Model.Campaign.Manager.Name : "--Unassigned--")</dd>
+                    <dt>Date and time:</dt>
+                    <dd>@(Model.Campaign.UTCDateTime.Value.ToString("yyyy-MM-dd HH:mm"))</dd>
+                    <dt>Status:</dt>
+                    <dd>@Model.Campaign.Status</dd>
+                </dl>
+            </div>
+            <div class="col-md-6">
+                <dl>
+                    <dt>Station:</dt>
+                    <dd>@Model.Campaign.Station</dd>
+                    <dt>Difficulty: </dt>
+                    <dd>@Model.Campaign.Difficulty.Value</dd>
+                    <dt>Tiers: </dt>
+                    <dd>@Model.Campaign.TiersString</dd>
+                </dl>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="form-group">
+                    <dl>
+                        <dt>Comments:</dt>
+                        <dd>@Model.Campaign.Comments</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="card mb-3">
+    <div class="card-header"><h5>Loot (<i>@Model.Loot.Count() item(s)</i>)</h5></div>
+    <div class="card-body text-center">
+        <div class="card-columns">
+            @foreach (var loot in Model.Loot)
+            {
+                @await Html.PartialAsync("_LootCardPartial", loot);
+            }
+        </div>
+    </div>
+</div>
+<div class="card mb-3">
+    <div class="card-header"><h5>Signup and attendance</h5></div>
+    <div class="card-body table-responsive">
+    @if (Model.Campaign.Attendance.Count() == 0 && Model.Campaign.Signups.Count() == 0)
+    {
+        <i>No data has been uploaded yet</i>
+    } else {
+        <table class="table table-striped table-bordered">
+            <thead class="text-center">
+                <th>Name</th>
+                <th>Signed up</th>
+                <th>Participated</th>
+            </thead>
+            <tbody>
+            @foreach (var player in Model.Players)
+            {
+                <tr>
+                    <td>@player.Name</td>
+                    <td class="text-center">@if (Model.Campaign.SignupsDict.ContainsKey(player.Id))
+                        {
+                            <i class="fa fa-check"></i>
+                        }
+                    <td class="text-center">@if (Model.Campaign.AttendanceDict.ContainsKey(player.Id))
+                        {
+                            <i class="fa fa-check"></i>
+                        }
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+    </div>
+</div>

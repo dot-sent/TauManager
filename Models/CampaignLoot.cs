@@ -3,6 +3,7 @@ using System.ComponentModel;
 
 namespace TauManager.Models
 {
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     public class CampaignLoot
     {
         public enum CampaignLootStatus : byte { Undistributed, StaysWithSyndicate, PermanentlyAwarded, OnLoan, Other };
@@ -17,5 +18,7 @@ namespace TauManager.Models
         public CampaignLootStatus Status { get; set; }
         public string Comments { get; set; }
         public virtual List<LootRequest> Requests { get; set; }
+        [DefaultValue(false)]
+        public bool? AvailableToOtherSyndicates { get; set; }
     }
 }

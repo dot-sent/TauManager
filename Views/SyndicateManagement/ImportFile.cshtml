@@ -2,26 +2,28 @@
 
 @{if (Model!=null) {
     <h2>Processing results:</h2>
-    <table class="table table-compact table-striped">
-        <thead>
-            <tr>
-                <td>Filename</td>
-                <td>Status</td>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var fileName in Model.Keys){
+    <div class="table-responsive">
+        <table class="table table-compact table-striped">
+            <thead>
                 <tr>
-                    <td>
-                        @fileName
-                    </td>
-                    <td>
-                        @Model[fileName]
-                    </td>
+                    <td>Filename</td>
+                    <td>Status</td>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach (var fileName in Model.Keys){
+                    <tr>
+                        <td>
+                            @fileName
+                        </td>
+                        <td>
+                            @Model[fileName]
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 }
 }
 

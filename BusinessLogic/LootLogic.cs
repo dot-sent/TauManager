@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using TauManager.Areas.Identity.Data;
 using TauManager.Models;
 using TauManager.Utils;
 using TauManager.ViewModels;
@@ -19,31 +18,30 @@ namespace TauManager.BusinessLogic
             _dbContext = dbContext;
             _campaignLogic = campaignLogic;
         }
-        public LootDistributionListModel GetCurrentDistributionOrder(int? campaignId, bool includeInactive, bool undistributedLootOnly)
+        public LootDistributionListModel GetCurrentDistributionOrder(int? campaignId, bool includeInactive, bool undistributedLootOnly, int syndicateId, int? playerId)
         {
             var model = new LootDistributionListModel{
                 CampaignId = campaignId,
                 UndistributedLootOnly = undistributedLootOnly,
                 IncludeInactive = includeInactive,
+                CurrentPlayer = _dbContext.Player.SingleOrDefault(p => playerId.HasValue && p.Id == playerId.Value),
             };
             var playerPositions = _dbContext.PlayerListPositionHistory.GroupBy(plph => plph.PlayerId)
                 .Select(g => new {
                     PlayerId =  g.Key,
                     Posiion = g.Max(ph => ph.Id)
-                }).Join(
+                })
+                .Join(
                     _dbContext.Player,
                     ph => ph.PlayerId,
                     p => p.Id,
                     (ph, p) => new { Player = p, Position = ph.Posiion }
-                ).OrderBy(
-                    p => p.Position
-                ).Select(
-                    p => p.Player
-                ).Where(
-                    p => includeInactive || p.Active
-                );
+                )
+                .OrderBy(p => p.Position)
+                .Select(p => p.Player)
+                .Where(p => (includeInactive || p.Active) && p.SyndicateId == syndicateId);
             model.CurrentOrder = playerPositions;
-            model.AllPlayers = _dbContext.Player.OrderBy(p => p.Name).AsEnumerable();
+            model.AllPlayers = _dbContext.Player.Where(p => p.SyndicateId == syndicateId).OrderBy(p => p.Name).AsEnumerable();
             model.AllCampaignLoot = _dbContext.CampaignLoot.Where(
                     cl => 
                          cl.CampaignId == campaignId || // Loot for specific campaign
@@ -51,24 +49,51 @@ namespace TauManager.BusinessLogic
                              !undistributedLootOnly || cl.Status == CampaignLoot.CampaignLootStatus.Undistributed
                          ))
                 )
+                .Join(
+                    _dbContext.Campaign,
+                    cl => cl.CampaignId,
+                    c => c.Id,
+                    (cl, c) => new { CampaignLoot = cl, Campaign = c}
+                )
+                .Where(clc => clc.Campaign.SyndicateId == syndicateId)
+                .Select(clc => clc.CampaignLoot)
                 .Include(cl => cl.Item)
+                .AsEnumerable()
                 .GroupBy(cl => cl.CampaignId)
                 .Select(g => new {
                     CampaignId = g.Key,
                     Loot = g.OrderBy(cl => cl.Item.Tier)
                 }).ToDictionary(g => g.CampaignId, g => g.Loot.AsEnumerable());
             model.AllLootRequests = _dbContext.LootRequest
+                .Join(
+                    _dbContext.CampaignLoot,
+                    lr => lr.LootId,
+                    cl => cl.Id,
+                    (lr, cl) => new { LootRequest = lr, CampaignLoot = cl }
+                )
+                .Join(
+                    _dbContext.Campaign,
+                    lrcl => lrcl.CampaignLoot.CampaignId,
+                    c => c.Id,
+                    (lrcl, c) => new { LootRequest = lrcl.LootRequest, Campaign = c }
+                )
+                .Where(lrc => lrc.Campaign.SyndicateId == syndicateId)
+                .Select(lrc => lrc.LootRequest)
+                .Where(lr => !campaignId.HasValue || lr.Loot.CampaignId == campaignId)
                 .Include(lr => lr.Loot)
+                .AsEnumerable()
                 .GroupBy(lr => lr.RequestedForId)
                 .Select(g => new {
                     PlayerId = g.Key,
                     Requests = g.Where(lr => !campaignId.HasValue || lr.Loot.CampaignId == campaignId)
                         .ToDictionary(lr => lr.Loot.Id, lr => lr)
                 }).ToDictionary(g => g.PlayerId, g => g.Requests);
-            model.AllCampaigns = _dbContext.Campaign.Where(c => model.AllCampaignLoot.ContainsKey(c.Id))
+            model.AllCampaigns = _dbContext.Campaign
+                .Where(c => c.SyndicateId == syndicateId)
+                .Include(c => c.Attendance)
                 .ToDictionary(c => c.Id, c => c);
             model.LootStatuses = EnumExtensions.ToDictionary<int>(typeof(CampaignLoot.CampaignLootStatus));
-            var attendanceModel = _campaignLogic.GetCampaignAttendance(null);
+            var attendanceModel = _campaignLogic.GetCampaignAttendance(null, syndicateId);
             model.TotalAttendanceRate = attendanceModel.TotalAttendance;
             model.HardT5AttendanceRate = attendanceModel.Last10T5HardAttendance;
             return model;
@@ -79,7 +104,7 @@ namespace TauManager.BusinessLogic
             if (lootRequestId == null && comment == null) return false;
             var playerExists = _dbContext.Player.Any(p => p.Id == id);
             if (!playerExists) return false;
-            var lootRequestExists = !lootRequestId.HasValue || _dbContext.LootRequest.Any(lr => lr.Id == lootRequestId.Value);
+            var lootRequestExists = !lootRequestId.HasValue || _dbContext.LootRequest.Any(lr => lr.Id == lootRequestId.Value && lr.RequestedForId == id);
             if (!lootRequestExists) return false;
             var newEntry = new PlayerListPositionHistory{
                 PlayerId = id,
@@ -114,10 +139,11 @@ namespace TauManager.BusinessLogic
 
         public LootItemViewModel CreateNewLootApplication(int lootItemId, int playerId, int? currentPlayerId)
         {
-            var lootItem = _dbContext.CampaignLoot.SingleOrDefault(cl => cl.Id == lootItemId);
+            var lootItem = _dbContext.CampaignLoot.Include(cl => cl.Campaign).SingleOrDefault(cl => cl.Id == lootItemId);
             if (lootItem == null) return null;
             var player = _dbContext.Player.SingleOrDefault(p => p.Id == playerId);
             if (player == null) return null;
+            if (lootItem.Campaign.SyndicateId != player.SyndicateId) return null; // TODO: Allow cross-syndicate LRs?
             var existingRequest = _dbContext.LootRequest.SingleOrDefault(lr => lr.LootId == lootItemId && lr.RequestedForId == playerId);
             LootItemViewModel result;
             if (existingRequest != null) 
@@ -126,6 +152,7 @@ namespace TauManager.BusinessLogic
                     Request = existingRequest,
                     Loot = existingRequest.Loot,
                     ShowApplyButton = true,
+                    RequestExists = true,
                     ShowSingleItemInterface = true,
                     ShowEditControls = false,
                     LootStatuses = EnumExtensions.ToDictionary<int>(typeof(CampaignLoot.CampaignLootStatus)),
@@ -150,13 +177,21 @@ namespace TauManager.BusinessLogic
             return result;
         }
 
-        public async Task<bool> ApplyForLoot(int lootId, int playerId, string comments, int? currentPlayerId, bool specialOffer)
+        public async Task<bool> ApplyForLoot(int lootId, int playerId, string comments, int? currentPlayerId, bool specialOffer, bool deleteRequest)
         {
-            var lootItem = _dbContext.CampaignLoot.SingleOrDefault(cl => cl.Id == lootId);
+            var lootItem = _dbContext.CampaignLoot.Include(cl => cl.Campaign).SingleOrDefault(cl => cl.Id == lootId);
             if (lootItem == null) return false;
             var player = _dbContext.Player.SingleOrDefault(p => p.Id == playerId);
             if (player == null) return false;
+            if (lootItem.Campaign.SyndicateId != player.SyndicateId) return false; // TODO: Allow cross-syndicate LRs?
             var lootRequest = _dbContext.LootRequest.SingleOrDefault(lr => lr.LootId == lootId && lr.RequestedForId == playerId);
+            if (deleteRequest)
+            {
+                if (lootRequest == null) return false;
+                _dbContext.Remove(lootRequest);
+                await _dbContext.SaveChangesAsync();
+                return true;
+            }
             if (lootRequest == null)
             {
                 lootRequest = new LootRequest
@@ -234,7 +269,7 @@ namespace TauManager.BusinessLogic
             return true;
         }
 
-        public LootOverviewViewModel GetOverview(int[] display)
+        public LootOverviewViewModel GetOverview(int[] display, int syndicateId)
         {
             var lootStatuses = EnumExtensions.ToDictionary<int>(typeof(CampaignLoot.CampaignLootStatus));
             if (display == null || display.Length == 0)
@@ -242,11 +277,101 @@ namespace TauManager.BusinessLogic
                 display = lootStatuses.Keys.ToArray();
             }
             var model = new LootOverviewViewModel{
-                AllLoot = _dbContext.CampaignLoot.Where(cl => display == null || display.Contains((int)cl.Status)).OrderByDescending(cl => cl.CampaignId),
+                AllLoot = _dbContext.CampaignLoot
+                    .Include(l => l.Campaign)
+                    .Include(l => l.Holder)
+                    .Include(l => l.Item)
+                    .Join(
+                        _dbContext.Campaign,
+                        cl => cl.CampaignId,
+                        c => c.Id,
+                        (cl, c) => new { CampaignLoot = cl, Campaign = c }
+                    )
+                    .Where(clc => clc.Campaign.SyndicateId == syndicateId)
+                    .Select(clc => clc.CampaignLoot)
+                    .Where(cl => display == null || display.Contains((int)cl.Status)).OrderByDescending(cl => cl.Campaign.UTCDateTime),
+                OtherSyndicatesLoot = _dbContext.CampaignLoot
+                    .Include(cl => cl.Campaign)
+                    .ThenInclude(clc => clc.Syndicate)
+                    .Where(cl => cl.Campaign.SyndicateId != syndicateId && 
+                        cl.AvailableToOtherSyndicates == true &&
+                        (cl.Status == CampaignLoot.CampaignLootStatus.Undistributed ||
+                        cl.Status == CampaignLoot.CampaignLootStatus.StaysWithSyndicate))
+                    .ToList(), // ToList() is, sadly, necessary to persist syndicate info/tag.
                 LootStatuses = EnumExtensions.ToDictionary<int>(typeof(CampaignLoot.CampaignLootStatus)),
                 Display = display,
             };
             return model;
+        }
+        
+        /* 
+            I'm not adding syndicateId check here since we might allow cross-syndicate requests
+            in the future. Currently it shouldn't be possible anyway since the code related
+            to creating loot requests has those checks.
+        */
+        public LootitemRequestsViewModel GetLootRequestsInfo(int campaignLootId)
+        {
+            var item = _dbContext.CampaignLoot.SingleOrDefault(cl => cl.Id == campaignLootId);
+            if (item == null) return null;
+            var playersOrdered = _dbContext.PlayerListPositionHistory.GroupBy(plph => plph.PlayerId)
+                .Select(g => new {
+                    PlayerId =  g.Key,
+                    Position = g.Max(ph => ph.Id)
+                }).Join(
+                    _dbContext.Player,
+                    ph => ph.PlayerId,
+                    p => p.Id,
+                    (ph, p) => new { Player = p, Position = ph.Position }
+                ).OrderBy(
+                    p => p.Position
+                ).Select(
+                    p => p.Player
+                );
+            var playerPositions = playersOrdered.Select(p => p.Id).ToList();
+            var activePlayerPositions = playersOrdered.Where(p => p.Active).Select(p => p.Id).ToList();
+
+            return new LootitemRequestsViewModel{ Requests = item.Requests
+                .OrderBy(
+                    r => activePlayerPositions.IndexOf(r.RequestedForId)
+                )
+                .Select(
+                r => new LootRequestViewModel {
+                    Id = r.Id,
+                    PlayerId = r.RequestedForId,
+                    PlayerName = r.RequestedFor.Name,
+                    PlayerPosition = playerPositions.IndexOf(r.RequestedForId) + 1,
+                    ActivePlayerPosition = activePlayerPositions.IndexOf(r.RequestedForId) + 1,
+                    Status = (LootRequestViewModel.LootRequestStatus)r.Status,
+                    SpecialOfferDescription = r.SpecialOfferDescription,
+                    AttendedCampaign = r.Loot.Campaign.Attendance.Any(a => a.PlayerId == r.RequestedForId),
+                }
+            ) };
+        }
+
+        public async Task<bool> AwardLoot(int lootId, int? lootRequestId, CampaignLoot.CampaignLootStatus status, bool? lootAvailableToOtherSyndicates)
+        {
+            var loot = _dbContext.CampaignLoot.SingleOrDefault(cl => cl.Id == lootId);
+            if (loot == null) return false;
+            var lootRequest = lootRequestId.HasValue ? _dbContext.LootRequest.SingleOrDefault(lr => lr.Id == lootRequestId.Value) : null;
+            if (lootRequestId.HasValue && lootRequest == null) return false;
+            
+            loot.Status = status;
+            loot.AvailableToOtherSyndicates = lootAvailableToOtherSyndicates;            
+            if (lootRequestId.HasValue)
+            {
+                loot.HolderId = lootRequest.RequestedForId;
+                lootRequest.Status = LootRequest.LootRequestStatus.Awarded;
+                var newHistoryEntry = new PlayerListPositionHistory
+                {
+                    LootRequest = lootRequest,
+                    PlayerId = lootRequest.RequestedForId,
+                    CreatedAt = DateTime.Now,
+                    Comment = "Drop associated with loot request",
+                };
+                await _dbContext.AddAsync(newHistoryEntry);
+            }
+            await _dbContext.SaveChangesAsync();
+            return true;
         }
     }
 }

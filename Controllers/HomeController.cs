@@ -21,8 +21,16 @@ namespace TauManager.Controllers
         public async Task<IActionResult> Index()
         {
             var playerId = await _userManager.GetPlayerIdAsync(User);
-            var model = _playerLogic.GetSyndicateMetrics(playerId);
+            var model = _playerLogic.GetHomePageModel(playerId);
             return View(model);
+        }
+
+        public async Task<IActionResult> PlayerDetailsChartData(byte interval, byte dataKind)
+        {
+            var playerId = await _userManager.GetPlayerIdAsync(User);
+            if (!playerId.HasValue) return NotFound();
+            var model = _playerLogic.GetPlayerDetailsChartData(playerId.Value, interval, dataKind);
+            return Json(model);
         }
 
         public IActionResult Privacy()
@@ -37,6 +45,11 @@ namespace TauManager.Controllers
         }
 
         public IActionResult RegistrationSuccess()
+        {
+            return View();
+        }
+
+        public IActionResult Acknowledgements()
         {
             return View();
         }

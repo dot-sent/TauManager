@@ -1,0 +1,11 @@
+@model string
+
+@{
+    ViewData["Title"] = "Player Page Upload Token";
+}
+
+<div class="text-center">
+    <div>Your new token for the Syndicate Info Collector script is</div>
+    <div class="text-success text-break" id="access_token_string">@Model</div>
+    <div class="d-none alert alert-success" id="access_token_success_message">...and this token has already been saved by the script.</div>
+</div>

@@ -19,17 +19,25 @@ namespace TauManager.Areas.Identity.Data
         public const string Administrator = "Administrator";
         public const string Leader = "Leader";
         public const string Officer = "Officer";
+        public const string MultiSyndicate = "MultiSyndicate";
         public static string[] AllRoles 
         {
             get 
             {
-                string[] result = { Administrator, Leader, Officer }; 
+                string[] result = { Administrator, Leader, Officer, MultiSyndicate };
                 return result;
             }
         }
         public static bool CanEdit(ClaimsPrincipal user, string role)
         {
-            return user.IsInRole(Administrator) ? true : user.IsInRole(Leader) && (role == Officer) ? true : false;
+            if (user.IsInRole(Administrator)) return true;
+            switch (role) {
+                case Officer:
+                    return user.IsInRole(Leader);
+                case MultiSyndicate:
+                    return user.IsInRole(MultiSyndicate) && user.IsInRole(Leader);
+            };
+            return false;
         }
 
         public static bool CanActivate(ClaimsPrincipal user, string role)

@@ -5,7 +5,15 @@
         <ul class="list-group list-group-flush">
             <li class="list-group-item">
                 <h5 class="card-title"><a href="@Model.Loot.Item.Url">@Model.Loot.Item.Name</a></h5>
-                <p class="card-text">@Model.Loot.Item.Caption</p>
+                <p class="card-text">
+                @if(Model.Loot.Item.Type == TauManager.Models.Item.ItemType.Weapon ||
+                    Model.Loot.Item.Type == TauManager.Models.Item.ItemType.Armor)
+                {
+                    @Model.Loot.Item.CampaignOverviewCaption
+                } else {
+                    @Model.Loot.Item.Caption
+                }
+                </p>
             </li>
             <li class="list-group-item">
                 Existing requests:
@@ -16,7 +24,12 @@
                     <ul>
                     @foreach (var playerPosition in Model.AllRequests.Keys)
                     {
-                        <li>(@playerPosition) @Model.AllRequests[playerPosition]</li>
+                        <li>
+                            (@playerPosition) @Model.AllRequests[playerPosition]
+                        @if (Model.SpecialRequests.ContainsKey(playerPosition)) {
+                            @:&nbsp;<i class="fas fa-exclamation-circle text-primary" title="@Model.SpecialRequests[playerPosition]"></i>
+                        }
+                        </li>
                     }
                     </ul>
                 }
@@ -29,24 +42,39 @@
                 <form action="/Campaigns/ApplyForLoot/@Model.Loot.Id" method="post">
                     <div class="form-group">
                         <label for="radio_apply_normal">
-                            <input type="radio" name="specialOffer" id="radio_apply_normal" value="False" checked>
+                            <input type="radio" name="specialOffer" id="radio_apply_normal" value="False"@(Model.RequestExists ? Model.Request.Status == LootRequest.LootRequestStatus.Interested ? " checked" : "" : " checked")>
                             Apply without special offer (default)
                         </label>
                     </div>
                     <div class="form-group">
                         <label for="radio_apply_special">
-                            <input type="radio" name="specialOffer" id="radio_apply_special" value="True">
+                            <input type="radio" name="specialOffer" id="radio_apply_special" value="True"@(Model.RequestExists && Model.Request.Status == LootRequest.LootRequestStatus.SpecialOffer ? " checked" : "")>
                             Apply with a special offer (specify below)
                         </label>
-                        <textarea class="form-control" id="ta_special_request" name="comments"></textarea>
+                        <textarea class="form-control" id="ta_special_request" name="comments">@(Model.RequestExists ? Model.Request.SpecialOfferDescription : "")</textarea>
                     </div>
                     <div class="form-group">
-                        <input type="submit" value="Apply">
+                        <button type="submit" class="btn btn-success">@(Model.RequestExists ? "Save" : "Apply")</button>
+                        @if(Model.RequestExists)
+                        {
+                            <button type="submit" name="deleteRequest" value="true" class="btn btn-danger">Withdraw</button>
+                        }
                     </div>
                 </form>
             } else {
-                <a asp-action="ApplyForLoot" asp-route-id="@Model.Loot.Id" class="btn btn-success">Apply</a>
+                if(Model.RequestExists)
+                {
+                    <a asp-action="ApplyForLoot" asp-route-id="@Model.Loot.Id" class="btn btn-warning">Edit or Withdraw</a>
+                } else {
+                    <a asp-action="ApplyForLoot" asp-route-id="@Model.Loot.Id" class="btn @(Model.TierRestriction ? "btn-danger" : "btn-success")">Apply@(Model.TierRestriction ? " (higher than your tier!)" : "")</a>
+                }
             }
+            </li>
+        }
+        @if(Model.ShowAwardButton)
+        {
+            <li class="list-group-item">
+                <input type="button" class="btn_award_loot btn btn-primary" value="Award" data-id="@Model.Loot.Id" data-name="@Model.Loot.Item.Name" data-toggle="modal" data-target="#modal_award_loot">
             </li>
         }
         @if(Model.ShowEditControls)

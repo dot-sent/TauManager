@@ -14,9 +14,16 @@ namespace TauManager
         {
         }
 
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+            => modelBuilder.UseSerialColumns();
+
+
         #region Player-related data
         public DbSet<Player> Player { get; set; }
         public DbSet<PlayerHistory> PlayerHistory { get; set; }
+        public DbSet<PlayerSkill> PlayerSkill { get; set; }
+        public DbSet<Skill> Skill { get; set; }
+        public DbSet<SkillGroup> SkillGroup { get; set; }
         #endregion
         #region Generic data
         public DbSet<Item> Item { get; set; }
@@ -28,6 +35,15 @@ namespace TauManager
         public DbSet<CampaignSignup> CampaignSignup { get; set; }
         public DbSet<LootRequest> LootRequest { get; set; }
         public DbSet<PlayerListPositionHistory> PlayerListPositionHistory { get; set; }
+        #endregion
+        #region Syndicate-related data
+        public DbSet<Syndicate> Syndicate { get; set; }
+        #endregion
+        #region Syndicate Market
+        public DbSet<MarketAd> MarketAd { get; set; }
+        public DbSet<MarketAdBundle> MarketAdBundle { get; set; }
+        public DbSet<MarketAdBundleItem> MarketAdBundleItem { get; set; }
+        public DbSet<MarketAdReaction> MarketAdReaction { get; set; }
         #endregion
     }
 }

@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace TauManager.Models
 {
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     public class PlayerHistory
     {
         public PlayerHistory() {}

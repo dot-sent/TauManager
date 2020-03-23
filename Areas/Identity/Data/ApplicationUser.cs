@@ -11,5 +11,10 @@ namespace TauManager.Areas.Identity.Data
     {
       public Boolean IsApproved { get; set; }
       public int PlayerId { get; set; }
+      public int? SyndicateOverride { get; set; }
+      public string PlayerPageUploadToken { get; set; }
+      public byte? MarketView { get; set; }
+      public byte? MarketSort { get; set; }
+      public bool? MarketIsViewPinned { get; set; }
     }
 }
