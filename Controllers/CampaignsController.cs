@@ -92,10 +92,9 @@ namespace TauManager.Controllers
             if (model == null) return Conflict();
             return PartialView("_LootCardPartial", model);
         }
-// Added tierSelect and typeSelect
-        public async Task<IActionResult> Loot(int[] display = null, int tierSelect = 0, int typeSelect = 0)
+        public async Task<IActionResult> Loot(int[] display = null, int itemTier = 0, int itemType = 0)
         {
-            var model = _lootLogic.GetOverview(display, tierSelect, typeSelect, (await GetSyndicate()).Id);
+            var model = _lootLogic.GetOverview(display, itemTier, itemType, (await GetSyndicate()).Id);
             return View(model);
         }
         public async Task<IActionResult> LootDistributionList()

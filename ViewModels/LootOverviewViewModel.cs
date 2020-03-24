@@ -11,7 +11,7 @@ namespace TauManager.ViewModels
         public Dictionary<int, string> LootStatuses { get; set; }
         public int[] Display { get; set; }
 
-        public int TierSelect {get; set;}
-        public int TypeSelect {get; set;}
+        public int ItemTier {get; set;}
+        public int ItemType {get; set;}
     }
 }

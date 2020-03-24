@@ -268,267 +268,52 @@ namespace TauManager.BusinessLogic
             await _dbContext.SaveChangesAsync();
             return true;
         }
-
-        public LootOverviewViewModel GetOverview(int[] display, int tierSelect, int typeSelect, int syndicateId)
+        /// <summary>This method retrieves loot by syndicate/tier/itemType.</summary>
+        /// <param name="display">Array of lootStatuses-based filters</param>
+        /// <param name="itemTier">0 - all tiers; 1,2,3,4,5 - particular tier</param>
+        /// <param name="itemType">0 - all types, 1 - armours, 2 - shortRangeWeapons, 3 - longRangeWeapons</param>
+        /// <param name="syndicateId">Syndicate ID</param>
+        public LootOverviewViewModel GetOverview(int[] display, int itemTier, int itemType, int syndicateId)
         {
             var lootStatuses = EnumExtensions.ToDictionary<int>(typeof(CampaignLoot.CampaignLootStatus));
             if (display == null || display.Length == 0)
             {
                 display = lootStatuses.Keys.ToArray();
             }
-            // And again, I can't enter conditional clauses into those queries translated directly into SQL
-            // Gonna have some IFs
-            if (tierSelect > 0) { // Tier selected
-                if (typeSelect == 0) { // All types of items
-                    var model = new LootOverviewViewModel{
-                        AllLoot = _dbContext.CampaignLoot
-                            .Include(l => l.Campaign)
-                            .Include(l => l.Holder)
-                            .Include(l => l.Item)
-                            .Where(l => l.Item.Tier == tierSelect)
-                            .Join(
-                                _dbContext.Campaign,
-                                cl => cl.CampaignId,
-                                c => c.Id,
-                                (cl, c) => new { CampaignLoot = cl, Campaign = c }
-                            )
-                            .Where(clc => clc.Campaign.SyndicateId == syndicateId)
-                            .Select(clc => clc.CampaignLoot)
-                            .Where(cl => display == null || display.Contains((int)cl.Status)).OrderByDescending(cl => cl.Campaign.UTCDateTime),
-                        OtherSyndicatesLoot = _dbContext.CampaignLoot
-                            .Include(cl => cl.Campaign)
-                            .ThenInclude(clc => clc.Syndicate)
-                            .Where(cl => cl.Campaign.SyndicateId != syndicateId && 
-                                cl.AvailableToOtherSyndicates == true &&
-                                (cl.Status == CampaignLoot.CampaignLootStatus.Undistributed ||
-                                cl.Status == CampaignLoot.CampaignLootStatus.StaysWithSyndicate))
-                            .ToList(), // ToList() is, sadly, necessary to persist syndicate info/tag.
-                        LootStatuses = EnumExtensions.ToDictionary<int>(typeof(CampaignLoot.CampaignLootStatus)),
-                        Display = display,
-                        TierSelect = tierSelect,
-                        TypeSelect = typeSelect
-                    };
-                    return model;
-                } else if (typeSelect == 1) { // Armours
-                    var model = new LootOverviewViewModel{
-                        AllLoot = _dbContext.CampaignLoot
-                            .Include(l => l.Campaign)
-                            .Include(l => l.Holder)
-                            .Include(l => l.Item)
-                            .Where(l => l.Item.Tier == tierSelect)
-                            .Where(l => l.Item.Type == Item.ItemType.Armor)
-                            .Join(
-                                _dbContext.Campaign,
-                                cl => cl.CampaignId,
-                                c => c.Id,
-                                (cl, c) => new { CampaignLoot = cl, Campaign = c }
-                            )
-                            .Where(clc => clc.Campaign.SyndicateId == syndicateId)
-                            .Select(clc => clc.CampaignLoot)
-                            .Where(cl => display == null || display.Contains((int)cl.Status)).OrderByDescending(cl => cl.Campaign.UTCDateTime),
-                        OtherSyndicatesLoot = _dbContext.CampaignLoot
-                            .Include(cl => cl.Campaign)
-                            .ThenInclude(clc => clc.Syndicate)
-                            .Where(cl => cl.Campaign.SyndicateId != syndicateId && 
-                                cl.AvailableToOtherSyndicates == true &&
-                                (cl.Status == CampaignLoot.CampaignLootStatus.Undistributed ||
-                                cl.Status == CampaignLoot.CampaignLootStatus.StaysWithSyndicate))
-                            .ToList(), // ToList() is, sadly, necessary to persist syndicate info/tag.
-                        LootStatuses = EnumExtensions.ToDictionary<int>(typeof(CampaignLoot.CampaignLootStatus)),
-                        Display = display,
-                        TierSelect = tierSelect,
-                        TypeSelect = typeSelect
-                    };
-                    return model;
-                } else if (typeSelect == 2) { // Short Range Weapons
-                    var model = new LootOverviewViewModel{
-                        AllLoot = _dbContext.CampaignLoot
-                            .Include(l => l.Campaign)
-                            .Include(l => l.Holder)
-                            .Include(l => l.Item)
-                            .Where(l => l.Item.Tier == tierSelect)
-                            .Where(l => l.Item.Type == Item.ItemType.Weapon)
-                            .Where(l => l.Item.WeaponRange == Item.ItemWeaponRange.Short)
-                            .Join(
-                                _dbContext.Campaign,
-                                cl => cl.CampaignId,
-                                c => c.Id,
-                                (cl, c) => new { CampaignLoot = cl, Campaign = c }
-                            )
-                            .Where(clc => clc.Campaign.SyndicateId == syndicateId)
-                            .Select(clc => clc.CampaignLoot)
-                            .Where(cl => display == null || display.Contains((int)cl.Status)).OrderByDescending(cl => cl.Campaign.UTCDateTime),
-                        OtherSyndicatesLoot = _dbContext.CampaignLoot
-                            .Include(cl => cl.Campaign)
-                            .ThenInclude(clc => clc.Syndicate)
-                            .Where(cl => cl.Campaign.SyndicateId != syndicateId && 
-                                cl.AvailableToOtherSyndicates == true &&
-                                (cl.Status == CampaignLoot.CampaignLootStatus.Undistributed ||
-                                cl.Status == CampaignLoot.CampaignLootStatus.StaysWithSyndicate))
-                            .ToList(), // ToList() is, sadly, necessary to persist syndicate info/tag.
-                        LootStatuses = EnumExtensions.ToDictionary<int>(typeof(CampaignLoot.CampaignLootStatus)),
-                        Display = display,
-                        TierSelect = tierSelect,
-                        TypeSelect = typeSelect
-                    };
-                    return model;
-                } else { // Long range weapons
-                    var model = new LootOverviewViewModel{
-                        AllLoot = _dbContext.CampaignLoot
-                            .Include(l => l.Campaign)
-                            .Include(l => l.Holder)
-                            .Include(l => l.Item)
-                            .Where(l => l.Item.Tier == tierSelect)
-                            .Where(l => l.Item.Type == Item.ItemType.Weapon)
-                            .Where(l => l.Item.WeaponRange == Item.ItemWeaponRange.Long)
-                            .Join(
-                                _dbContext.Campaign,
-                                cl => cl.CampaignId,
-                                c => c.Id,
-                                (cl, c) => new { CampaignLoot = cl, Campaign = c }
-                            )
-                            .Where(clc => clc.Campaign.SyndicateId == syndicateId)
-                            .Select(clc => clc.CampaignLoot)
-                            .Where(cl => display == null || display.Contains((int)cl.Status)).OrderByDescending(cl => cl.Campaign.UTCDateTime),
-                        OtherSyndicatesLoot = _dbContext.CampaignLoot
-                            .Include(cl => cl.Campaign)
-                            .ThenInclude(clc => clc.Syndicate)
-                            .Where(cl => cl.Campaign.SyndicateId != syndicateId && 
-                                cl.AvailableToOtherSyndicates == true &&
-                                (cl.Status == CampaignLoot.CampaignLootStatus.Undistributed ||
-                                cl.Status == CampaignLoot.CampaignLootStatus.StaysWithSyndicate))
-                            .ToList(), // ToList() is, sadly, necessary to persist syndicate info/tag.
-                        LootStatuses = EnumExtensions.ToDictionary<int>(typeof(CampaignLoot.CampaignLootStatus)),
-                        Display = display,
-                        TierSelect = tierSelect,
-                        TypeSelect = typeSelect
-                    };
-                    return model;
-                }
-            } else { // Tier not selected
-                if (typeSelect == 0) { // All types of items
-                    var model = new LootOverviewViewModel{
-                        AllLoot = _dbContext.CampaignLoot
-                            .Include(l => l.Campaign)
-                            .Include(l => l.Holder)
-                            .Include(l => l.Item)
-                            .Join(
-                                _dbContext.Campaign,
-                                cl => cl.CampaignId,
-                                c => c.Id,
-                                (cl, c) => new { CampaignLoot = cl, Campaign = c }
-                            )
-                            .Where(clc => clc.Campaign.SyndicateId == syndicateId)
-                            .Select(clc => clc.CampaignLoot)
-                            .Where(cl => display == null || display.Contains((int)cl.Status)).OrderByDescending(cl => cl.Campaign.UTCDateTime),
-                        OtherSyndicatesLoot = _dbContext.CampaignLoot
-                            .Include(cl => cl.Campaign)
-                            .ThenInclude(clc => clc.Syndicate)
-                            .Where(cl => cl.Campaign.SyndicateId != syndicateId && 
-                                cl.AvailableToOtherSyndicates == true &&
-                                (cl.Status == CampaignLoot.CampaignLootStatus.Undistributed ||
-                                cl.Status == CampaignLoot.CampaignLootStatus.StaysWithSyndicate))
-                            .ToList(), // ToList() is, sadly, necessary to persist syndicate info/tag.
-                        LootStatuses = EnumExtensions.ToDictionary<int>(typeof(CampaignLoot.CampaignLootStatus)),
-                        Display = display,
-                        TierSelect = tierSelect,
-                        TypeSelect = typeSelect
-                    };
-                    return model;
-                } else if (typeSelect == 1) { // Armours
-                    var model = new LootOverviewViewModel{
-                        AllLoot = _dbContext.CampaignLoot
-                            .Include(l => l.Campaign)
-                            .Include(l => l.Holder)
-                            .Include(l => l.Item)
-                            .Where(l => l.Item.Type == Item.ItemType.Armor)
-                            .Join(
-                                _dbContext.Campaign,
-                                cl => cl.CampaignId,
-                                c => c.Id,
-                                (cl, c) => new { CampaignLoot = cl, Campaign = c }
-                            )
-                            .Where(clc => clc.Campaign.SyndicateId == syndicateId)
-                            .Select(clc => clc.CampaignLoot)
-                            .Where(cl => display == null || display.Contains((int)cl.Status)).OrderByDescending(cl => cl.Campaign.UTCDateTime),
-                        OtherSyndicatesLoot = _dbContext.CampaignLoot
-                            .Include(cl => cl.Campaign)
-                            .ThenInclude(clc => clc.Syndicate)
-                            .Where(cl => cl.Campaign.SyndicateId != syndicateId && 
-                                cl.AvailableToOtherSyndicates == true &&
-                                (cl.Status == CampaignLoot.CampaignLootStatus.Undistributed ||
-                                cl.Status == CampaignLoot.CampaignLootStatus.StaysWithSyndicate))
-                            .ToList(), // ToList() is, sadly, necessary to persist syndicate info/tag.
-                        LootStatuses = EnumExtensions.ToDictionary<int>(typeof(CampaignLoot.CampaignLootStatus)),
-                        Display = display,
-                        TierSelect = tierSelect,
-                        TypeSelect = typeSelect
-                    };
-                    return model;
-                } else if (typeSelect == 2) { // Short Range Weapons
-                    var model = new LootOverviewViewModel{
-                        AllLoot = _dbContext.CampaignLoot
-                            .Include(l => l.Campaign)
-                            .Include(l => l.Holder)
-                            .Include(l => l.Item)
-                            .Where(l => l.Item.Type == Item.ItemType.Weapon)
-                            .Where(l => l.Item.WeaponRange == Item.ItemWeaponRange.Short)
-                            .Join(
-                                _dbContext.Campaign,
-                                cl => cl.CampaignId,
-                                c => c.Id,
-                                (cl, c) => new { CampaignLoot = cl, Campaign = c }
-                            )
-                            .Where(clc => clc.Campaign.SyndicateId == syndicateId)
-                            .Select(clc => clc.CampaignLoot)
-                            .Where(cl => display == null || display.Contains((int)cl.Status)).OrderByDescending(cl => cl.Campaign.UTCDateTime),
-                        OtherSyndicatesLoot = _dbContext.CampaignLoot
-                            .Include(cl => cl.Campaign)
-                            .ThenInclude(clc => clc.Syndicate)
-                            .Where(cl => cl.Campaign.SyndicateId != syndicateId && 
-                                cl.AvailableToOtherSyndicates == true &&
-                                (cl.Status == CampaignLoot.CampaignLootStatus.Undistributed ||
-                                cl.Status == CampaignLoot.CampaignLootStatus.StaysWithSyndicate))
-                            .ToList(), // ToList() is, sadly, necessary to persist syndicate info/tag.
-                        LootStatuses = EnumExtensions.ToDictionary<int>(typeof(CampaignLoot.CampaignLootStatus)),
-                        Display = display,
-                        TierSelect = tierSelect,
-                        TypeSelect = typeSelect
-                    };
-                    return model;
-                } else { // Long range weapons
-                    var model = new LootOverviewViewModel{
-                        AllLoot = _dbContext.CampaignLoot
-                            .Include(l => l.Campaign)
-                            .Include(l => l.Holder)
-                            .Include(l => l.Item)
-                            .Where(l => l.Item.Type == Item.ItemType.Weapon)
-                            .Where(l => l.Item.WeaponRange == Item.ItemWeaponRange.Long)
-                            .Join(
-                                _dbContext.Campaign,
-                                cl => cl.CampaignId,
-                                c => c.Id,
-                                (cl, c) => new { CampaignLoot = cl, Campaign = c }
-                            )
-                            .Where(clc => clc.Campaign.SyndicateId == syndicateId)
-                            .Select(clc => clc.CampaignLoot)
-                            .Where(cl => display == null || display.Contains((int)cl.Status)).OrderByDescending(cl => cl.Campaign.UTCDateTime),
-                        OtherSyndicatesLoot = _dbContext.CampaignLoot
-                            .Include(cl => cl.Campaign)
-                            .ThenInclude(clc => clc.Syndicate)
-                            .Where(cl => cl.Campaign.SyndicateId != syndicateId && 
-                                cl.AvailableToOtherSyndicates == true &&
-                                (cl.Status == CampaignLoot.CampaignLootStatus.Undistributed ||
-                                cl.Status == CampaignLoot.CampaignLootStatus.StaysWithSyndicate))
-                            .ToList(), // ToList() is, sadly, necessary to persist syndicate info/tag.
-                        LootStatuses = EnumExtensions.ToDictionary<int>(typeof(CampaignLoot.CampaignLootStatus)),
-                        Display = display,
-                        TierSelect = tierSelect,
-                        TypeSelect = typeSelect
-                    };
-                    return model;
-                }
-            }
+            var model = new LootOverviewViewModel{
+                AllLoot = _dbContext.CampaignLoot
+                    .Include(l => l.Campaign)
+                    .Include(l => l.Holder)
+                    .Include(l => l.Item)
+                    .Where(l => itemTier == 0 || l.Item.Tier == itemTier)
+                    .Where(l => itemType == 0 ||
+                        (itemType == 1 && l.Item.Type == Item.ItemType.Armor) ||
+                        (itemType == 2 && l.Item.WeaponRange == Item.ItemWeaponRange.Short) ||
+                        (itemType == 3 && l.Item.WeaponRange == Item.ItemWeaponRange.Long)
+                    )
+                    .Join(
+                        _dbContext.Campaign,
+                        cl => cl.CampaignId,
+                        c => c.Id,
+                        (cl, c) => new { CampaignLoot = cl, Campaign = c }
+                    )
+                    .Where(clc => clc.Campaign.SyndicateId == syndicateId)
+                    .Select(clc => clc.CampaignLoot)
+                    .Where(cl => display == null || display.Contains((int)cl.Status)).OrderByDescending(cl => cl.Campaign.UTCDateTime),
+                OtherSyndicatesLoot = _dbContext.CampaignLoot
+                    .Include(cl => cl.Campaign)
+                    .ThenInclude(clc => clc.Syndicate)
+                    .Where(cl => cl.Campaign.SyndicateId != syndicateId && 
+                        cl.AvailableToOtherSyndicates == true &&
+                        (cl.Status == CampaignLoot.CampaignLootStatus.Undistributed ||
+                        cl.Status == CampaignLoot.CampaignLootStatus.StaysWithSyndicate))
+                    .ToList(), // ToList() is, sadly, necessary to persist syndicate info/tag.
+                LootStatuses = EnumExtensions.ToDictionary<int>(typeof(CampaignLoot.CampaignLootStatus)),
+                Display = display,
+                ItemTier = itemTier,
+                ItemType = itemType
+            };
+            return model;
         }
         
         /* 
