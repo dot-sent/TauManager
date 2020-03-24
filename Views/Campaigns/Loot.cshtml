@@ -9,7 +9,7 @@
 
 <div class="text-center">
     <form class="form-inline align-items-center" method="GET">
-        <select name="itemTier" class="sel-user-player">
+        <select name="itemTier" class="sel-item-tier">
             <!option value="0">All Tiers</!option>
             <!option value="1"@(Model.ItemTier == 1 ? " selected" : "")>Tier 1</!option>
             <!option value="2"@(Model.ItemTier == 2 ? " selected" : "")>Tier 2</!option>
@@ -17,7 +17,7 @@
             <!option value="4"@(Model.ItemTier == 4 ? " selected" : "")>Tier 4</!option>
             <!option value="5"@(Model.ItemTier == 5 ? " selected" : "")>Tier 5</!option>
         </select>
-        <select name="itemType" class="sel-user-player">
+        <select name="itemType" class="sel-item-type">
             <!option value="0">All Types</!option>
             <!option value="1"@(Model.ItemType == 1 ? " selected" : "")>Armour</!option>
             <!option value="2"@(Model.ItemType == 2 ? " selected" : "")>Short Range</!option>
