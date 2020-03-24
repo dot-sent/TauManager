@@ -15,25 +15,48 @@
                 }
                 </p>
             </li>
-            <li class="list-group-item">
-                Existing requests:
-                @if (Model.AllRequests == null || Model.AllRequests.Count == 0)
-                {
-                    <i>None</i>
-                } else {
-                    <ul>
-                    @foreach (var playerPosition in Model.AllRequests.Keys)
+            <! –– Requests only show for items without owners ––>
+            <! –– It meanst that once you assign an item to someone, they won't show ––>
+            <! –– If that's a problem, remove this condition ––>
+            @if (!Model.Loot.HolderId.HasValue) 
+            {
+                <li class="list-group-item">
+                    Existing requests:
+                    @if (Model.AllRequests == null || Model.AllRequests.Count == 0)
                     {
-                        <li>
-                            (@playerPosition) @Model.AllRequests[playerPosition]
-                        @if (Model.SpecialRequests.ContainsKey(playerPosition)) {
-                            @:&nbsp;<i class="fas fa-exclamation-circle text-primary" title="@Model.SpecialRequests[playerPosition]"></i>
+                        <i>None</i>
+                    } else {
+                        <ul>
+                        @foreach (var playerPosition in Model.AllRequests.Keys)
+                        {
+                            <li>
+                                (@playerPosition) @Model.AllRequests[playerPosition]
+                            @if (Model.SpecialRequests.ContainsKey(playerPosition)) {
+                                @:&nbsp;<i class="fas fa-exclamation-circle text-primary" title="@Model.SpecialRequests[playerPosition]"></i>
+                            }
+                            </li>
                         }
-                        </li>
+                        </ul>
                     }
-                    </ul>
-                }
+                </li>
+            }
+            <li class="list-group-item">
+                <label for="select_loot_item_status_@(Model.Loot.Id)">Status: @(Model.Loot.Status)</label>
             </li>
+            <! –– If you can somehow grab a player by ID, that loop inside can be replaced ––>
+            @if (Model.Loot.HolderId.HasValue)
+            {
+                @foreach (var player in Model.Players)
+                {
+                    @if (Model.Loot.HolderId.Value == player.Id)
+                    {
+                        <li class="list-group-item">
+                            <label for="select_loot_item_holder_@(Model.Loot.Id)">Holder: @(player.Name)</label>
+                        </li>       
+                    }
+                }  
+            }
+
         @if (Model.ShowApplyButton)
         {
             <li class="list-group-item">
