@@ -92,13 +92,12 @@ namespace TauManager.Controllers
             if (model == null) return Conflict();
             return PartialView("_LootCardPartial", model);
         }
-
-        public async Task<IActionResult> Loot(int[] display = null)
+// Added tierSelect and typeSelect
+        public async Task<IActionResult> Loot(int[] display = null, int tierSelect = 0, int typeSelect = 0)
         {
-            var model = _lootLogic.GetOverview(display, (await GetSyndicate()).Id);
+            var model = _lootLogic.GetOverview(display, tierSelect, typeSelect, (await GetSyndicate()).Id);
             return View(model);
         }
-
         public async Task<IActionResult> LootDistributionList()
         {
             var id = HttpContext.Session.Get<int?>(KeyCampaignId, null);

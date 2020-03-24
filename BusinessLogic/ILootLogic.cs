@@ -13,7 +13,7 @@ namespace TauManager.BusinessLogic
         LootItemViewModel CreateNewLootApplication(int id, int playerId, int? currentPlayerId);
         Task<bool> ApplyForLoot(int lootId, int playerId, string comments, int? currentPlayerId, bool specialOffer, bool deleteRequest);
         Task<bool> SetLootRequestStatus(int playerId, int currentPlayerId, int campaignLootId, int status, int lootStatus, string comments, bool dropRequestorDown);
-        LootOverviewViewModel GetOverview(int[] display, int syndicateId);
+        LootOverviewViewModel GetOverview(int[] display, int tierSelect, int typeSelect, int syndicateId);
         LootitemRequestsViewModel GetLootRequestsInfo(int campaignLootId);
         Task<bool> AwardLoot(int lootId, int? lootRequestId, CampaignLoot.CampaignLootStatus status, bool? lootAvailableToOtherSyndicates);
     }
