@@ -12,7 +12,9 @@
         var ctxStats = $('#canvas_stats');
         var dataKind1 = $('input[name="dataKind1"]:checked').val();
         var label1 = $('input[name="dataKind1"]:checked').parent().text();
+        var firstGraphBase = $('input[name="firstGraphBase"]:checked').val();
         var dataKind2 = $('input[name="dataKind2"]:checked').val();
+        var secondGraphBase = $('input[name="secondGraphBase"]:checked').val();
         var label2 = $('input[name="dataKind2"]:checked').parent().text();
         var interval = $('input[name="interval"]:checked').val();
         $.post(url,
@@ -23,6 +25,10 @@
             },
             function(data){
                 if (dataKind2 < 254) {
+                // For dual graphs I need to create 4 combinations of y-axis settings
+                // Because I have no idea how to inject variable-based conditional statements
+                // into parameters below
+                if (firstGraphBase == 1 && secondGraphBase == 1) {
                     $.post(url,
                         {
                             @(Model.UseManagementUrl ? "id: playerId," : "")
@@ -58,12 +64,20 @@
                                         yAxes: [{
                                             id: 'first-y-axis',
                                             type: 'linear',
-                                            position: 'left'
+                                            position: 'left',
+                                            ticks: {
+                                                min: 0,
+                                                fontColor: "#22AA00",
+                                            }
                                         },
                                         {
                                             id: 'second-y-axis',
                                             type: 'linear',
-                                            position: 'right'
+                                            position: 'right',
+                                            ticks: {
+                                                min: 0,
+                                                fontColor: "#2233AA",
+                                            }
                                         }]
                                     },
                                     elements: {
@@ -79,32 +93,260 @@
                             });
                         }
                     );
-                } else {
-                    chartObj = new Chart(ctxStats, {
-                        type: 'line',
-                        data: {
-                            datasets: [{
-                                label: label1,
-                                data: data,
-                                borderColor: "#22AA00",
-                                borderWidth: 2,
-                                fill: false
-                            }]
+                } else if (firstGraphBase == 1) {
+                    $.post(url,
+                        {
+                            @(Model.UseManagementUrl ? "id: playerId," : "")
+                            dataKind: dataKind2,
+                            interval: interval
                         },
-                        options: {
-                            scales: {
-                                xAxes: [{
-                                    type: 'time'
+                        function(data2) {
+                            chartObj = new Chart(ctxStats, {
+                                type: 'line',
+                                data: {
+                                    datasets: [{
+                                        label: label1,
+                                        data: data,
+                                        borderColor: "#22AA00",
+                                        borderWidth: 2,
+                                        fill: false,
+                                        yAxisID: 'first-y-axis'
+                                    },
+                                    {
+                                        label: label2,
+                                        data: data2,
+                                        borderColor: "#2233AA",
+                                        borderWidth: 2,
+                                        fill: false,
+                                        yAxisID: 'second-y-axis'
+                                    }]
+                                },
+                                options: {
+                                    scales: {
+                                        xAxes: [{
+                                            type: 'time'
+                                        }],
+                                        yAxes: [{
+                                            id: 'first-y-axis',
+                                            type: 'linear',
+                                            position: 'left',
+                                            ticks: {
+                                                min: 0,
+                                                fontColor: "#22AA00",
+                                            }
+                                        },
+                                        {
+                                            id: 'second-y-axis',
+                                            type: 'linear',
+                                            position: 'right',
+                                            ticks: {
+                                                fontColor: "#2233AA",
+                                            }
+                                        }]
+                                    },
+                                    elements: {
+                                        line: {
+                                            tension: 0 // disables bezier curves
+                                        }
+                                    },
+                                    tooltips: {
+                                        mode: 'x'
+                                    },
+                                    events: ['click', 'mousemove']
+                                }
+                            });
+                        }
+                    );
+                } else if (secondGraphBase == 1) {
+                    $.post(url,
+                        {
+                            @(Model.UseManagementUrl ? "id: playerId," : "")
+                            dataKind: dataKind2,
+                            interval: interval
+                        },
+                        function(data2) {
+                            chartObj = new Chart(ctxStats, {
+                                type: 'line',
+                                data: {
+                                    datasets: [{
+                                        label: label1,
+                                        data: data,
+                                        borderColor: "#22AA00",
+                                        borderWidth: 2,
+                                        fill: false,
+                                        yAxisID: 'first-y-axis'
+                                    },
+                                    {
+                                        label: label2,
+                                        data: data2,
+                                        borderColor: "#2233AA",
+                                        borderWidth: 2,
+                                        fill: false,
+                                        yAxisID: 'second-y-axis'
+                                    }]
+                                },
+                                options: {
+                                    scales: {
+                                        xAxes: [{
+                                            type: 'time'
+                                        }],
+                                        yAxes: [{
+                                            id: 'first-y-axis',
+                                            type: 'linear',
+                                            position: 'left',
+                                            ticks: {
+                                                fontColor: "#22AA00",
+                                            }
+                                        },
+                                        {
+                                            id: 'second-y-axis',
+                                            type: 'linear',
+                                            position: 'right',
+                                            ticks: {
+                                                min: 0,
+                                                fontColor: "#2233AA",
+                                            }
+                                        }]
+                                    },
+                                    elements: {
+                                        line: {
+                                            tension: 0 // disables bezier curves
+                                        }
+                                    },
+                                    tooltips: {
+                                        mode: 'x'
+                                    },
+                                    events: ['click', 'mousemove']
+                                }
+                            });
+                        }
+                    );
+                } else { // dual relative graphs
+                    $.post(url,
+                        {
+                            @(Model.UseManagementUrl ? "id: playerId," : "")
+                            dataKind: dataKind2,
+                            interval: interval
+                        },
+                        function(data2) {
+                            chartObj = new Chart(ctxStats, {
+                                type: 'line',
+                                data: {
+                                    datasets: [{
+                                        label: label1,
+                                        data: data,
+                                        borderColor: "#22AA00",
+                                        borderWidth: 2,
+                                        fill: false,
+                                        yAxisID: 'first-y-axis'
+                                    },
+                                    {
+                                        label: label2,
+                                        data: data2,
+                                        borderColor: "#2233AA",
+                                        borderWidth: 2,
+                                        fill: false,
+                                        yAxisID: 'second-y-axis'
+                                    }]
+                                },
+                                options: {
+                                    scales: {
+                                        xAxes: [{
+                                            type: 'time'
+                                        }],
+                                        yAxes: [{
+                                            id: 'first-y-axis',
+                                            type: 'linear',
+                                            position: 'left',
+                                            ticks: {
+                                                fontColor: "#22AA00",
+                                            }
+                                        },
+                                        {
+                                            id: 'second-y-axis',
+                                            type: 'linear',
+                                            position: 'right',
+                                            ticks: {
+                                                fontColor: "#2233AA",
+                                            }
+                                        }]
+                                    },
+                                    elements: {
+                                        line: {
+                                            tension: 0 // disables bezier curves
+                                        }
+                                    },
+                                    tooltips: {
+                                        mode: 'x'
+                                    },
+                                    events: ['click', 'mousemove']
+                                }
+                            });
+                        }
+                    );
+                }
+
+                } else {
+                    if (firstGraphBase > 0) { // If a single graph has to be zero-based
+                        chartObj = new Chart(ctxStats, {
+                            type: 'line',
+                            data: {
+                                datasets: [{
+                                    label: label1,
+                                    data: data,
+                                    borderColor: "#22AA00",
+                                    borderWidth: 2,
+                                    fill: false
                                 }]
                             },
-                            elements: {
-                                line: {
-                                    tension: 0 // disables bezier curves
-                                }
+                            options: {
+                                scales: {
+                                    xAxes: [{
+                                        type: 'time'
+                                    }],
+                                    yAxes: [{
+                                            ticks: {
+                                                min: 0 // sets ymin to 0
+                                            }
+                                        }
+                                    ]
+                                },
+                                elements: {
+                                    line: {
+                                        tension: 0 // disables bezier curves
+                                    }
+                                },
+                                events: ['click', 'mousemove']
+                            }
+                        });
+                    } else {
+                        chartObj = new Chart(ctxStats, {
+                            type: 'line',
+                            data: {
+                                datasets: [{
+                                    label: label1,
+                                    data: data,
+                                    borderColor: "#22AA00",
+                                    borderWidth: 2,
+                                    fill: false
+                                }]
                             },
-                            events: ['click', 'mousemove']
-                        }
-                    });
+                            options: {
+                                scales: {
+                                    xAxes: [{
+                                        type: 'time'
+                                    }]
+                                },
+                                elements: {
+                                    line: {
+                                        tension: 0 // disables bezier curves
+                                    }
+                                },
+                                events: ['click', 'mousemove']
+                            }
+                        });
+                    }
+                    
                 }
             }
         )
