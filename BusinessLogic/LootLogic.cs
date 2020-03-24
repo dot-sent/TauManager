@@ -271,7 +271,7 @@ namespace TauManager.BusinessLogic
         /// <summary>This method retrieves loot by syndicate/tier/itemType.</summary>
         /// <param name="display">Array of lootStatuses-based filters</param>
         /// <param name="itemTier">0 - all tiers; 1,2,3,4,5 - particular tier</param>
-        /// <param name="itemType">0 - all types, 1 - armours, 2 - shortRangeWeapons, 3 - longRangeWeapons</param>
+        /// <param name="itemType">enum Item.ItemTypeFilters: 0 - all types, 1 - armors, 2 - shortRangeWeapons, 3 - longRangeWeapons</param>
         /// <param name="syndicateId">Syndicate ID</param>
         public LootOverviewViewModel GetOverview(int[] display, int itemTier, int itemType, int syndicateId)
         {
@@ -309,6 +309,7 @@ namespace TauManager.BusinessLogic
                         cl.Status == CampaignLoot.CampaignLootStatus.StaysWithSyndicate))
                     .ToList(), // ToList() is, sadly, necessary to persist syndicate info/tag.
                 LootStatuses = EnumExtensions.ToDictionary<int>(typeof(CampaignLoot.CampaignLootStatus)),
+                TypeFilters = EnumExtensions.ToDictionary<int>(typeof(Item.ItemTypeFilters)),
                 Display = display,
                 ItemTier = itemTier,
                 ItemType = itemType

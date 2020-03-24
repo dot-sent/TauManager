@@ -18,10 +18,9 @@
             <!option value="5"@(Model.ItemTier == 5 ? " selected" : "")>Tier 5</!option>
         </select>
         <select name="itemType" class="sel-item-type">
-            <!option value="0">All Types</!option>
-            <!option value="1"@(Model.ItemType == 1 ? " selected" : "")>Armour</!option>
-            <!option value="2"@(Model.ItemType == 2 ? " selected" : "")>Short Range</!option>
-            <!option value="3"@(Model.ItemType == 3 ? " selected" : "")>Long Range</!option>
+            @foreach (var filterKey in Model.TypeFilters.Keys) {
+                <!option value="@filterKey" @(filterKey == Model.ItemType ? " selected" : "")>@Model.TypeFilters[filterKey]</!option>
+            }
         </select>
     @foreach (var status in Model.LootStatuses.Keys)
     {

@@ -9,6 +9,7 @@ namespace TauManager.Models
     {
         public const string UrlBase = "https://alpha.taustation.space/item/";
         public enum ItemType : byte { Armor, Weapon, Medical, Blueprint, Event, Mission, Mod, Ration, TradeGood, VIP };
+        public enum ItemTypeFilters : byte { All, Armor, ShortRangeWeapon, LongRangeWeapon};
         public enum ItemRarity : byte { Common, Uncommon, Rare, Epic};
         public enum ItemWeaponRange : byte { Long, Short };
         public enum ItemWeaponType : byte { Blade, Club, Handgun, Rifle, ShortBarrelRifle, Shotgun, SniperRifle };
