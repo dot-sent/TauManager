@@ -286,11 +286,11 @@ namespace TauManager.BusinessLogic
                     .Include(l => l.Holder)
                     .Include(l => l.Item)
                     .Where(l => itemTier == 0 || l.Item.Tier == itemTier)
-                    .Where(l => itemType == 0 ||
-                        (itemType == 1 && l.Item.Type == Item.ItemType.Armor) ||
-                        (itemType == 2 && l.Item.WeaponRange == Item.ItemWeaponRange.Short) ||
-                        (itemType == 3 && l.Item.WeaponRange == Item.ItemWeaponRange.Long)
-                    )
+                    .Where(l => itemType == (int)Item.ItemTypeFilters.All ||
+                        (itemType == (int)Item.ItemTypeFilters.Armor && l.Item.Type == Item.ItemType.Armor) ||
+                        (itemType == (int)Item.ItemTypeFilters.ShortRangeWeapon && l.Item.WeaponRange == Item.ItemWeaponRange.Short) ||
+                        (itemType == (int)Item.ItemTypeFilters.LongRangeWeapon && l.Item.WeaponRange == Item.ItemWeaponRange.Long)
+                   )
                     .Join(
                         _dbContext.Campaign,
                         cl => cl.CampaignId,
