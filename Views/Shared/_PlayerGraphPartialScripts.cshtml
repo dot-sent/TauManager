@@ -12,9 +12,19 @@
         var ctxStats = $('#canvas_stats');
         var dataKind1 = $('input[name="dataKind1"]:checked').val();
         var label1 = $('input[name="dataKind1"]:checked').parent().text();
+        var firstGraphBase = $('input[name="firstGraphBase"]:checked').val();
         var dataKind2 = $('input[name="dataKind2"]:checked').val();
+        var secondGraphBase = $('input[name="secondGraphBase"]:checked').val();
         var label2 = $('input[name="dataKind2"]:checked').parent().text();
         var interval = $('input[name="interval"]:checked').val();
+        var ticks1 = { fontColor: "#22AA00" };
+        var ticks2 = { fontColor: "#2233AA" };
+        if (firstGraphBase == 1) {
+            ticks1.min = 0;    
+        }
+        if (secondGraphBase == 1) {
+            ticks2.min = 0;    
+        }
         $.post(url,
             {
                 @(Model.UseManagementUrl ? "id: playerId," : "")
@@ -23,62 +33,64 @@
             },
             function(data){
                 if (dataKind2 < 254) {
-                    $.post(url,
-                        {
-                            @(Model.UseManagementUrl ? "id: playerId," : "")
-                            dataKind: dataKind2,
-                            interval: interval
-                        },
-                        function(data2) {
-                            chartObj = new Chart(ctxStats, {
-                                type: 'line',
-                                data: {
-                                    datasets: [{
-                                        label: label1,
-                                        data: data,
-                                        borderColor: "#22AA00",
-                                        borderWidth: 2,
-                                        fill: false,
-                                        yAxisID: 'first-y-axis'
+                $.post(url,
+                    {
+                        @(Model.UseManagementUrl ? "id: playerId," : "")
+                        dataKind: dataKind2,
+                        interval: interval
+                    },
+                    function(data2) {
+                        chartObj = new Chart(ctxStats, {
+                            type: 'line',
+                            data: {
+                                datasets: [{
+                                    label: label1,
+                                    data: data,
+                                    borderColor: "#22AA00",
+                                    borderWidth: 2,
+                                    fill: false,
+                                    yAxisID: 'first-y-axis'
+                                },
+                                {
+                                    label: label2,
+                                    data: data2,
+                                    borderColor: "#2233AA",
+                                    borderWidth: 2,
+                                    fill: false,
+                                    yAxisID: 'second-y-axis'
+                                }]
+                            },
+                            options: {
+                                scales: {
+                                    xAxes: [{
+                                        type: 'time'
+                                    }],
+                                    yAxes: [{
+                                        id: 'first-y-axis',
+                                        type: 'linear',
+                                        position: 'left',
+                                        ticks: ticks1
                                     },
                                     {
-                                        label: label2,
-                                        data: data2,
-                                        borderColor: "#2233AA",
-                                        borderWidth: 2,
-                                        fill: false,
-                                        yAxisID: 'second-y-axis'
+                                        id: 'second-y-axis',
+                                        type: 'linear',
+                                        position: 'right',
+                                        ticks: ticks2
                                     }]
                                 },
-                                options: {
-                                    scales: {
-                                        xAxes: [{
-                                            type: 'time'
-                                        }],
-                                        yAxes: [{
-                                            id: 'first-y-axis',
-                                            type: 'linear',
-                                            position: 'left'
-                                        },
-                                        {
-                                            id: 'second-y-axis',
-                                            type: 'linear',
-                                            position: 'right'
-                                        }]
-                                    },
-                                    elements: {
-                                        line: {
-                                            tension: 0 // disables bezier curves
-                                        }
-                                    },
-                                    tooltips: {
-                                        mode: 'x'
-                                    },
-                                    events: ['click', 'mousemove']
-                                }
-                            });
-                        }
-                    );
+                                elements: {
+                                    line: {
+                                        tension: 0 // disables bezier curves
+                                    }
+                                },
+                                tooltips: {
+                                    mode: 'x'
+                                },
+                                events: ['click', 'mousemove']
+                            }
+                        });
+                    }
+                );
                 } else {
                     chartObj = new Chart(ctxStats, {
                         type: 'line',
@@ -95,7 +107,11 @@
                             scales: {
                                 xAxes: [{
                                     type: 'time'
-                                }]
+                                }],
+                                yAxes: [{
+                                        ticks: ticks1
+                                    }
+                                ]
                             },
                             elements: {
                                 line: {
@@ -104,7 +120,7 @@
                             },
                             events: ['click', 'mousemove']
                         }
-                    });
+                    });                  
                 }
             }
         )

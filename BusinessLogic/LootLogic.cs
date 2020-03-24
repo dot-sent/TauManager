@@ -268,8 +268,12 @@ namespace TauManager.BusinessLogic
             await _dbContext.SaveChangesAsync();
             return true;
         }
-
-        public LootOverviewViewModel GetOverview(int[] display, int syndicateId)
+        /// <summary>This method retrieves loot by syndicate/tier/itemType.</summary>
+        /// <param name="display">Array of lootStatuses-based filters</param>
+        /// <param name="itemTier">0 - all tiers; 1,2,3,4,5 - particular tier</param>
+        /// <param name="itemType">enum Item.ItemTypeFilters: 0 - all types, 1 - armors, 2 - shortRangeWeapons, 3 - longRangeWeapons</param>
+        /// <param name="syndicateId">Syndicate ID</param>
+        public LootOverviewViewModel GetOverview(int[] display, int itemTier, int itemType, int syndicateId)
         {
             var lootStatuses = EnumExtensions.ToDictionary<int>(typeof(CampaignLoot.CampaignLootStatus));
             if (display == null || display.Length == 0)
@@ -281,6 +285,12 @@ namespace TauManager.BusinessLogic
                     .Include(l => l.Campaign)
                     .Include(l => l.Holder)
                     .Include(l => l.Item)
+                    .Where(l => itemTier == 0 || l.Item.Tier == itemTier)
+                    .Where(l => itemType == (int)Item.ItemTypeFilters.All ||
+                        (itemType == (int)Item.ItemTypeFilters.Armor && l.Item.Type == Item.ItemType.Armor) ||
+                        (itemType == (int)Item.ItemTypeFilters.ShortRangeWeapon && l.Item.WeaponRange == Item.ItemWeaponRange.Short) ||
+                        (itemType == (int)Item.ItemTypeFilters.LongRangeWeapon && l.Item.WeaponRange == Item.ItemWeaponRange.Long)
+                   )
                     .Join(
                         _dbContext.Campaign,
                         cl => cl.CampaignId,
@@ -299,7 +309,10 @@ namespace TauManager.BusinessLogic
                         cl.Status == CampaignLoot.CampaignLootStatus.StaysWithSyndicate))
                     .ToList(), // ToList() is, sadly, necessary to persist syndicate info/tag.
                 LootStatuses = EnumExtensions.ToDictionary<int>(typeof(CampaignLoot.CampaignLootStatus)),
+                TypeFilters = EnumExtensions.ToDictionary<int>(typeof(Item.ItemTypeFilters)),
                 Display = display,
+                ItemTier = itemTier,
+                ItemType = itemType
             };
             return model;
         }
