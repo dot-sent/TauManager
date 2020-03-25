@@ -3,3 +3,7 @@ obj/
 nginx/
 ScaffoldingReadme.txt
 redis/
+appsettings.Development.json
+appsettings.json
+.vscode/launch.json
+.vscode/tasks.json
