@@ -3,3 +3,5 @@ obj/
 nginx/
 ScaffoldingReadme.txt
 redis/
+appsettings.json
+appsettings.Development.json
