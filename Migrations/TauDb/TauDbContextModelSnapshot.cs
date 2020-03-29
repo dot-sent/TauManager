@@ -8,6 +8,7 @@ using TauManager;
 
 namespace TauManager.Migrations.TauDb
 {
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     [DbContext(typeof(TauDbContext))]
     partial class TauDbContextModelSnapshot : ModelSnapshot
     {

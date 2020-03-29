@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using TauManager.Areas.Identity.Data;
 namespace TauManager.Areas.Identity.Pages.Account.Manage
 {
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     public class ChangePasswordModel : PageModel
     {
         private readonly UserManager<ApplicationUser> _userManager;

@@ -12,6 +12,7 @@ using TauManager.Areas.Identity.Data;
 
 namespace TauManager.Areas.Identity.Pages.Account.Manage
 {
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     public partial class IndexModel : PageModel
     {
         private readonly UserManager<ApplicationUser> _userManager;

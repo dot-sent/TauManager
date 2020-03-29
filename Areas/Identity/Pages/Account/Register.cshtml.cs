@@ -15,6 +15,7 @@ using TauManager.Areas.Identity.Data;
 namespace TauManager.Areas.Identity.Pages.Account
 {
     [AllowAnonymous]
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     public class RegisterModel : PageModel
     {
         private readonly SignInManager<ApplicationUser> _signInManager;

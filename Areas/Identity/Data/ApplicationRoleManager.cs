@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace TauManager.Areas.Identity.Data
 {
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     public class ApplicationRoleManager: RoleManager<IdentityRole>
     {
         public ApplicationRoleManager(IRoleStore<IdentityRole> store, 

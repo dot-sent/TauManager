@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Identity;
 namespace TauManager.Areas.Identity.Data
 {
     // Add profile data for application users by adding properties to the ApplicationUser class
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     public class ApplicationUser : IdentityUser
     {
       public Boolean IsApproved { get; set; }

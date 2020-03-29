@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 
 namespace TauManager.Areas.Identity.Data
 {
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     public class ApplicationIdentityUserManager: UserManager<ApplicationUser>
     {
         public ApplicationIdentityUserManager(IUserStore<ApplicationUser> store, IOptions<IdentityOptions> optionsAccessor, 

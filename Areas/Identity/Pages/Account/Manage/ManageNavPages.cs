@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace TauManager.Areas.Identity.Pages.Account.Manage
 {
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     public static class ManageNavPages
     {
         public static string Index => "Index";

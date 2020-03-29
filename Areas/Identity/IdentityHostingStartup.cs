@@ -10,6 +10,7 @@ using TauManager.Areas.Identity.Data;
 [assembly: HostingStartup(typeof(TauManager.Areas.Identity.IdentityHostingStartup))]
 namespace TauManager.Areas.Identity
 {
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     public class IdentityHostingStartup : IHostingStartup
     {
         public void Configure(IWebHostBuilder builder)

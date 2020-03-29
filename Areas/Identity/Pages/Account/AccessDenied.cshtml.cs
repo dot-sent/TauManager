@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace TauManager.Areas.Identity.Pages.Account
 {
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     public class AccessDeniedModel : PageModel
     {
         public void OnGet()

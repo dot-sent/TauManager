@@ -9,6 +9,7 @@ using TauManager.Areas.Identity.Data;
 
 namespace TauManager.Areas.Identity
 {
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     public class TauManagerIdentityDbContext : IdentityDbContext<ApplicationUser>
     {
         public TauManagerIdentityDbContext(DbContextOptions<TauManagerIdentityDbContext> options)
