@@ -324,7 +324,14 @@ namespace TauManager.BusinessLogic
         */
         public LootitemRequestsViewModel GetLootRequestsInfo(int campaignLootId)
         {
-            var item = _dbContext.CampaignLoot.SingleOrDefault(cl => cl.Id == campaignLootId);
+            var item = _dbContext.CampaignLoot
+                .Include(i => i.Requests)
+                .ThenInclude(r => r.RequestedFor)
+                .Include(i => i.Requests)
+                .ThenInclude(r => r.Loot)
+                .ThenInclude(l => l.Campaign)
+                .ThenInclude(c => c.Attendance)
+                .SingleOrDefault(cl => cl.Id == campaignLootId);
             if (item == null) return null;
             var playersOrdered = _dbContext.PlayerListPositionHistory.GroupBy(plph => plph.PlayerId)
                 .Select(g => new {
@@ -348,17 +355,18 @@ namespace TauManager.BusinessLogic
                     r => activePlayerPositions.IndexOf(r.RequestedForId)
                 )
                 .Select(
-                r => new LootRequestViewModel {
-                    Id = r.Id,
-                    PlayerId = r.RequestedForId,
-                    PlayerName = r.RequestedFor.Name,
-                    PlayerPosition = playerPositions.IndexOf(r.RequestedForId) + 1,
-                    ActivePlayerPosition = activePlayerPositions.IndexOf(r.RequestedForId) + 1,
-                    Status = (LootRequestViewModel.LootRequestStatus)r.Status,
-                    SpecialOfferDescription = r.SpecialOfferDescription,
-                    AttendedCampaign = r.Loot.Campaign.Attendance.Any(a => a.PlayerId == r.RequestedForId),
-                }
-            ) };
+                    r => new LootRequestViewModel {
+                        Id = r.Id,
+                        PlayerId = r.RequestedForId,
+                        PlayerName = r.RequestedFor.Name,
+                        PlayerPosition = playerPositions.IndexOf(r.RequestedForId) + 1,
+                        ActivePlayerPosition = activePlayerPositions.IndexOf(r.RequestedForId) + 1,
+                        Status = (LootRequestViewModel.LootRequestStatus)r.Status,
+                        SpecialOfferDescription = r.SpecialOfferDescription,
+                        AttendedCampaign = r.Loot.Campaign.Attendance.Any(a => a.PlayerId == r.RequestedForId),
+                    }
+                )
+             };
         }
 
         public async Task<bool> AwardLoot(int lootId, int? lootRequestId, CampaignLoot.CampaignLootStatus status, bool? lootAvailableToOtherSyndicates)
