@@ -36,6 +36,7 @@
         <form id="form_campaign" asp-action="Edit" method="post">
             <input type="hidden" name="Id" id="hidden_campaign_id" value="@Model.Campaign.Id">
             <input type="hidden" name="Tiers" id="hidden_campaign_tiers" value="@Model.Campaign.Tiers">
+            <input type="hidden" name="ExcludeFromLeaderboards" id="hidden_exclude_from_leaderboards" value="False">
             <div class="form-row">
                 <div class="col-md-6">
                     <div class="form-group">
@@ -107,6 +108,11 @@
                             </label>
                         }
                         </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-control">
+                            <input type="checkbox" id="cb_exclude_from_leaderboards"@(Model.Campaign.ExcludeFromLeaderboards ? " checked": "")> Exclude from leaderboards
+                        </label>
                     </div>
                     <div class="form-group">
                         <label for="campaign_comments">Comments:</label>
@@ -237,6 +243,7 @@
                 $elem.prop('disabled', 'disabled');
             }
             $('#hidden_campaign_tiers').val(tiers);
+            $('#hidden_exclude_from_leaderboards').val($('#cb_exclude_from_leaderboards').prop('checked') ? 'True' : 'False');
             $('#form_campaign').submit();
         });
         configureControlPostback('.select-loot-item-status', '/Campaigns/SetLootStatus',
