@@ -51,19 +51,13 @@
             <th>Station</th>
             <th>Difficulty</th>
             <th>Tiers</th>
+            <th>Actions</th>
         </thead>
         <tbody>
         @foreach(var campaign in Model.CurrentCampaigns)
         {
             <tr title="@campaign.Comments">
-                <td>
-                @if(userHasEditRights || campaign.ManagerId == Model.PlayerId)
-                {
-                    <a asp-action="Details" asp-route-id="@campaign.Id">@campaign.Name</a>
-                } else {
-                    @campaign.Name
-                }
-                </td>
+                <td>@campaign.Name</td>
                 <td>@campaign.UTCDateString</td>
                 <td>@campaign.GCTDateString</td>
                 <td>
@@ -78,6 +72,12 @@
                 <td>@campaign.Station</td>
                 <td>@(campaign.Difficulty.HasValue ? @campaign.Difficulty.Value.ToString() : "Not set")</td>
                 <td>@campaign.TiersString</td>
+                <td>
+                @if(userHasEditRights || campaign.ManagerId == Model.PlayerId)
+                {
+                    <a asp-action="Details" asp-route-id="@campaign.Id" class="btn btn-sm btn-warning">Edit</a>
+                }
+                </td>
             </tr>
         }
         </tbody>
@@ -103,20 +103,13 @@
             <th>Station</th>
             <th>Difficulty</th>
             <th>Tiers</th>
-            <th>Signup</th>
+            <th>Actions</th>
         </thead>
         <tbody>
         @foreach(var campaign in Model.FutureCampaigns)
         {
             <tr title="@campaign.Comments">
-                <td>
-                @if(userHasEditRights || campaign.ManagerId == Model.PlayerId)
-                {
-                    <a asp-action="Details" asp-route-id="@campaign.Id">@campaign.Name</a>
-                } else {
-                    @campaign.Name
-                }
-                </td>
+                <td>@campaign.Name</td>
                 <td>@campaign.UTCDateString</td>
                 <td>@campaign.GCTDateString</td>
                 <td>
@@ -137,14 +130,16 @@
                 <td>@(campaign.Difficulty.HasValue ? @campaign.Difficulty.Value.ToString() : "Not set")</td>
                 <td>@campaign.TiersString</td>
                 <td>
-                    @if(Model.MySignups.ContainsKey(campaign.Id))
-                    {
-                        <span>Yes</span>
-                        <input type="button" class="btn btn-danger btn-sm btn-campaign-signup" value="Remove" data-campaign-id="@campaign.Id" data-status="false">
-                    } else {
-                        <span>No</span>
-                        <input type="button" class="btn btn-success btn-sm btn-campaign-signup" value="Sign up" data-campaign-id="@campaign.Id" data-status="true">
-                    }
+                @if(Model.MySignups.ContainsKey(campaign.Id))
+                {
+                    <input type="button" class="btn btn-danger btn-sm btn-campaign-signup" value="Cancel signup" data-campaign-id="@campaign.Id" data-status="false">
+                } else {
+                    <input type="button" class="btn btn-success btn-sm btn-campaign-signup" value="Sign up" data-campaign-id="@campaign.Id" data-status="true">
+                }
+                @if(userHasEditRights || campaign.ManagerId == Model.PlayerId)
+                {
+                    <a asp-action="Details" asp-route-id="@campaign.Id" class="btn btn-sm btn-warning">Edit</a>
+                }
                 </td>
             </tr>
         }
@@ -215,11 +210,11 @@
                     }
                 </td>
                 <td>
-                    <a asp-action="View" asp-route-id="@campaign.Id" class="btn btn-success">View</a>
+                    <a asp-action="View" asp-route-id="@campaign.Id" class="btn btn-sm btn-success">View</a>
                 @if(userHasEditRights || campaign.ManagerId == Model.PlayerId)
                 {
-                    <a asp-action="Details" asp-route-id="@campaign.Id" class="btn btn-warning">Edit</a>
-                } 
+                    <a asp-action="Details" asp-route-id="@campaign.Id" class="btn btn-sm btn-warning">Edit</a>
+                }
                 </td>
             </tr>
         }
