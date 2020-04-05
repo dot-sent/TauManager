@@ -197,7 +197,11 @@
                 <td>@(campaign.Difficulty.HasValue ? @campaign.Difficulty.Value.ToString() : "Not set")</td>
                 <td>@campaign.TiersString</td>
                 <td>
-                    @if (campaign.Tiers.HasValue &&
+                    @if(campaign.ExcludeFromLeaderboards)
+                    {
+                        <i class="fas fa-clipboard-list font-weight-bold text-muted"></i>
+                        <span class="font-weight-bold text-muted">Excluded</span>
+                    } else if (campaign.Tiers.HasValue &&
                         campaign.Tiers.Value > 15 &&
                         campaign.Difficulty.HasValue &&
                         (campaign.Difficulty.Value == Campaign.CampaignDifficulty.Hard || campaign.Difficulty.Value == Campaign.CampaignDifficulty.Extreme))

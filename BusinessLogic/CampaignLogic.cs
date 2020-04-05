@@ -398,7 +398,7 @@ namespace TauManager.BusinessLogic
                         Player = p.Player,
                         Campaign = c
                     })
-                .Where(pc => pc.Campaign.SyndicateId == syndicateId)
+                .Where(pc => pc.Campaign.SyndicateId == syndicateId && !pc.Campaign.ExcludeFromLeaderboards)
                 .ToList()
                 .GroupBy(p => p.Player)
                 .Select(
@@ -410,14 +410,15 @@ namespace TauManager.BusinessLogic
                     p => p.Player.Id,
                     v => v.Camapaigns
                 );
-            var totalCampaignCount = _dbContext.Campaign.Count(c => c.SyndicateId == syndicateId);
+            var totalCampaignCount = _dbContext.Campaign.Count(c => c.SyndicateId == syndicateId && !c.ExcludeFromLeaderboards);
             var allT5HardCampaigns = _dbContext.Campaign
                 .OrderByDescending(c => c.UTCDateTime)
                 .Where(c => (c.Difficulty == Campaign.CampaignDifficulty.Hard ||
                     c.Difficulty == Campaign.CampaignDifficulty.Extreme) &&
                     c.Tiers.HasValue && c.Tiers.Value > 15 &&
                     (c.Status == Campaign.CampaignStatus.Completed || c.Status == Campaign.CampaignStatus.Failed) &&
-                    c.SyndicateId == syndicateId)
+                    c.SyndicateId == syndicateId &&
+                    !c.ExcludeFromLeaderboards)
                 .Select(c => c.Id);
             var T5HardCampaigns = allT5HardCampaigns
                 .ToDictionary(
