@@ -75,7 +75,7 @@
                 <td>
                 @if(userHasEditRights || campaign.ManagerId == Model.PlayerId)
                 {
-                    <a asp-action="Details" asp-route-id="@campaign.Id" class="btn btn-sm btn-warning">Edit</a>
+                    <a asp-action="Details" asp-route-id="@campaign.Id" class="btn btn-sm btn-warning mb-1 mr-1">Edit</a>
                 }
                 </td>
             </tr>
@@ -132,13 +132,13 @@
                 <td>
                 @if(Model.MySignups.ContainsKey(campaign.Id))
                 {
-                    <input type="button" class="btn btn-danger btn-sm btn-campaign-signup" value="Cancel signup" data-campaign-id="@campaign.Id" data-status="false">
+                    <input type="button" class="btn btn-danger btn-sm btn-campaign-signup mb-1 mr-1" value="Cancel signup" data-campaign-id="@campaign.Id" data-status="false">
                 } else {
-                    <input type="button" class="btn btn-success btn-sm btn-campaign-signup" value="Sign up" data-campaign-id="@campaign.Id" data-status="true">
+                    <input type="button" class="btn btn-success btn-sm btn-campaign-signup mb-1 mr-1" value="Sign up" data-campaign-id="@campaign.Id" data-status="true">
                 }
                 @if(userHasEditRights || campaign.ManagerId == Model.PlayerId)
                 {
-                    <a asp-action="Details" asp-route-id="@campaign.Id" class="btn btn-sm btn-warning">Edit</a>
+                    <a asp-action="Details" asp-route-id="@campaign.Id" class="btn btn-sm btn-warning mb-1 mr-1">Edit</a>
                 }
                 </td>
             </tr>
@@ -210,10 +210,10 @@
                     }
                 </td>
                 <td>
-                    <a asp-action="View" asp-route-id="@campaign.Id" class="btn btn-sm btn-success">View</a>
+                    <a asp-action="View" asp-route-id="@campaign.Id" class="btn btn-sm btn-success mb-1 mr-1">View</a>
                 @if(userHasEditRights || campaign.ManagerId == Model.PlayerId)
                 {
-                    <a asp-action="Details" asp-route-id="@campaign.Id" class="btn btn-sm btn-warning">Edit</a>
+                    <a asp-action="Details" asp-route-id="@campaign.Id" class="btn btn-sm btn-warning mb-1 mr-1">Edit</a>
                 }
                 </td>
             </tr>
