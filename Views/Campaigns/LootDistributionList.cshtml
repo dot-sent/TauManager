@@ -1,6 +1,7 @@
 @model TauManager.ViewModels.LootDistributionListModel
 
 @{
+    ViewData["Title"] = "Loot Distribution List";
     var userHasEditRights = 
         User.IsInRole(TauManager.Areas.Identity.Data.ApplicationRoleManager.Administrator)
         || User.IsInRole(TauManager.Areas.Identity.Data.ApplicationRoleManager.Leader)
@@ -110,14 +111,14 @@
                             }
                             @if (comment == null || comment == "") 
                             {
-                                <span>@(requestStatus == -1 ? "" : Model.AllLootRequests[player.Id][campaignLoot.Id].Status.ToString())</span>
+                                <span class="font-weight-bold">@(requestStatus == -1 ? "" : Model.AllLootRequests[player.Id][campaignLoot.Id].Status.ToString())</span>
                             } else {
                                 <span title="@comment">@(requestStatus == -1 ? "" : Model.AllLootRequests[player.Id][campaignLoot.Id].Status.ToString())</span>
                             }
                             
                         @if(userHasEditRights)
                         {
-                            <input type="button" class="btn btn-xs btn-display-lr-editor" data-toggle="modal" data-target="#modal_edit_lr" value="(edit)"
+                            <input type="button" class="btn btn-xs btn-display-lr-editor text-muted" data-toggle="modal" data-target="#modal_edit_lr" value="(edit)"
                                 data-player-id="@player.Id" data-loot-id="@campaignLoot.Id" data-status="@requestStatus" data-comment="@comment">
                         }
                         </td>
