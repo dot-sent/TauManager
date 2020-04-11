@@ -38,6 +38,7 @@ namespace TauManager
         #endregion
         #region Syndicate-related data
         public DbSet<Syndicate> Syndicate { get; set; }
+        public DbSet<SyndicateHistory> SyndicateHistory { get; set; }
         #endregion
         #region Syndicate Market
         public DbSet<MarketAd> MarketAd { get; set; }
