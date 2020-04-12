@@ -81,5 +81,16 @@ namespace TauManager.BusinessLogic
         {
             return id.HasValue ? _dbContext.Player.SingleOrDefault(p => p.Id == id.Value) : null;
         }
+
+        public async Task<bool> SubmitSyndicateHistory(SyndicateInfoViewModel entry)
+        {
+            var syndicate = _dbContext.Syndicate.SingleOrDefault(s => s.Tag == entry.Tag);
+            if (syndicate == null) return false;
+            var historyEntry = new SyndicateHistory(entry);
+            historyEntry.SyndicateId = syndicate.Id;
+            _dbContext.Add(historyEntry);
+            await _dbContext.SaveChangesAsync();
+            return true;
+        }
     }
 }

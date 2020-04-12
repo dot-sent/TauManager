@@ -12,5 +12,14 @@ namespace TauManager.Models
         public int Bonds { get; set; }
         public decimal Credits { get; set; }
         public int MembersCount { get; set; }
+
+        public SyndicateHistory() { }
+        public SyndicateHistory(ViewModels.SyndicateInfoViewModel model)
+        {
+            this.Level = model.Level;
+            this.Bonds = model.Bonds;
+            this.Credits = model.Credits;
+            this.MembersCount = model.MembersCount;
+        }
     }
 }

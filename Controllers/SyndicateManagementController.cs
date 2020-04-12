@@ -9,6 +9,9 @@ using TauManager.BusinessLogic;
 using System.Threading.Tasks;
 using TauManager.Utils;
 using Microsoft.AspNetCore.Authorization;
+using TauManager.Models;
+using TauManager.ViewModels;
+using System.ComponentModel.DataAnnotations;
 
 namespace TauManager.Controllers
 {
@@ -43,6 +46,7 @@ namespace TauManager.Controllers
         public async Task<IActionResult> ImportFile(List<IFormFile> files, string token)
         {
             var user = await _userManager.GetUserAsync(User);
+            if (user == null && string.IsNullOrWhiteSpace(token)) return Unauthorized();
             if (user == null) user = _userManager.Users.SingleOrDefault(u => u.PlayerPageUploadToken == token);
             if (user == null ||
                 (
@@ -70,6 +74,23 @@ namespace TauManager.Controllers
                 model[formFile.FileName] = message;
             }
             return View(model);
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        public async Task<IActionResult> ImportSyndicateStats(SyndicateInfoViewModel entry)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null && string.IsNullOrWhiteSpace(entry.Token)) return Unauthorized();
+            if (user == null) user = _userManager.Users.SingleOrDefault(u => u.PlayerPageUploadToken == entry.Token);
+            if (user == null ||
+                (
+                    !(await _userManager.IsInRoleAsync(user, ApplicationRoleManager.Leader)) &&
+                    !(await _userManager.IsInRoleAsync(user, ApplicationRoleManager.Officer)) &&
+                    !(await _userManager.IsInRoleAsync(user, ApplicationRoleManager.Administrator))
+                )) return Unauthorized();
+            var result = await _syndicateLogic.SubmitSyndicateHistory(entry);
+            return Json(new {result = result});
         }
 
         [HttpPost]

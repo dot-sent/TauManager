@@ -12,5 +12,6 @@ namespace TauManager.BusinessLogic
         Task<SyndicateListViewModel> GetAllSyndicates(ClaimsPrincipal currentUser);
         SyndicatePlayerViewModel GetSyndicatePlayerAssignment();
         Task<bool> SetPlayerSyndicate(int playerId, int? syndicateId);
+        Task<bool> SubmitSyndicateHistory(SyndicateInfoViewModel historyEntry);
     }
 }
