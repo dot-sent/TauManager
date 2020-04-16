@@ -5,6 +5,7 @@ using TauManager.Areas.Identity.Data;
 using TauManager.Models;
 using System.Threading.Tasks;
 using TauManager.ViewModels;
+using System;
 
 namespace TauManager.BusinessLogic
 {
@@ -87,6 +88,7 @@ namespace TauManager.BusinessLogic
             var syndicate = _dbContext.Syndicate.SingleOrDefault(s => s.Tag == entry.Tag);
             if (syndicate == null) return false;
             var historyEntry = new SyndicateHistory(entry);
+            historyEntry.RecordedAt = DateTime.Now;
             historyEntry.SyndicateId = syndicate.Id;
             _dbContext.Add(historyEntry);
             await _dbContext.SaveChangesAsync();

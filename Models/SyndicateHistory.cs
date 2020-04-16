@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace TauManager.Models
@@ -12,6 +13,7 @@ namespace TauManager.Models
         public int Bonds { get; set; }
         public decimal Credits { get; set; }
         public int MembersCount { get; set; }
+        public DateTime RecordedAt { get; set; }
 
         public SyndicateHistory() { }
         public SyndicateHistory(ViewModels.SyndicateInfoViewModel model)
