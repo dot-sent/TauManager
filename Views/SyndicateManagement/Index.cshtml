@@ -66,7 +66,12 @@
                         <td>@player.Social</td>
                         <td>@player.BankString</td>
                         <td>@player.Bonds</td>
-                        <td class="@(player.Active ? player.UniCourseActive ? "text-success" : "text-danger" : "")">@player.UniCourseDateString</td>
+                        @if (player.UniversityComplete)
+                        {
+                            <td class="text-success">(done)</td>
+                        } else {
+                            <td class="@(player.Active ? player.UniCourseActive ? "text-success" : "text-danger" : "")">@player.UniCourseDateString</td>
+                        }
                         <td>@player.LastUpdateString</td>
                         <td class="player-activity player-activity-@(Model.LastActivity[player.Id].DaysClass)">@(Model.LastActivity[player.Id].DaysAgoString)</td>
                         <td>@Model.Attendance.TotalAttendance.SingleOrGiven(player.Id, 0)%/@Model.Attendance.Last10T5HardAttendance.SingleOrGiven(player.Id, 0)%</td>

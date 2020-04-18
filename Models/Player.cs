@@ -5,6 +5,7 @@ using System.Data;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 
 namespace TauManager.Models
 {
@@ -60,6 +61,13 @@ namespace TauManager.Models
                 return UniCourseDate.HasValue ?
                     UniCourseDate.Value.Date >= DateTime.Today :
                     false;
+            }
+        }
+
+        public bool UniversityComplete {
+            get
+            {
+                return this.PlayerSkills.Sum(ps => ps.SkillLevel) >= Constants.MaxUniversityCourses;
             }
         }
         public string UniCourseDateString { 

@@ -402,7 +402,7 @@ namespace TauManager.BusinessLogic
             var announcements = new List<Announcement>();
             if (playerId.HasValue)
             {
-                if (!player.UniCourseActive && player.PlayerSkills.Sum(ps => ps.SkillLevel) < 127)
+                if (!player.UniCourseActive && player.PlayerSkills.Sum(ps => ps.SkillLevel) < Constants.MaxUniversityCourses)
                 {
                     announcements.Add(new Announcement{
                         FromId = null,
