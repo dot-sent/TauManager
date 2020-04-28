@@ -29,6 +29,25 @@
 </div>
 
 <div class="alert alert-success@(Model.Alert == null ? " d-none" : "")">@Model.Alert</div>
+@if (Model.Messages != null) {
+<div class="mb-2">
+    <a data-toggle="collapse" data-target="#importlog_div">Import stats: @Model.Messages.SuccessMessages.Count successfuly imported epic(s); @Model.Messages.WarningMessages.Count warning(s); @Model.Messages.ErrorMessages.Count error(s) (click for details)</a>
+    <div class="collapse" id="importlog_div">
+        <ul class="list-group">
+        @foreach (var message in Model.Messages.ErrorMessages) {
+            <li class="list-group-item list-group-item-danger">@message</li>
+        }
+        @foreach (var message in Model.Messages.WarningMessages) {
+            <li class="list-group-item list-group-item-warning">@message</li>
+        }
+        @foreach (var message in Model.Messages.SuccessMessages) {
+            <li class="list-group-item list-group-item-success">@message</li>
+        }
+        </ul>
+    </div>
+</div>
+}
+
 
 <div class="card mb-3">
     <div class="card-header"><h5>Campaign details</h5></div>

@@ -13,5 +13,6 @@ namespace TauManager.ViewModels
         public Dictionary<int, string> Statuses { get; set; }
         public string Alert { get; set; }
         public IEnumerable<Item> KnownEpics { get; set; }
+        public CampaignPageParseResultViewModel Messages { get; set; }
     }
 }

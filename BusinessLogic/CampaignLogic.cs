@@ -229,7 +229,11 @@ namespace TauManager.BusinessLogic
             var campaign = _dbContext.Campaign.SingleOrDefault(c => c.Id == campaignId);
             if (campaign == null) return null;
 
-            var model = new CampaignPageParseResultViewModel();
+            var model = new CampaignPageParseResultViewModel {
+                ErrorMessages = new List<string>(),
+                SuccessMessages = new List<string>(),
+                WarningMessages = new List<string>()
+            };
             var document = new HtmlDocument();
             document.LoadHtml(fileContents);
             var epicImages = document.DocumentNode.SelectNodes("//div[contains(concat(\" \",normalize-space(@class),\" \"),\" epic \")]/img");
@@ -256,7 +260,21 @@ namespace TauManager.BusinessLogic
                         {
                             var tauHeadUrl = TauHead.UrlBase + "/" + urlParts.TakeLast(2).Aggregate((result, item) => result + "/" + item);
                             epic = await _tauHead.GetItemData(tauHeadUrl);
-                            await _dbContext.AddAsync(epic);
+                            if (epic == null) // Item is missing from TauHead
+                            {
+                                model.ErrorMessages.Add(
+                                    string.Format(
+                                        "Item with slug {0} is missing from TauHead! Please contact Dotsent and firefu.",
+                                         slug
+                                    ));
+                            } else {
+                                model.SuccessMessages.Add(
+                                    string.Format(
+                                        "Item with slug {0} has been successfully imported from TauHead.",
+                                        slug
+                                    ));
+                                await _dbContext.AddAsync(epic);
+                            }
                         }
                         if (epic != null)
                         {
@@ -272,16 +290,27 @@ namespace TauManager.BusinessLogic
                                     };
                                     await _dbContext.AddAsync(loot);
                                     existingLootCount++;
-                                    // TODO: log successfully added loot
+                                    model.SuccessMessages.Add(
+                                        string.Format(
+                                            "Item with slug {0} has been added to the loot list.",
+                                            slug
+                                        ));
                                 }
                             } else {
-                                // TODO: log non-armor, non-weapon epic
+                                model.WarningMessages.Add(
+                                    string.Format(
+                                        "Ignoring epic item with slug {0} since it's neither weapon nor armor.",
+                                        slug
+                                    ));
                             }
-                        } else {
-                            // TODO: log incorrect slug
                         }
                     } else {
-                        // TODO: log item without linkify URL
+                        // This check is probably going to be very noisy since it will activate on items
+                        // that Linkify doesn't decorate, yet they still have Epic frames
+
+                        // model.WarningMessages.Add(
+                        //     "Skipping epic item without URL. Perhaps, Linkify.user.js is not installed?"
+                        // );
                     }
                 }
             }
@@ -303,7 +332,11 @@ namespace TauManager.BusinessLogic
                             await _dbContext.AddAsync(attendance);
                         }
                     } else {
-                        // TODO: Handle non-existing player
+                        model.WarningMessages.Add(
+                            string.Format(
+                                "Player {0} does not seem to belong to the syndicate. Please ensure that members' list is up to date!",
+                                cells[2].InnerText
+                            ));
                     }
                 }
             }

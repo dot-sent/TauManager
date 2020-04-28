@@ -3,11 +3,13 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using TauManager.Areas.Identity;
 using TauManager.Areas.Identity.Data;
 using TauManager.BusinessLogic;
 using TauManager.Models;
 using TauManager.Utils;
+using TauManager.ViewModels;
 
 namespace TauManager.Controllers
 {
@@ -59,6 +61,8 @@ namespace TauManager.Controllers
             var model = _campaignLogic.GetCampaignById(id, false, true, (await GetSyndicate()).Id);
             if (model == null || model.Campaign == null) return NotFound();
             model.Alert = alert;
+            model.Messages = TempData.ContainsKey("CampaignImportMessages") ?
+                JsonConvert.DeserializeObject<CampaignPageParseResultViewModel>((string)TempData["CampaignImportMessages"]) : null;
             return View(model);
         }
 
@@ -178,7 +182,11 @@ namespace TauManager.Controllers
             string fileContents = reader.ReadToEnd();
             reader.Close();
             var model = await _campaignLogic.ParseCampaignPage(fileContents, campaignId);
-            return RedirectToAction("Details", new{ id = campaignId, alert = "Campaign results imported successfully. Campaign status set to Completed."});
+            TempData["CampaignImportMessages"] = JsonConvert.SerializeObject(model);
+            return RedirectToAction("Details", new{ 
+                id = campaignId, 
+                alert = "Campaign results imported successfully. Campaign status set to Completed."
+            });
         }
 
         [HttpPost]

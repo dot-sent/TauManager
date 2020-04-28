@@ -89,6 +89,9 @@ namespace TauManager.Controllers
                     !(await _userManager.IsInRoleAsync(user, ApplicationRoleManager.Officer)) &&
                     !(await _userManager.IsInRoleAsync(user, ApplicationRoleManager.Administrator))
                 )) return Unauthorized();
+            if (entry.Level == 0) {
+                return BadRequest("Zero syndicate level reported - please contact Dotsent");
+            }
             var result = await _syndicateLogic.SubmitSyndicateHistory(entry);
             return Json(new {result = result});
         }
