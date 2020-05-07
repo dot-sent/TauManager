@@ -21,13 +21,13 @@ namespace TauManager.BusinessLogic
             _campaignLogic = campaignLogic;
         }
 
-        public SyndicateMetricsViewModel GetSyndicateMetrics(int? playerId, bool includeInactive, int syndicateId)
+        public SyndicatePlayersViewModel GetSyndicateMetrics(int? playerId, bool includeInactive, int syndicateId)
         {
-            var model = new SyndicateMetricsViewModel{
+            var model = new SyndicatePlayersViewModel{
                 IncludeInactive = includeInactive,
             };
             var allPlayers = _dbContext.Player.Where(p => (includeInactive || p.Active) && p.SyndicateId == syndicateId).AsEnumerable();
-            model.PlayerStats = allPlayers.Where(p => p.Active).ToList().GroupBy(p => p.Tier).Select(g => new SyndicateMetricsViewModel.TierStatistics
+            model.PlayerStats = allPlayers.Where(p => p.Active).ToList().GroupBy(p => p.Tier).Select(g => new SyndicatePlayersViewModel.TierStatistics
             {
                 Tier = g.Key,
                 PlayerCount = g.Count(),
@@ -76,7 +76,7 @@ namespace TauManager.BusinessLogic
                         }
                     );
                 
-                model.LastActivity = new Dictionary<int, SyndicateMetricsViewModel.LastPlayerActivity>();
+                model.LastActivity = new Dictionary<int, SyndicatePlayersViewModel.LastPlayerActivity>();
                 foreach (var history in histories)
                 {
                     var player = allPlayers.SingleOrDefault(p => p.Id == history.playerId);
@@ -102,7 +102,7 @@ namespace TauManager.BusinessLogic
                             daysAgo = 15;
                         }
                     }
-                    model.LastActivity[history.playerId] = new SyndicateMetricsViewModel.LastPlayerActivity
+                    model.LastActivity[history.playerId] = new SyndicatePlayersViewModel.LastPlayerActivity
                     {
                         DaysAgo = daysAgo,
                         Active = player.Active,
@@ -112,7 +112,7 @@ namespace TauManager.BusinessLogic
                 {
                     if (!model.LastActivity.ContainsKey(player.Id))
                     {
-                        model.LastActivity[player.Id] = new SyndicateMetricsViewModel.LastPlayerActivity
+                        model.LastActivity[player.Id] = new SyndicatePlayersViewModel.LastPlayerActivity
                         {
                             DaysAgo = 15,
                             Active = player.Active,

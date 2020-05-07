@@ -6,7 +6,7 @@ namespace TauManager.ViewModels
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     public class HomePageViewModel
     {
-        public SyndicateMetricsViewModel Metrics { get; set; }
+        public SyndicatePlayersViewModel Metrics { get; set; }
         public IEnumerable<Announcement> Announcements { get; set; }
     }
 }

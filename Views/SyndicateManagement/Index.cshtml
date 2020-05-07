@@ -1,4 +1,4 @@
-@model TauManager.ViewModels.SyndicateMetricsViewModel
+@model TauManager.ViewModels.SyndicatePlayersViewModel
 @using static TauManager.Utils.DictionaryExtensions
 @{
     ViewData["Title"] = "Players overview - syndicate management";
@@ -9,7 +9,7 @@
 }
 
 <div class="text-center">
-    <h2>Syndicate metrics</h2>
+    <h2>Syndicate members</h2>
     <p><a asp-controller="SyndicateManagement" asp-action="ImportFile">Import new file(s)</a></p>
     <p>
         <form class="form-inline" id="form_filter" asp-action="SetSyndicateOverviewParams">

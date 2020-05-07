@@ -5,7 +5,7 @@ namespace TauManager.BusinessLogic
 {
     public interface IPlayerLogic
     {
-        SyndicateMetricsViewModel GetSyndicateMetrics(int? playerId, bool includeInactive, int syndicateId);
+        SyndicatePlayersViewModel GetSyndicateMetrics(int? playerId, bool includeInactive, int syndicateId);
         HomePageViewModel GetHomePageModel(int? playerId);
         Task<string> ParsePlayerPageAsync(string fileContents, int syndicateId);
         Task<bool> SetPlayerActiveAsync(int playerId, bool status);
