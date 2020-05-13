@@ -532,5 +532,10 @@ namespace TauManager.BusinessLogic
 
             return result;
         }
+
+        public Task<bool> SetPlayerDiscordAccountAsync(int? playerId, string login)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

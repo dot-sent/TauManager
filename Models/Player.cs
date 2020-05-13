@@ -12,6 +12,19 @@ namespace TauManager.Models
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     public class Player
     {
+        [Flags]
+        public enum NotificationFlags: int {
+            None = 0,
+            GauleVisa = 1,
+            University = 2,
+            NewCampaign = 4,
+            CampaignUpdatedIfSignedUp = 8,
+            CampaignUpdatedAll = 16,
+            CampaignSoonIfSignedUp = 32,
+            CampaignSoonAll = 64,
+            NewMarketAd = 128
+        }
+
         public int Id { get; set; }
         public string Name { get; set; }
         public int? SyndicateId { get; set; }
@@ -114,6 +127,8 @@ namespace TauManager.Models
             }
         }
 
+        public string DiscordLogin { get; set; }
+        public NotificationFlags NotificationSettings { get; set; }
         public virtual ICollection<PlayerHistory> History { get; set; }
 
         public void Update(PlayerHistory p)
