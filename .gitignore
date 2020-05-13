@@ -5,3 +5,8 @@ ScaffoldingReadme.txt
 redis/
 appsettings.json
 appsettings.Development.json
+backups/
+packages-microsoft-prod.deb
+scripts/.market_test_data.sql.swp
+scripts/market_test_data.sql
+tau.env
