@@ -1,0 +1,8 @@
+@model TauManager.Models.Announcement
+
+<div class="row">
+    <div class="col-md-12 alert alert-@(Model.Style.ToString().ToLower())">
+        Message from <b>@(Model.FromId.HasValue ? Model.From.Name : "System")</b>:<br/>
+        @Model.Text
+    </div>
+</div>
