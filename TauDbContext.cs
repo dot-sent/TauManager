@@ -46,5 +46,8 @@ namespace TauManager
         public DbSet<MarketAdBundleItem> MarketAdBundleItem { get; set; }
         public DbSet<MarketAdReaction> MarketAdReaction { get; set; }
         #endregion
+        #region Notifications
+        public DbSet<Notification> Notification { get; set; }
+        #endregion
     }
 }

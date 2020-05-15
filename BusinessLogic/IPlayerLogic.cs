@@ -14,5 +14,6 @@ namespace TauManager.BusinessLogic
         SkillOverviewViewModel GetSkillsOverview(string skillGroupName, int syndicateId);
         string GetPlayerPageUploadToken();
         Task<bool> SetPlayerDiscordAccountAsync(int? playerId, string login);
+        bool SetPlayerNotificationByDiscord(string discordLogin, int notificationFlags);
     }
 }

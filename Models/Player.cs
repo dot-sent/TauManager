@@ -22,8 +22,14 @@ namespace TauManager.Models
             CampaignUpdatedAll = 16,
             CampaignSoonIfSignedUp = 32,
             CampaignSoonAll = 64,
-            NewMarketAd = 128
+            NewMarketAd = 128,
+            All = (GauleVisa | University | NewCampaign |
+                CampaignUpdatedIfSignedUp | CampaignUpdatedAll |
+                CampaignSoonIfSignedUp | CampaignSoonAll |
+                NewMarketAd )
         }
+
+        public static bool IsValidNotificationFlag(int flag) => (flag & (int)NotificationFlags.All) == flag;
 
         public int Id { get; set; }
         public string Name { get; set; }

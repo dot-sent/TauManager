@@ -541,5 +541,17 @@ namespace TauManager.BusinessLogic
             await _dbContext.SaveChangesAsync();
             return true;
         }
+
+        public bool SetPlayerNotificationByDiscord(string discordLogin, int notificationFlags)
+        {
+            if (string.IsNullOrWhiteSpace(discordLogin)) return false;
+            if (!Player.IsValidNotificationFlag(notificationFlags)) return false;
+            var players = _dbContext.Player.Where(p => p.DiscordLogin == discordLogin);
+            if (players.Count() != 1) return false; // This limits Discord account connection to max. 1 player, which is what I want.
+            var player = players.First();
+            player.NotificationSettings = (Player.NotificationFlags)notificationFlags;
+            _dbContext.SaveChanges();
+            return true;
+        }
     }
 }
