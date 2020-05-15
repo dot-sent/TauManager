@@ -2,11 +2,12 @@ using System;
 
 namespace TauManager.Models
 {
+    public enum NotificationKind: byte { GauleVisa, University, NewCampaign, CampaignUpdated, CampaignSoon, NewMarketAd }
+
     public class Notification
     {
         public const int MaxRetries = 3;
         public enum NotificationStatus: byte { NotSent, Sent, PermanentlyFailed }
-        public enum NotificationKind: byte { GauleVisa, University, NewCampaign, CampaignUpdated, CampaignSoon, NewMarketAd }
         public long Id { get; set; }
         public DateTime SendAfter { get; set; }
         public int RecipientId { get; set; }
