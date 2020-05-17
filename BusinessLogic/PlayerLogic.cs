@@ -9,6 +9,7 @@ using TauManager.Models;
 using System.Security.Cryptography;
 using Microsoft.EntityFrameworkCore;
 using TauManager.Utils;
+using static TauManager.Models.Notification;
 
 namespace TauManager.BusinessLogic
 {
@@ -565,9 +566,19 @@ namespace TauManager.BusinessLogic
                         case Player.NotificationFlags.GauleVisa:
                             if (valueDiff > 0)
                             {
-                                _notificationLogic.AddNotificationIfNeeded(NotificationKind.GauleVisa, player.Id);
+                                _dbContext.Notification.Add(
+                                    new Notification{
+                                        Kind = NotificationKind.GauleVisa,
+                                        RecipientId = player.Id,
+                                        SendAfter = player.GauleVisaExpiry.Value.AddDays(-2),
+                                        Status = NotificationStatus.NotSent
+                                    }
+                                );
                             } else {
-                                _notificationLogic.RemoveNotificationIfNeeded(NotificationKind.GauleVisa, player.Id);
+                                var notifications =_dbContext.Notification
+                                    .Where(n => n.RecipientId == player.Id &&
+                                        n.Kind == NotificationKind.GauleVisa);
+                                _dbContext.RemoveRange(notifications);
                             }
                             break;
                         case Player.NotificationFlags.University:
@@ -575,18 +586,26 @@ namespace TauManager.BusinessLogic
                             {
                                 if (!player.UniversityComplete)
                                 {
-                                    _notificationLogic.AddNotificationIfNeeded(NotificationKind.University, player.Id);
+                                    _dbContext.Notification.Add(
+                                        new Notification{
+                                            Kind = NotificationKind.University,
+                                            RecipientId = player.Id,
+                                            SendAfter = player.GauleVisaExpiry.Value.AddDays(-1),
+                                            Status = NotificationStatus.NotSent
+                                        }
+                                    );
                                 }
                             } else {
-                                _notificationLogic.RemoveNotificationIfNeeded(NotificationKind.University, player.Id);
+                                var notifications =_dbContext.Notification
+                                    .Where(n => n.RecipientId == player.Id &&
+                                        n.Kind == NotificationKind.University);
+                                _dbContext.RemoveRange(notifications);
                             }
                             break;
                         case Player.NotificationFlags.CampaignSoonAll:
                             if (valueDiff > 0)
                             {
-                                _notificationLogic.AddNotificationIfNeeded(NotificationKind.CampaignSoon, player.Id);
                             } else {
-                                _notificationLogic.RemoveNotificationIfNeeded(NotificationKind.CampaignSoon, player.Id);
                             }
                             break;
                         default:
