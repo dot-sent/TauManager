@@ -8,6 +8,18 @@ services:
             - /etc/tau.env
         extra_hosts:
             - "database:172.17.0.1"
+        networks:
+            taunet:
+                ipv4_address: 172.18.0.2
+    bot:
+        image: taubot:latest
+        env_file:
+            - /etc/taubot.env
+        extra_hosts:
+            - "database:172.17.0.1"
+        networks:
+            taunet:
+                ipv4_address: 172.18.0.10
     proxy:
         build:
             context:  ./nginx
