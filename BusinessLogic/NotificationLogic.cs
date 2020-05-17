@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using TauManager.Models;
 using TauManager.ViewModels;
 using static TauManager.Models.Notification;
+using static TauManager.Models.Player;
 
 namespace TauManager.BusinessLogic
 {
@@ -74,6 +76,116 @@ namespace TauManager.BusinessLogic
                     break;
             }
             return message;
+        }
+
+        public async Task<bool> AddNotificationIfNeeded(NotificationKind kind, int relatedId)
+        {
+            switch (kind)
+            {
+                case NotificationKind.GauleVisa:
+                    {
+                        var player = _dbContext.Player.FirstOrDefault(p => p.Id == relatedId);
+                        _dbContext.Notification.Add(
+                            new Notification{
+                                Kind = kind,
+                                RecipientId = relatedId,
+                                SendAfter = player.GauleVisaExpiry.Value.AddDays(-2),
+                                Status = NotificationStatus.NotSent
+                            }
+                        );
+                    }
+                    break;
+                case NotificationKind.University:
+                    {
+                        var player = _dbContext.Player.FirstOrDefault(p => p.Id == relatedId);
+                        _dbContext.Notification.Add(
+                            new Notification{
+                                Kind = kind,
+                                RecipientId = relatedId,
+                                SendAfter = player.UniCourseDate.Value.AddDays(-1),
+                                Status = NotificationStatus.NotSent
+                            }
+                        );
+                    }
+                    break;
+                case NotificationKind.NewCampaign:
+                    {
+                        var campaign = _dbContext.Campaign
+                            .Include(c => c.Signups)
+                            .FirstOrDefault(c => c.Id == relatedId);
+                        var playersToNotify = _dbContext.Player
+                            .Where(p =>
+                                p.SyndicateId == campaign.SyndicateId &&
+                                (p.NotificationSettings & NotificationFlags.NewCampaign) == NotificationFlags.NewCampaign
+                            );
+                        foreach (var player in playersToNotify)
+                        {
+                            _dbContext.Add(
+                                new Notification{
+                                    Kind = kind,
+                                    RecipientId = player.Id,
+                                    SendAfter = DateTime.Now,
+                                    Status = NotificationStatus.NotSent
+                                }
+                            );
+                        }
+                        var playersToNotifyBeforeCamp = _dbContext.Player
+                            .Where(p =>
+                                p.SyndicateId == campaign.SyndicateId &&
+                                (p.NotificationSettings & NotificationFlags.CampaignSoonAll) == NotificationFlags.CampaignSoonAll
+                            );
+                        foreach (var player in playersToNotifyBeforeCamp)
+                        {
+                            _dbContext.Add(
+                                new Notification{
+                                    Kind = NotificationKind.CampaignSoon,
+                                    RecipientId = player.Id,
+                                    SendAfter = campaign.UTCDateTime.Value.AddHours(-4),
+                                    Status = NotificationStatus.NotSent
+                                }
+                            );
+                        }
+                    }
+                    break;
+                case NotificationKind.CampaignUpdated:
+                    break;
+                case NotificationKind.CampaignSoon:
+                    break;
+                case NotificationKind.NewMarketAd:
+                    break;
+                default:
+                    break;
+            }
+            await _dbContext.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> RemoveNotificationIfNeeded(NotificationKind kind, int recipientId)
+        {
+            switch (kind)
+            {
+                case NotificationKind.GauleVisa:
+                case NotificationKind.University:
+                    {
+                        var notifications =_dbContext.Notification
+                            .Where(n => n.RecipientId == recipientId &&
+                                n.Kind == kind);
+                        _dbContext.RemoveRange(notifications);
+                    }
+                    break;
+                case NotificationKind.CampaignSoon:
+                    {
+                        var notifications =_dbContext.Notification
+                            .Where(n => n.RecipientId == recipientId &&
+                                n.Kind == NotificationKind.CampaignSoon);
+                        _dbContext.RemoveRange(notifications);
+                    }
+                    break;
+                default:
+                    break;
+            }
+            await _dbContext.SaveChangesAsync();
+            return true;
         }
     }
 }

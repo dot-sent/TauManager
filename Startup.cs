@@ -74,6 +74,7 @@ namespace TauManager
 #endif
 
             #region Business logic services registration
+            services.AddScoped<INotificationLogic, NotificationLogic>();
             services.AddScoped<ICampaignLogic, CampaignLogic>();
             services.AddScoped<IItemLogic, ItemLogic>();
             services.AddScoped<IPlayerLogic, PlayerLogic>();

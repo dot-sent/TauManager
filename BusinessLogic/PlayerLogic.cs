@@ -8,6 +8,7 @@ using TauManager.ViewModels;
 using TauManager.Models;
 using System.Security.Cryptography;
 using Microsoft.EntityFrameworkCore;
+using TauManager.Utils;
 
 namespace TauManager.BusinessLogic
 {
@@ -15,10 +16,12 @@ namespace TauManager.BusinessLogic
     {
         private TauDbContext _dbContext { get; set; }
         private ICampaignLogic _campaignLogic { get; set; }
-        public PlayerLogic(TauDbContext dbContext, ICampaignLogic campaignLogic)
+        private INotificationLogic _notificationLogic { get; set; }
+        public PlayerLogic(TauDbContext dbContext, ICampaignLogic campaignLogic, INotificationLogic notificationLogic)
         {
             _dbContext = dbContext;
             _campaignLogic = campaignLogic;
+            _notificationLogic = notificationLogic;
         }
 
         public SyndicatePlayersViewModel GetSyndicateMetrics(int? playerId, bool includeInactive, int syndicateId)
@@ -549,7 +552,49 @@ namespace TauManager.BusinessLogic
             var players = _dbContext.Player.Where(p => p.DiscordLogin == discordLogin);
             if (players.Count() != 1) return false; // This limits Discord account connection to max. 1 player, which is what I want.
             var player = players.First();
+            var oldValues = player.NotificationSettings;
             player.NotificationSettings = (Player.NotificationFlags)notificationFlags;
+            var flagValues = EnumExtensions.ToDictionary<Player.NotificationFlags>(typeof(Player.NotificationFlags));
+            foreach(var flagKey in flagValues.Keys)
+            {
+                // valueDiff will be 0 for no changes, >0 if turning flag on, <0 if turning flag off
+                var valueDiff = (player.NotificationSettings & flagKey) - (oldValues & flagKey);
+                if (valueDiff != 0)
+                {
+                    switch(flagKey) {
+                        case Player.NotificationFlags.GauleVisa:
+                            if (valueDiff > 0)
+                            {
+                                _notificationLogic.AddNotificationIfNeeded(NotificationKind.GauleVisa, player.Id);
+                            } else {
+                                _notificationLogic.RemoveNotificationIfNeeded(NotificationKind.GauleVisa, player.Id);
+                            }
+                            break;
+                        case Player.NotificationFlags.University:
+                            if (valueDiff > 0)
+                            {
+                                if (!player.UniversityComplete)
+                                {
+                                    _notificationLogic.AddNotificationIfNeeded(NotificationKind.University, player.Id);
+                                }
+                            } else {
+                                _notificationLogic.RemoveNotificationIfNeeded(NotificationKind.University, player.Id);
+                            }
+                            break;
+                        case Player.NotificationFlags.CampaignSoonAll:
+                            if (valueDiff > 0)
+                            {
+                                _notificationLogic.AddNotificationIfNeeded(NotificationKind.CampaignSoon, player.Id);
+                            } else {
+                                _notificationLogic.RemoveNotificationIfNeeded(NotificationKind.CampaignSoon, player.Id);
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            }
+
             _dbContext.SaveChanges();
             return true;
         }
