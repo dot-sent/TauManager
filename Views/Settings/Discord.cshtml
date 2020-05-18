@@ -1,0 +1,93 @@
+@model TauManager.Models.Player
+@{
+    ViewData["Title"] = "Settings - Discord";
+}
+
+<div class="row justify-content-start">
+    <div class="col-md-8">
+        <form method="POST" id="formDiscordSettings">
+            <input type="hidden" name="notificationSettings" value="@Model.NotificationSettings" id="hNotificationSettings">
+            <div class="form-group">
+                <label for="discordLoginInput">Discord username</label>
+                <input type="text" class="form-control" id="discordLoginInput" name="login" placeholder="Dotsent#5616" value="@Model.DiscordLogin">
+            </div>
+            <h5>Notify me of:</h5>
+            <div class="form-check mb-1">
+                <input class="form-check-input notification-flag" type="checkbox" value="1" id="cbGauleVisa"@(Model.NotificationSettings.HasFlag(Player.NotificationFlags.GauleVisa) ? " checked": "" )>
+                <label class="form-check-label" for="cbGauleVisa">
+                    Gaule visa expiration
+                </label>
+                <small class="text-muted">(2 days before)</small>
+            </div>
+            <div class="form-check mb-1">
+                <input class="form-check-input notification-flag" type="checkbox" value="2" id="cbUniversity"@(Model.NotificationSettings.HasFlag(Player.NotificationFlags.University) ? " checked": "" )>
+                <label class="form-check-label" for="cbUniversity">
+                    University course finish
+                </label>
+                <small class="text-muted">(1 day before, doesn't apply to fully educated citizens)</small>
+            </div>
+            <div class="form-check mb-1">
+                <input class="form-check-input notification-flag" type="checkbox" value="4" id="cbNewCampaign"@(Model.NotificationSettings.HasFlag(Player.NotificationFlags.NewCampaign) ? " checked": "" )>
+                <label class="form-check-label" for="cbNewCampaign">
+                    New campaign for your syndicate is added to the Manager
+                </label>
+                <small class="text-muted">(immediately)</small>
+            </div>
+            <div class="form-check mb-1">
+                <input class="form-check-input notification-flag" type="checkbox" value="8" id="cbCampaignUpdatedIfSignedUp"@(Model.NotificationSettings.HasFlag(Player.NotificationFlags.CampaignUpdatedIfSignedUp) ? " checked": "" )>
+                <label class="form-check-label" for="cbCampaignUpdatedIfSignedUp">
+                    A campaign you signed up for has been updated
+                </label>
+                <small class="text-muted">(immediately, only if you signed up)</small>
+            </div>
+            <div class="form-check mb-1">
+                <input class="form-check-input notification-flag" type="checkbox" value="16" id="cbCampaignUpdatedAll"@(Model.NotificationSettings.HasFlag(Player.NotificationFlags.CampaignUpdatedAll) ? " checked": "" )>
+                <label class="form-check-label" for="cbCampaignUpdatedAll">
+                    Any campaign planned for your syndicate has been updated
+                </label>
+                <small class="text-muted">(immediately, even if you didn't sign up)</small>
+            </div>
+            <div class="form-check mb-1">
+                <input class="form-check-input notification-flag" type="checkbox" value="32" id="cbCampaignSoonIfSignedUp"@(Model.NotificationSettings.HasFlag(Player.NotificationFlags.CampaignSoonIfSignedUp) ? " checked": "" )>
+                <label class="form-check-label" for="cbCampaignSoonIfSignedUp">
+                    A campaign you signed up for starts soon
+                </label>
+                <small class="text-muted">(4 hours/~16 segments before campaign starts, only if you signed up)</small>
+            </div>
+            <div class="form-check mb-1">
+                <input class="form-check-input notification-flag" type="checkbox" value="64" id="cbCampaignSoonAll"@(Model.NotificationSettings.HasFlag(Player.NotificationFlags.CampaignSoonAll) ? " checked": "" )>
+                <label class="form-check-label" for="cbCampaignSoonAll">
+                    Any campaign planned for your syndicate starts soon
+                </label>
+                <small class="text-muted">(4 hours/~16 segments before campaign starts, even if you didn't sign up)</small>
+            </div>
+            <div class="form-check mb-1">
+                <input class="form-check-input notification-flag" type="checkbox" value="128" id="cbNewMarketAd"@(Model.NotificationSettings.HasFlag(Player.NotificationFlags.NewMarketAd) ? " checked": "" )>
+                <label class="form-check-label" for="cbNewMarketAd">
+                    New Market ad has been added
+                </label>
+                <small class="text-muted">(immediately)</small>
+            </div>
+            <div class="form-group">
+                <input type="button" id="btnSaveChanges" value="Save" style="form-control btn btn-primary">
+            </div>
+
+        </form>
+    </div>
+</div>
+
+@section Scripts
+{
+    <script type="text/javascript">
+        $("#btnSaveChanges").click(function(evt) {
+            evt.preventDefault();
+            let $form = $("#formDiscordSettings");
+            let flags = 0;
+            $(".notification-flag:checked").each(function(ix,el){
+                flags += parseInt($(el).val());
+            });
+            $("#hNotificationSettings").val(flags);
+            $form.submit();
+        });
+    </script>
+}

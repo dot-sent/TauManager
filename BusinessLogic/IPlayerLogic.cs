@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using TauManager.Models;
 using TauManager.ViewModels;
 
 namespace TauManager.BusinessLogic
@@ -15,5 +16,6 @@ namespace TauManager.BusinessLogic
         string GetPlayerPageUploadToken();
         Task<bool> SetPlayerDiscordAccountAsync(int? playerId, string login);
         bool SetPlayerNotificationByDiscord(string discordLogin, int notificationFlags);
+        Player GetPlayerById(int id);
     }
 }

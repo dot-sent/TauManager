@@ -617,5 +617,11 @@ namespace TauManager.BusinessLogic
             _dbContext.SaveChanges();
             return true;
         }
+
+        public Player GetPlayerById(int id)
+        {
+            var player = _dbContext.Player.FirstOrDefault(p => p.Id == id);
+            return player;
+        }
     }
 }
