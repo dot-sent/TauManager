@@ -267,6 +267,33 @@ namespace TauManager.BusinessLogic
                     {
                         message += " and player entry updated";
                         player.Update(playerHistory);
+                        if (player.NotificationSettings.HasFlag(Player.NotificationFlags.GauleVisa) &&
+                            player.GauleVisaExpiry != visaDate &&
+                            visaDate.HasValue)
+                        {
+                            _dbContext.Notification.Add(
+                                new Notification{
+                                    Kind = NotificationKind.GauleVisa,
+                                    RecipientId = player.Id,
+                                    SendAfter = visaDate.Value.AddDays(-2),
+                                    Status = NotificationStatus.NotSent
+                                }
+                            );
+                        }
+                        if (player.NotificationSettings.HasFlag(Player.NotificationFlags.University) &&
+                            player.UniCourseDate != lastCourseDate &&
+                            lastCourseDate.HasValue &&
+                            !player.UniversityComplete)
+                        {
+                            _dbContext.Notification.Add(
+                                new Notification{
+                                    Kind = NotificationKind.University,
+                                    RecipientId = player.Id,
+                                    SendAfter = lastCourseDate.Value.AddDays(-1),
+                                    Status = NotificationStatus.NotSent
+                                }
+                            );
+                        }
                         player.UniCourseDate = lastCourseDate;
                         player.GauleVisaExpiry = visaDate;
                         _dbContext.Update(player);
