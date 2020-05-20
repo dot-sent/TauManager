@@ -161,13 +161,95 @@ namespace TauManager.BusinessLogic
             {
                 campaign.ManagerId = null;
             }
+            var playersToNotifyOfNewCampaign = new List<int>();
+            var playersToNotifyOfUpdatedCampaign = new List<int>();
+            var playersToNotifyOfCampaignSoon = new List<int>();
             if (campaign.Id == 0)
             {
                 _dbContext.Add(campaign);
+                playersToNotifyOfNewCampaign.AddRange(_dbContext.Player
+                    .Where(p => p.SyndicateId == campaign.SyndicateId &&
+                        p.NotificationSettings.HasFlag(Player.NotificationFlags.NewCampaign))
+                    .Select(p => p.Id));
+                playersToNotifyOfCampaignSoon.AddRange(_dbContext.Player
+                    .Where(p => p.SyndicateId == campaign.SyndicateId &&
+                        p.NotificationSettings.HasFlag(Player.NotificationFlags.CampaignSoonAll))
+                    .Select(p => p.Id));
             } else {
-                var campaignExists = _dbContext.Campaign.Any(c => c.Id == campaign.Id && c.SyndicateId == syndicateId);
-                if (!campaignExists) return null;
+                var campaignExists = _dbContext.Campaign
+                    .AsNoTracking() // We are going to just save the object from the input parameter
+                    .FirstOrDefault(c => c.Id == campaign.Id && c.SyndicateId == syndicateId);
+                if (campaignExists == null) return null;
                 _dbContext.Update(campaign);
+                playersToNotifyOfUpdatedCampaign.AddRange(_dbContext.Player
+                    .Where(p => p.SyndicateId == campaign.SyndicateId &&
+                        p.NotificationSettings.HasFlag(Player.NotificationFlags.CampaignUpdatedAll))
+                    .Select(p => p.Id));
+                playersToNotifyOfUpdatedCampaign = playersToNotifyOfUpdatedCampaign.Union(
+                    _dbContext.CampaignSignup
+                        .Include(cs => cs.Player)
+                        .Where(cs => cs.CampaignId == campaign.Id &&
+                            cs.Player.NotificationSettings.HasFlag(Player.NotificationFlags.CampaignUpdatedIfSignedUp))
+                        .Select(cs => cs.PlayerId)
+                ).ToList();
+                if (campaignExists.UTCDateString != campaign.UTCDateString)
+                {
+                    // Campaign time has been changed, we need to invalidate the notifications
+                    var notificationsToRemove = _dbContext.Notification
+                        .Where(n => n.Kind == NotificationKind.CampaignSoon &&
+                            n.RelatedId == campaign.Id);
+                    _dbContext.RemoveRange(notificationsToRemove);
+                    playersToNotifyOfCampaignSoon.AddRange(_dbContext.Player
+                        .Where(p => p.SyndicateId == campaign.SyndicateId &&
+                            p.NotificationSettings.HasFlag(Player.NotificationFlags.CampaignSoonAll))
+                        .Select(p => p.Id));
+                    playersToNotifyOfCampaignSoon = playersToNotifyOfCampaignSoon.Union(
+                        _dbContext.CampaignSignup
+                        .Include(cs => cs.Player)
+                        .Where(cs => cs.CampaignId == campaign.Id &&
+                            cs.Player.NotificationSettings.HasFlag(Player.NotificationFlags.CampaignSoonIfSignedUp))
+                        .Select(cs => cs.PlayerId)
+                    ).ToList();
+                }
+            }
+            await _dbContext.SaveChangesAsync();
+
+            // Generate instant notifications
+            foreach(var id in playersToNotifyOfNewCampaign)
+            {
+                _dbContext.Notification.Add(
+                    new Notification{
+                        RecipientId = id,
+                        RelatedId = campaign.Id,
+                        Kind = NotificationKind.NewCampaign,
+                        SendAfter = DateTime.Now
+                    }
+                );
+            }
+            foreach(var id in playersToNotifyOfUpdatedCampaign)
+            {
+                _dbContext.Notification.Add(
+                    new Notification{
+                        RecipientId = id,
+                        RelatedId = campaign.Id,
+                        Kind = NotificationKind.CampaignUpdated,
+                        SendAfter = DateTime.Now
+                    }
+                );
+            }
+            // Generate delayed notifications
+            var sendAfter = campaign.UTCDateTime.Value.EnsureUTC().AddHours(-4);
+            sendAfter = TimeZoneInfo.ConvertTimeFromUtc(sendAfter, TimeZoneInfo.Local);
+            foreach(var id in playersToNotifyOfCampaignSoon)
+            {
+                _dbContext.Notification.Add(
+                    new Notification{
+                        RecipientId = id,
+                        RelatedId = campaign.Id,
+                        Kind = NotificationKind.CampaignSoon,
+                        SendAfter = sendAfter
+                    }
+                );
             }
             await _dbContext.SaveChangesAsync();
             return campaign;
