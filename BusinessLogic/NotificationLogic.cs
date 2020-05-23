@@ -58,10 +58,22 @@ namespace TauManager.BusinessLogic
                                 campaign.UTCDateString);
                         break;
                     case NotificationKind.CampaignUpdated:
-                        model.Message += "A campaign you're following has been updated - check it out at https://dotsent.nl/Campaigns/";
+                        model.Message +=
+                            string.Format("A campaign you're following has been updated: it's now T{0}{1} at {2} on {3} ({4} UTC).\nMore details at https://dotsent.nl/Campaigns/",
+                                string.Join(null, campaign.TiersList.Select(t => t.ToString())),
+                                campaign.Difficulty.ToString(),
+                                campaign.Station,
+                                campaign.GCTDateString,
+                                campaign.UTCDateString);
                         break;
                     case NotificationKind.CampaignSoon:
-                        model.Message += "A campaign you're following is starting in about 16 segments - make sure to be there on time!";
+                        model.Message +=
+                            string.Format("A campaign you're following, T{0}{1} at {2}, starts in about 16 segments: on {3} ({4} UTC).\nMake sure to be there on time!",
+                                string.Join(null, campaign.TiersList.Select(t => t.ToString())),
+                                campaign.Difficulty.ToString(),
+                                campaign.Station,
+                                campaign.GCTDateString,
+                                campaign.UTCDateString);
                         break;
                     case NotificationKind.NewMarketAd:
                         model.Message += "There is a new ad on the Syndicate Market, check it out at https://dotsent.nl/Market/";
