@@ -617,7 +617,7 @@ namespace TauManager.BusinessLogic
                                         new Notification{
                                             Kind = NotificationKind.University,
                                             RecipientId = player.Id,
-                                            SendAfter = player.GauleVisaExpiry.Value.AddDays(-1),
+                                            SendAfter = player.UniCourseDate.Value.AddDays(-1),
                                             Status = NotificationStatus.NotSent
                                         }
                                     );
