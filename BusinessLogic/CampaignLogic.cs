@@ -431,8 +431,8 @@ namespace TauManager.BusinessLogic
         {
             var campaign = _dbContext.Campaign.SingleOrDefault(c => c.Id == campaignId);
             if (campaign == null) return false;
-            var playerExists = _dbContext.Player.Any(p => p.Id == playerId);
-            if (!playerExists) return false;
+            var player = _dbContext.Player.SingleOrDefault(p => p.Id == playerId);
+            if (player == null) return false;
             var signup = _dbContext.CampaignSignup.SingleOrDefault(s => s.PlayerId == playerId && s.CampaignId == campaignId);
             if (signup == null)
             {
@@ -442,9 +442,35 @@ namespace TauManager.BusinessLogic
                     CampaignId = campaignId,
                 };
                 await _dbContext.AddAsync(signup);
+                if ((player.NotificationSettings & Player.NotificationFlags.CampaignSoonIfSignedUp)
+                    == Player.NotificationFlags.CampaignSoonIfSignedUp &&
+                    (player.NotificationSettings & Player.NotificationFlags.CampaignSoonAll) == 0)
+                {
+                    var sendAfter = campaign.UTCDateTime.Value.EnsureUTC().AddHours(-4);
+                    sendAfter = TimeZoneInfo.ConvertTimeFromUtc(sendAfter, TimeZoneInfo.Local);
+                    await _dbContext.AddAsync(
+                        new Notification{
+                            Kind = NotificationKind.CampaignSoon,
+                            RecipientId = player.Id,
+                            RelatedId = campaign.Id,
+                            SendAfter = sendAfter,
+                            Status = Notification.NotificationStatus.NotSent
+                        }
+                    );
+                }
             } else {
                 if (status) return false;
                 _dbContext.Remove(signup);
+                if ((player.NotificationSettings & Player.NotificationFlags.CampaignSoonIfSignedUp)
+                    == Player.NotificationFlags.CampaignSoonIfSignedUp &&
+                    (player.NotificationSettings & Player.NotificationFlags.CampaignSoonAll) == 0)
+                {
+                    var notificationsToRemove = _dbContext.Notification.
+                        Where(n => n.RecipientId == player.Id &&
+                            n.Kind == NotificationKind.CampaignSoon &&
+                            n.RelatedId == campaign.Id);
+                    _dbContext.RemoveRange(notificationsToRemove);
+                }
             }
             await _dbContext.SaveChangesAsync();
             return true;
