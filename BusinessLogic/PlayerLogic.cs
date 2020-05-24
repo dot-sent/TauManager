@@ -573,6 +573,12 @@ namespace TauManager.BusinessLogic
             return true;
         }
 
+        private static bool FlagCombo(Player.NotificationFlags values, bool all, bool ifSignedup)
+        {
+            return values.HasFlag(Player.NotificationFlags.CampaignSoonAll) == all &&
+                values.HasFlag(Player.NotificationFlags.CampaignSoonIfSignedUp) == ifSignedup;
+        }
+
         public bool SetPlayerNotificationByDiscord(string discordLogin, int notificationFlags)
         {
             if (string.IsNullOrWhiteSpace(discordLogin)) return false;
@@ -630,15 +636,93 @@ namespace TauManager.BusinessLogic
                             }
                             break;
                         case Player.NotificationFlags.CampaignSoonAll:
-                            if (valueDiff > 0)
-                            {
-                            } else {
-                            }
+                            // Too complex logic to implement it just like this, see below
                             break;
                         default:
                             break;
                     }
                 }
+            }
+
+            if(FlagCombo(oldValues, false, false) &&
+                (player.NotificationSettings &
+                    (Player.NotificationFlags.CampaignSoonAll | Player.NotificationFlags.CampaignSoonIfSignedUp)) != 0)
+            {
+                var campaignsSoon =
+                    player.NotificationSettings.HasFlag(Player.NotificationFlags.CampaignSoonAll)
+                    ?
+                    _dbContext.Campaign
+                    .Where(c => c.UTCDateTime.Value > DateTime.UtcNow && c.SyndicateId == player.SyndicateId)
+                    :
+                    _dbContext.CampaignSignup
+                    .Include(c => c.Campaign)
+                    .Where(c => c.PlayerId == player.Id && c.Campaign.UTCDateTime.Value > DateTime.UtcNow)
+                    .Select(c => c.Campaign);
+                foreach (var campaign in campaignsSoon)
+                {
+                    var sendAfter = campaign.UTCDateTime.Value.EnsureUTC().AddHours(-4);
+                    sendAfter = TimeZoneInfo.ConvertTimeFromUtc(sendAfter, TimeZoneInfo.Local);
+                    _dbContext.Notification.Add(
+                        new Notification{
+                            Kind = NotificationKind.CampaignSoon,
+                            RecipientId = player.Id,
+                            RelatedId = campaign.Id,
+                            SendAfter = sendAfter,
+                            Status = NotificationStatus.NotSent
+                        }
+                    );
+                }
+            }
+
+            if (FlagCombo(oldValues, false, true) &&
+                (player.NotificationSettings &
+                    Player.NotificationFlags.CampaignSoonAll) != 0)
+            {
+                var campaignsSoon = _dbContext.Campaign
+                    .Where(c => c.UTCDateTime.Value > DateTime.UtcNow && c.SyndicateId == player.SyndicateId
+                    && !_dbContext.CampaignSignup.Any(cs => cs.CampaignId == c.Id && cs.PlayerId == player.Id));
+                foreach (var campaign in campaignsSoon)
+                {
+                    var sendAfter = campaign.UTCDateTime.Value.EnsureUTC().AddHours(-4);
+                    sendAfter = TimeZoneInfo.ConvertTimeFromUtc(sendAfter, TimeZoneInfo.Local);
+                    _dbContext.Notification.Add(
+                        new Notification{
+                            Kind = NotificationKind.CampaignSoon,
+                            RecipientId = player.Id,
+                            RelatedId = campaign.Id,
+                            SendAfter = sendAfter,
+                            Status = NotificationStatus.NotSent
+                        }
+                    );
+                }
+            }
+
+            if (FlagCombo(player.NotificationSettings, false, true) &&
+                (oldValues & Player.NotificationFlags.CampaignSoonAll) != 0)
+            {
+                var notificationsToRemove = _dbContext.Campaign
+                    .Join(_dbContext.Notification,
+                        c => c.Id,
+                        n => n.RelatedId,
+                        (c, n) => new{Campaign = c, Notification = n})
+                    .Where(c => c.Campaign.UTCDateTime.Value > DateTime.UtcNow && c.Campaign.SyndicateId == player.SyndicateId
+                    && !_dbContext.CampaignSignup.Any(cs => cs.CampaignId == c.Campaign.Id && cs.PlayerId == player.Id)
+                    && c.Notification.Kind == NotificationKind.CampaignSoon
+                    && c.Notification.RecipientId == player.Id
+                    && c.Notification.Status == NotificationStatus.NotSent)
+                    .Select(c => c.Notification);
+                _dbContext.RemoveRange(notificationsToRemove);
+            }
+
+            if (FlagCombo(player.NotificationSettings, false, false) &&
+                (oldValues &
+                    (Player.NotificationFlags.CampaignSoonAll | Player.NotificationFlags.CampaignSoonIfSignedUp)) != 0)
+            {
+                var notificationsToRemove = _dbContext.Notification
+                    .Where(n => n.RecipientId == player.Id
+                        && n.Kind == NotificationKind.CampaignSoon
+                        && n.Status == NotificationStatus.NotSent);
+                _dbContext.RemoveRange(notificationsToRemove);
             }
 
             _dbContext.SaveChanges();
