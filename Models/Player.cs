@@ -134,6 +134,9 @@ namespace TauManager.Models
         }
 
         public string DiscordLogin { get; set; }
+        public string DiscordAuthCode { get; set; }
+        [DefaultValue(false)]
+        public bool DiscordAuthConfirmed { get; set; }
         public NotificationFlags NotificationSettings { get; set; }
         public virtual ICollection<PlayerHistory> History { get; set; }
 
