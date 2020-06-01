@@ -13,9 +13,9 @@ namespace TauManager.BusinessLogic
         PlayerDetailsViewModel GetPlayerDetails(int id, bool? loadAll);
         PlayerDetailsChartData GetPlayerDetailsChartData(int id, byte interval, byte dataKind);
         SkillOverviewViewModel GetSkillsOverview(string skillGroupName, int syndicateId);
-        string GetPlayerPageUploadToken();
-        Task<bool> SetPlayerDiscordAccountAsync(int? playerId, string login);
-        bool SetPlayerNotificationByDiscord(string discordLogin, int notificationFlags);
+        string RequestPlayerDiscordLink(string playerName, string discordLogin);
+        Task<bool> SetPlayerDiscordAccountAsync(int? playerId, string login, string authCode);
+        bool SetPlayerNotificationFlags(int? playerId, int notificationFlags);
         Player GetPlayerById(int id);
     }
 }

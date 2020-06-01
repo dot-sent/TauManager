@@ -20,7 +20,9 @@ namespace TauManager.BusinessLogic
         {
             var notifications = _dbContext.Notification
                 .Include(n => n.Recipient)
-                .Where(n => n.SendAfter < DateTime.Now && n.Status == NotificationStatus.NotSent)
+                .Where(n => n.SendAfter < DateTime.Now &&
+                    n.Status == NotificationStatus.NotSent &&
+                    n.Recipient.DiscordAuthConfirmed)
                 .ToList();
             var notificationModels = new List<NotificationViewModel>();
             foreach (var notification in notifications)

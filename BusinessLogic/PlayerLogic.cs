@@ -6,7 +6,6 @@ using HtmlAgilityPack;
 using MathNet.Numerics.Statistics;
 using TauManager.ViewModels;
 using TauManager.Models;
-using System.Security.Cryptography;
 using Microsoft.EntityFrameworkCore;
 using TauManager.Utils;
 using static TauManager.Models.Notification;
@@ -481,27 +480,6 @@ namespace TauManager.BusinessLogic
             return model;
         }
 
-        public string GetPlayerPageUploadToken()
-        {
-            // The length of this string is 32 chars on purpose - 
-            // it MUST be one of the integer divisors for 256.
-            string randomChars = "ABCDEFGHJKLMNPQRSTUVWXYZ01234567";
-            RandomNumberGenerator r = RandomNumberGenerator.Create();
-            byte[] randomBytes = new Byte[256];
-            r.GetBytes(randomBytes);
-
-            var resultString = "";
-
-            List<char> chars = new List<char>();
-            foreach (var b in randomBytes)
-            {
-                chars.Add(randomChars[b % randomChars.Length]);
-            }
-            resultString = new string(chars.ToArray());
-
-            return resultString;
-        }
-
         public PlayerDetailsChartData GetPlayerDetailsChartData(int id, byte interval, byte dataKind)
         {
             var result = new PlayerDetailsChartData();
@@ -564,11 +542,11 @@ namespace TauManager.BusinessLogic
             return result;
         }
 
-        public async Task<bool> SetPlayerDiscordAccountAsync(int? playerId, string login)
+        public async Task<bool> SetPlayerDiscordAccountAsync(int? playerId, string login, string authCode)
         {
-            var player = _dbContext.Player.SingleOrDefault(p => p.Id == playerId);
+            var player = _dbContext.Player.SingleOrDefault(p => p.Id == playerId && p.DiscordLogin == login && p.DiscordAuthCode == authCode);
             if (player == null) return false;
-            player.DiscordLogin = login;
+            player.DiscordAuthConfirmed = true;
             await _dbContext.SaveChangesAsync();
             return true;
         }
@@ -579,13 +557,11 @@ namespace TauManager.BusinessLogic
                 values.HasFlag(Player.NotificationFlags.CampaignSoonIfSignedUp) == ifSignedup;
         }
 
-        public bool SetPlayerNotificationByDiscord(string discordLogin, int notificationFlags)
+        public bool SetPlayerNotificationFlags(int? playerId, int notificationFlags)
         {
-            if (string.IsNullOrWhiteSpace(discordLogin)) return false;
             if (!Player.IsValidNotificationFlag(notificationFlags)) return false;
-            var players = _dbContext.Player.Where(p => p.DiscordLogin == discordLogin);
-            if (players.Count() != 1) return false; // This limits Discord account connection to max. 1 player, which is what I want.
-            var player = players.First();
+            var player = _dbContext.Player.SingleOrDefault(p => p.Id == playerId);
+            if (player == null) return false;
             var oldValues = player.NotificationSettings;
             player.NotificationSettings = (Player.NotificationFlags)notificationFlags;
             var flagValues = EnumExtensions.ToDictionary<Player.NotificationFlags>(typeof(Player.NotificationFlags));
@@ -733,6 +709,19 @@ namespace TauManager.BusinessLogic
         {
             var player = _dbContext.Player.FirstOrDefault(p => p.Id == id);
             return player;
+        }
+
+        public string RequestPlayerDiscordLink(string playerName, string discordLogin)
+        {
+            var player = _dbContext.Player.FirstOrDefault(p =>
+                p.Name == playerName &&
+                !p.DiscordAuthConfirmed &&
+                (p.DiscordAuthCode == null || p.DiscordAuthCode == string.Empty));
+            if (player == null) return null;
+            player.DiscordLogin = discordLogin;
+            player.DiscordAuthCode = Utils.Random.GetRandom256ByteString();
+            _dbContext.SaveChanges();
+            return player.DiscordAuthCode;
         }
     }
 }

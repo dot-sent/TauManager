@@ -9,9 +9,7 @@ using TauManager.BusinessLogic;
 using System.Threading.Tasks;
 using TauManager.Utils;
 using Microsoft.AspNetCore.Authorization;
-using TauManager.Models;
 using TauManager.ViewModels;
-using System.ComponentModel.DataAnnotations;
 
 namespace TauManager.Controllers
 {
@@ -132,7 +130,7 @@ namespace TauManager.Controllers
         public async Task<IActionResult> GetPlayerPageUploadToken()
         {
             var user = await _userManager.GetUserAsync(User);
-            var token = _playerLogic.GetPlayerPageUploadToken();
+            var token = Random.GetRandom256ByteString();
             user.PlayerPageUploadToken = token;
             await _userManager.UpdateAsync(user);
             return View(model: token);
