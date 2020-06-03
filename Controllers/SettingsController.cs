@@ -57,5 +57,22 @@ namespace TauManager.Controllers
                 Text = "Notification settings saved successfully."
             });
         }
+
+        [HttpGet]
+        public async Task<IActionResult> DiscordDisconnect()
+        {
+            var result = await _playerLogic.DisconnectDiscordAccount(await _userManager.GetPlayerIdAsync(User));
+            if (!result)
+            {
+                return View("SingleMessage", new Announcement{
+                    Style = Announcement.AnnouncementStyle.Danger,
+                    Text = "Failed to disconnect Discord account - maybe, it was not connected? If this problem persists, please contact Dotsent."
+                });
+            }
+            return View("SingleMessage", new Announcement{
+                Style = Announcement.AnnouncementStyle.Success,
+                Text = "Discord account disconnected successfully. Please use !connect <player_name> bot command to connect Discord account again."
+            });
+        }
     }
 }

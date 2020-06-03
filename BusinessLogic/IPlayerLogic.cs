@@ -17,5 +17,6 @@ namespace TauManager.BusinessLogic
         Task<bool> SetPlayerDiscordAccountAsync(int? playerId, string login, string authCode);
         bool SetPlayerNotificationFlags(int? playerId, int notificationFlags);
         Player GetPlayerById(int id);
+        Task<bool> DisconnectDiscordAccount(int? playerId);
     }
 }

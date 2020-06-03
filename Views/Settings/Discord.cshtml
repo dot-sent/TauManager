@@ -8,8 +8,22 @@
         <form method="POST" id="formDiscordSettings">
             <input type="hidden" name="notificationSettings" value="@Model.NotificationSettings" id="hNotificationSettings">
             <div class="form-group">
-                <label for="discordLoginInput">Discord username</label>
-                <input type="text" class="form-control" id="discordLoginInput" name="login" placeholder="Dotsent#5616" value="@Model.DiscordLogin">
+                <h5>Discord username:</h5>
+            @if (string.IsNullOrEmpty(Model.DiscordLogin)) {
+                <h4 id="discordLogin"><i>Not connected</i></h4>
+            } else  {
+                <h4 id="discordLogin">@Model.DiscordLogin
+                @if (Model.DiscordAuthConfirmed) {
+                    <i class="fas fa-check text-success font-weight-bold" title="Verified"></i>
+                } else {
+                    <i class="fas fa-times text-warning font-weight-bold" title="Not verified yet"></i>
+                }
+                </h4>
+                @if (Model.DiscordAuthConfirmed) {
+
+                }
+                <a class="btn btn-danger" asp-action="DiscordDisconnect">Disconnect</a>
+            }
             </div>
             <h5>Notify me of:</h5>
             <div class="form-check mb-1">

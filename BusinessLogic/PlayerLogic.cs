@@ -723,5 +723,18 @@ namespace TauManager.BusinessLogic
             _dbContext.SaveChanges();
             return player.DiscordAuthCode;
         }
+
+        public async Task<bool> DisconnectDiscordAccount(int? playerId)
+        {
+            var player = _dbContext.Player.FirstOrDefault(p =>
+                p.Id == playerId &&
+                p.DiscordAuthCode != string.Empty);
+            if (player == null) return false;
+            player.DiscordAuthCode = null;
+            player.DiscordLogin = null;
+            player.DiscordAuthConfirmed = false;
+            await _dbContext.SaveChangesAsync();
+            return true;
+        }
     }
 }
