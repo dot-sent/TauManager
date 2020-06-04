@@ -49,5 +49,8 @@ namespace TauManager
         #region Notifications
         public DbSet<Notification> Notification { get; set; }
         #endregion
+        #region Integrations
+        public DbSet<DiscordOfficer> DiscordOfficer { get; set; }
+        #endregion
     }
 }
