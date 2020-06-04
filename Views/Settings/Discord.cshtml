@@ -76,9 +76,9 @@
                 <small class="text-muted">(4 hours/~16 segments before campaign starts, even if you didn't sign up)</small>
             </div>
             <div class="form-check mb-1">
-                <input class="form-check-input notification-flag" type="checkbox" value="128" id="cbNewMarketAd"@(Model.NotificationSettings.HasFlag(Player.NotificationFlags.NewMarketAd) ? " checked": "" )>
+                <input class="form-check-input notification-flag" type="checkbox" value="128" disabled="disabled" id="cbNewMarketAd"@(Model.NotificationSettings.HasFlag(Player.NotificationFlags.NewMarketAd) ? " checked": "" )>
                 <label class="form-check-label" for="cbNewMarketAd">
-                    New Market ad has been added
+                    New Market ad has been added (planned)
                 </label>
                 <small class="text-muted">(immediately)</small>
             </div>
