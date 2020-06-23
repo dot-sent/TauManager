@@ -18,7 +18,9 @@ namespace TauManager.Controllers
         [AuthorizeRoles(ApplicationRoleManager.MultiSyndicate)]
         public async Task<IActionResult> GetAll()
         {
-            var syndicates = await _syndicateLogic.GetAllSyndicates(User);
+            var playerId = await _userManager.GetPlayerIdAsync(User);
+            var syndicateOverride = await _userManager.GetSyndicateOverrideAsync(User);
+            var syndicates = _syndicateLogic.GetAllSyndicates(User, playerId, syndicateOverride);
             return Json(syndicates);
         }
 
