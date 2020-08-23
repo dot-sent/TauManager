@@ -1,130 +1,243 @@
-@model TauManager.ViewModels.SyndicatePlayersViewModel
+@model TauManager.ViewModels.SyndicateStatsViewModel
 @using static TauManager.Utils.DictionaryExtensions
 @{
-    ViewData["Title"] = "Players overview - syndicate management";
+    ViewData["Title"] = "Global metrics - syndicate management";
 }
 
-@section Head{
-    <link rel="stylesheet" href="/lib/jquery-tablesorter/theme.default.css" />
-}
-
-<div class="text-center">
-    <h2>Syndicate members</h2>
-    <p><a asp-controller="SyndicateManagement" asp-action="ImportFile">Import new file(s)</a></p>
-    <p>
-        <form class="form-inline" id="form_filter" asp-action="SetSyndicateOverviewParams">
-            <input type="hidden" id="hidden_includeInactive" name="includeInactive">
-            <div class="form-check mb-2 mr-sm-2">
-                <input type="checkbox" class="form-check-input" id="cb_filter_includeInactive"@(Model.IncludeInactive ? " checked": "")>
-                <label for="cb_filter_includeInactive" class="form-check-label">Include inactive players</label>
-            </div>
-            <input type="submit" class="btn btn-sm btn-primary form-control form-control-sm mb-2 mr-sm-2" id="btn_filter_apply" value="Apply">
-        </form>
-    </p>
-</div>
-@await Html.PartialAsync("_SyndicateSummaryPartial", Model)
-<div class="row">
-    <div class="col-md-12 table-responsive">
-        <div class="text-center">
-            <h2>Player list by tier</h2>
+<div class="container">
+    <div class="card mb-3">
+        <div class="card-header text-center">
+            <h4>[@Model.Tag] syndicate metrics</h4>
         </div>
-        <table id="table_users" class="table table-condensed table-striped table-bordered">
-            <thead>
-                <tr>
-                    <th>Player</th>
-                    <th>Level</th>
-                    <th>T</th>
-                    <th>Stats Total</th>
-                    <th>Str</th>
-                    <th>Agi</th>
-                    <th>Sta</th>
-                    <th>Int</th>
-                    <th>Soc</th>
-                    <th>Credits</th>
-                    <th>Bonds</th>
-                    <th>Uni</th>
-                    <th>Last updated</th>
-                    <th>Last activity</th>
-                    <th>Campaign att% Total/T5H</th>
-                    <th>In?</th>
-                </tr>
-            </thead>
-            <tbody>
-            @foreach(var tier in Model.Players.Keys)
-            {
-                @foreach(var player in Model.Players[tier])
-                {
-                    <tr class="text-right">
-                        <td class="text-left"><a asp-action="PlayerDetails" asp-route-id="@player.Id">@player.Name</a></td>
-                        <td class="@(tier<5 && player.Active && (tier * 5 == (int)Math.Floor(player.Level)) ? "font-weight-bold text-success" : "")">@player.LevelString</td>
-                        <td>@tier</td>
-                        <td>@player.StatTotal</td>
-                        <td>@player.Strength</td>
-                        <td>@player.Agility</td>
-                        <td>@player.Stamina</td>
-                        <td>@player.Intelligence</td>
-                        <td>@player.Social</td>
-                        <td>@player.BankString</td>
-                        <td>@player.Bonds</td>
-                        @if (player.UniversityComplete)
-                        {
-                            <td class="text-success">(done)</td>
-                        } else {
-                            <td class="@(player.Active ? player.UniCourseActive ? "text-success" : "text-danger" : "")">@player.UniCourseDateString</td>
-                        }
-                        <td>@player.LastUpdateString</td>
-                        <td class="player-activity player-activity-@(Model.LastActivity[player.Id].DaysClass)">@(Model.LastActivity[player.Id].DaysAgoString)</td>
-                        <td>@Model.Attendance.TotalAttendance.SingleOrGiven(player.Id, 0)%/@Model.Attendance.Last10T5HardAttendance.SingleOrGiven(player.Id, 0)%</td>
-                        <td class="text-center">
-                            <input type="checkbox" data-player-id="@player.Id" class="cb-player-active"@(player.Active ? "checked" : "")/>
-                        </td>
-                    </tr>
-                }
-            }
-            </tbody>
-        </table>
+        <dl class="row card-body mb-0">
+            <dt class="col-sm-2">Level:</dt>
+            <dd class="col-sm-4">@Html.DisplayFor(m => m.Level)</dd>
+            <dt class="col-sm-2">Bonds:</dt>
+            <dd class="col-sm-4">@Html.DisplayFor(m => m.Bonds)</dd>
+            <dt class="col-sm-2">Members:</dt>
+            <dd class="col-sm-4">@Html.DisplayFor(m => m.MembersCount)</dd>
+            <dt class="col-sm-2">Credits:</dt>
+            <dd class="col-sm-4">@Html.DisplayFor(m => m.Credits)</dd>
+            <dt class="col-sm-2">Recorded:</dt>
+            <dd class="col-sm-4">@Html.DisplayFor(m => m.RecordedAt)</dd>
+        </dl>
+    </div>
+    <div class="card mb-3">
+        <div class="card-header text-center">
+            <h4>Graphs</h4>
+        </div>
+        <div class="card-body">
+            <div>
+                <div>
+                    <h6>First graph</h6>
+                    <label class="active">
+                        <input class="chart-radio" type="radio" name="dataKind1" value="4"/> Members
+                    </label>
+                    <label>
+                        <input class="chart-radio" type="radio" name="dataKind1" value="1"/> Credits
+                    </label>
+                    <label>
+                        <input class="chart-radio" type="radio" name="dataKind1" value="2"/> Bonds
+                    </label>
+                    <label>
+                        <input class="chart-radio" type="radio" name="dataKind1" value="3" checked/> XP
+                    </label>
+                </div>
+                <div class="control-group">
+                    <label class="active">
+                        <input class="chart-radio" type="radio" name="firstGraphBase" value="0" checked/> Relative Graph
+                    </label>
+                    <label>
+                        <input class="chart-radio" type="radio" name="firstGraphBase" value="1"/> Absolute Graph
+                    </label>
+                </div>
+                <div class="control-group">
+                    <h6>Second graph</h6>
+                    <label class="active">
+                        <input class="chart-radio" type="radio" name="dataKind2" value="254" checked/> None
+                    </label>
+                    <label>
+                        <input class="chart-radio" type="radio" name="dataKind2" value="4"/> Members
+                    </label>
+                    <label>
+                        <input class="chart-radio" type="radio" name="dataKind2" value="1"/> Credits
+                    </label>
+                    <label>
+                        <input class="chart-radio" type="radio" name="dataKind2" value="2"/> Bonds
+                    </label>
+                    <label>
+                        <input class="chart-radio" type="radio" name="dataKind2" value="3"/> XP
+                    </label>
+                </div>
+                <div class="control-group">
+                    <label class="active">
+                        <input class="chart-radio" type="radio" name="secondGraphBase" value="0" checked/> Relative Graph
+                    </label>
+                    <label>
+                        <input class="chart-radio" type="radio" name="secondGraphBase" value="1"/> Absolute Graph
+                    </label>
+                </div>
+                <div class="control-group">
+                    <h6>Interval</h6>
+                    <label class="active">
+                        <input class="chart-radio" type="radio" name="interval" value="0"/> 1 week
+                    </label>
+                    <label>
+                        <input class="chart-radio" type="radio" name="interval" value="1"/> 1 month
+                    </label>
+                    <label>
+                        <input class="chart-radio" type="radio" name="interval" value="2" checked/> 3 months
+                    </label>
+                    <label>
+                        <input class="chart-radio" type="radio" name="interval" value="3"/> 6 months
+                    </label>
+                    <label>
+                        <input class="chart-radio" type="radio" name="interval" value="4"/> 1 year
+                    </label>
+                    <label>
+                        <input class="chart-radio" type="radio" name="interval" value="5"/> All time
+                    </label>
+                </div>
+            </div>
+            <canvas id="canvas_stats"></canvas>
+        </div>
+    </div>
+    <div class="card mb-3">
+        <div class="card-header text-center">
+            <h4>Player metrics (<a asp-action="Players">Go to the list</a>)</h4>
+        </div>
+        <div class="card-body">
+            @await Html.PartialAsync("_SyndicateSummaryPartial", Model.PlayerStats)
+        </div>
     </div>
 </div>
 
 @section Scripts{
-    <script type="text/javascript" src="/lib/jquery-tablesorter/jquery.tablesorter.min.js"></script>
-    <script type="text/javascript" src="/lib/jquery-tablesorter/jquery.tablesorter.widgets.js"></script>
-    <script type="text/javascript">
-        $(function() {
-            $("#table_users").tablesorter({
-                theme : "default",
-                widgets: ["zebra", "stickyHeaders"],
-                ignoreCase: true
-
-            });
-            configureControlPostback('.cb-player-active', '/SyndicateManagement/SetPlayerActive',
-                {
-                    playerId: 'player-id',
-                    status: '#checked'
+<script type="text/javascript" src="/lib/chart/Chart.bundle.min.js"></script>
+<script type="text/javascript">
+    var chartObj = undefined;
+    function reloadChart(){
+        if (chartObj != undefined) {
+            chartObj.destroy();
+        }
+        var ctxStats = $('#canvas_stats');
+        var dataKind1 = $('input[name="dataKind1"]:checked').val();
+        var label1 = $('input[name="dataKind1"]:checked').parent().text();
+        var firstGraphBase = $('input[name="firstGraphBase"]:checked').val();
+        var dataKind2 = $('input[name="dataKind2"]:checked').val();
+        var secondGraphBase = $('input[name="secondGraphBase"]:checked').val();
+        var label2 = $('input[name="dataKind2"]:checked').parent().text();
+        var interval = $('input[name="interval"]:checked').val();
+        var ticks1 = { fontColor: "#22AA00" };
+        var ticks2 = { fontColor: "#2233AA" };
+        if (firstGraphBase == 1) {
+            ticks1.min = 0;
+        }
+        if (secondGraphBase == 1) {
+            ticks2.min = 0;
+        }
+        $.post('/SyndicateManagement/SyndicateHistoryChartData',
+            {
+                dataKind: dataKind1,
+                interval: interval
+            },
+            function(data){
+                if (dataKind2 < 254) {
+                $.post('/SyndicateManagement/SyndicateHistoryChartData',
+                    {
+                        dataKind: dataKind2,
+                        interval: interval
+                    },
+                    function(data2) {
+                        chartObj = new Chart(ctxStats, {
+                            type: 'line',
+                            data: {
+                                datasets: [{
+                                    label: label1,
+                                    data: data,
+                                    borderColor: "#22AA00",
+                                    borderWidth: 2,
+                                    fill: false,
+                                    yAxisID: 'first-y-axis'
+                                },
+                                {
+                                    label: label2,
+                                    data: data2,
+                                    borderColor: "#2233AA",
+                                    borderWidth: 2,
+                                    fill: false,
+                                    yAxisID: 'second-y-axis'
+                                }]
+                            },
+                            options: {
+                                scales: {
+                                    xAxes: [{
+                                        type: 'time'
+                                    }],
+                                    yAxes: [{
+                                        id: 'first-y-axis',
+                                        type: 'linear',
+                                        position: 'left',
+                                        ticks: ticks1
+                                    },
+                                    {
+                                        id: 'second-y-axis',
+                                        type: 'linear',
+                                        position: 'right',
+                                        ticks: ticks2
+                                    }]
+                                },
+                                elements: {
+                                    line: {
+                                        tension: 0 // disables bezier curves
+                                    }
+                                },
+                                tooltips: {
+                                    mode: 'x'
+                                },
+                                events: ['click', 'mousemove']
+                            }
+                        });
+                    }
+                );
+                } else {
+                    chartObj = new Chart(ctxStats, {
+                        type: 'line',
+                        data: {
+                            datasets: [{
+                                label: label1,
+                                data: data,
+                                borderColor: "#22AA00",
+                                borderWidth: 2,
+                                fill: false
+                            }]
+                        },
+                        options: {
+                            scales: {
+                                xAxes: [{
+                                    type: 'time'
+                                }],
+                                yAxes: [{
+                                        ticks: ticks1
+                                    }
+                                ]
+                            },
+                            elements: {
+                                line: {
+                                    tension: 0 // disables bezier curves
+                                }
+                            },
+                            events: ['click', 'mousemove']
+                        }
+                    });
                 }
-            );
-        });
-    </script>
-    <script type="text/javascript">
-        $('#form_filter').submit(function(evt){
-            evt.preventDefault();
-            
-            var form = $(this);
-            var url = form.attr('action');
+            }
+        )
+    }
 
-            $('#hidden_includeInactive').val($('#cb_filter_includeInactive').prop('checked'));
+    $(function() {
+        $('.chart-radio').change(reloadChart);
+        reloadChart();
+    });
 
-            $.ajax({
-                type: 'POST',
-                url: url,
-                data: form.serialize(),
-                success: function(data){
-                    location.reload(true);
-                },
-                error: function(jqXHR, textStatus, errorThrown){
-                    console.log('Error setting filters: textStatus="' + textStatus + '", errorThrown="' + errorThrown + '"');
-                }
-            });
-        })
-    </script>
-}
+</script>}

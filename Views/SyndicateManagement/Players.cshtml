@@ -1,0 +1,130 @@
+@model TauManager.ViewModels.SyndicatePlayersViewModel
+@using static TauManager.Utils.DictionaryExtensions
+@{
+    ViewData["Title"] = "Players overview - syndicate management";
+}
+
+@section Head{
+    <link rel="stylesheet" href="/lib/jquery-tablesorter/theme.default.css" />
+}
+
+<div class="text-center">
+    <h2>Syndicate members</h2>
+    <p><a asp-controller="SyndicateManagement" asp-action="ImportFile">Import new file(s)</a></p>
+    <p>
+        <form class="form-inline" id="form_filter" asp-action="SetSyndicateOverviewParams">
+            <input type="hidden" id="hidden_includeInactive" name="includeInactive">
+            <div class="form-check mb-2 mr-sm-2">
+                <input type="checkbox" class="form-check-input" id="cb_filter_includeInactive"@(Model.IncludeInactive ? " checked": "")>
+                <label for="cb_filter_includeInactive" class="form-check-label">Include inactive players</label>
+            </div>
+            <input type="submit" class="btn btn-sm btn-primary form-control form-control-sm mb-2 mr-sm-2" id="btn_filter_apply" value="Apply">
+        </form>
+    </p>
+</div>
+@await Html.PartialAsync("_SyndicateSummaryPartial", Model)
+<div class="row">
+    <div class="col-md-12 table-responsive">
+        <div class="text-center">
+            <h2>Player list by tier</h2>
+        </div>
+        <table id="table_users" class="table table-condensed table-striped table-bordered">
+            <thead>
+                <tr>
+                    <th>Player</th>
+                    <th>Level</th>
+                    <th>T</th>
+                    <th>Stats Total</th>
+                    <th>Str</th>
+                    <th>Agi</th>
+                    <th>Sta</th>
+                    <th>Int</th>
+                    <th>Soc</th>
+                    <th>Credits</th>
+                    <th>Bonds</th>
+                    <th>Uni</th>
+                    <th>Last updated</th>
+                    <th>Last activity</th>
+                    <th>Campaign att% Total/T5H</th>
+                    <th>In?</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach(var tier in Model.Players.Keys)
+            {
+                @foreach(var player in Model.Players[tier])
+                {
+                    <tr class="text-right">
+                        <td class="text-left"><a asp-action="PlayerDetails" asp-route-id="@player.Id">@player.Name</a></td>
+                        <td class="@(tier<5 && player.Active && (tier * 5 == (int)Math.Floor(player.Level)) ? "font-weight-bold text-success" : "")">@player.LevelString</td>
+                        <td>@tier</td>
+                        <td>@player.StatTotal</td>
+                        <td>@player.Strength</td>
+                        <td>@player.Agility</td>
+                        <td>@player.Stamina</td>
+                        <td>@player.Intelligence</td>
+                        <td>@player.Social</td>
+                        <td>@player.BankString</td>
+                        <td>@player.Bonds</td>
+                        @if (player.UniversityComplete)
+                        {
+                            <td class="text-success">(done)</td>
+                        } else {
+                            <td class="@(player.Active ? player.UniCourseActive ? "text-success" : "text-danger" : "")">@player.UniCourseDateString</td>
+                        }
+                        <td>@player.LastUpdateString</td>
+                        <td class="player-activity player-activity-@(Model.LastActivity[player.Id].DaysClass)">@(Model.LastActivity[player.Id].DaysAgoString)</td>
+                        <td>@Model.Attendance.TotalAttendance.SingleOrGiven(player.Id, 0)%/@Model.Attendance.Last10T5HardAttendance.SingleOrGiven(player.Id, 0)%</td>
+                        <td class="text-center">
+                            <input type="checkbox" data-player-id="@player.Id" class="cb-player-active"@(player.Active ? "checked" : "")/>
+                        </td>
+                    </tr>
+                }
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts{
+    <script type="text/javascript" src="/lib/jquery-tablesorter/jquery.tablesorter.min.js"></script>
+    <script type="text/javascript" src="/lib/jquery-tablesorter/jquery.tablesorter.widgets.js"></script>
+    <script type="text/javascript">
+        $(function() {
+            $("#table_users").tablesorter({
+                theme : "default",
+                widgets: ["zebra", "stickyHeaders"],
+                ignoreCase: true
+
+            });
+            configureControlPostback('.cb-player-active', '/SyndicateManagement/SetPlayerActive',
+                {
+                    playerId: 'player-id',
+                    status: '#checked'
+                }
+            );
+        });
+    </script>
+    <script type="text/javascript">
+        $('#form_filter').submit(function(evt){
+            evt.preventDefault();
+
+            var form = $(this);
+            var url = form.attr('action');
+
+            $('#hidden_includeInactive').val($('#cb_filter_includeInactive').prop('checked'));
+
+            $.ajax({
+                type: 'POST',
+                url: url,
+                data: form.serialize(),
+                success: function(data){
+                    location.reload(true);
+                },
+                error: function(jqXHR, textStatus, errorThrown){
+                    console.log('Error setting filters: textStatus="' + textStatus + '", errorThrown="' + errorThrown + '"');
+                }
+            });
+        })
+    </script>
+}

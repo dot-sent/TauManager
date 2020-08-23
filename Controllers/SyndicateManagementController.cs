@@ -30,8 +30,21 @@ namespace TauManager.Controllers
         public async Task<IActionResult> Index()
         {
             var includeInactive = HttpContext.Session.Get<bool>(KeyIncludeInactive, false);
-            var model = _playerLogic.GetSyndicateMetrics(null, includeInactive, (await GetSyndicate()).Id);
+            var model = _syndicateLogic.GetSyndicateInfo((await GetSyndicate()).Id);
             return View(model);
+        }
+
+        public async Task<IActionResult> Players()
+        {
+            var includeInactive = HttpContext.Session.Get<bool>(KeyIncludeInactive, false);
+            var model = _playerLogic.GetSyndicatePlayers(null, includeInactive, (await GetSyndicate()).Id);
+            return View(model);
+        }
+
+        public async Task<IActionResult> SyndicateHistoryChartData(byte interval, byte dataKind)
+        {
+            var model = _syndicateLogic.GetSyndicateHistoricalData((await GetSyndicate()).Id, interval, dataKind);
+            return Json(model);
         }
 
         public IActionResult ImportFile()
