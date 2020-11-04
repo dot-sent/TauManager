@@ -85,6 +85,8 @@
             <tbody>
             @foreach (var player in Model.Players)
             {
+                if (player.Active || Model.Campaign.SignupsDict.ContainsKey(player.Id) || Model.Campaign.AttendanceDict.ContainsKey(player.Id))
+                {
                 <tr>
                     <td>@player.Name</td>
                     <td class="text-center">@if (Model.Campaign.SignupsDict.ContainsKey(player.Id))
@@ -96,6 +98,7 @@
                             <i class="fa fa-check"></i>
                         }
                 </tr>
+                }
             }
             </tbody>
         </table>
