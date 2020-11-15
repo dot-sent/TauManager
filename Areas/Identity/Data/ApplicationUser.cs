@@ -17,5 +17,6 @@ namespace TauManager.Areas.Identity.Data
       public byte? MarketView { get; set; }
       public byte? MarketSort { get; set; }
       public bool? MarketIsViewPinned { get; set; }
+      public Models.UserCSSTheme ThemeId { get; set; }
     }
 }

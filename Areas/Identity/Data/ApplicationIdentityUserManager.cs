@@ -41,5 +41,12 @@ namespace TauManager.Areas.Identity.Data
             if (appUser == null) return null;
             return appUser.SyndicateOverride;
         }
+
+        public async Task<Models.UserCSSTheme> GetUserCSSThemeAsync(ClaimsPrincipal user)
+        {
+            var appUser = await this.GetUserAsync(user);
+            if (appUser == null) return Models.UserCSSTheme.Default;
+            return appUser.ThemeId;
+        }
     }
 }
