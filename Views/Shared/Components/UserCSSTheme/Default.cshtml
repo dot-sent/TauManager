@@ -7,5 +7,9 @@
 }
 </environment>
 <environment exclude="Development">
+@if (Model == TauManager.Models.UserCSSTheme.Default) {
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+} else {
+    <link rel="stylesheet" href="~/lib/bootswatch-4.3.1/dist/@Model.ToString().ToLower()/bootstrap.min.css" />
+}
 </environment>
