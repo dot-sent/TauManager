@@ -10,7 +10,6 @@ using TauManager.Areas.Identity;
 namespace TauManager.Migrations
 {
     [DbContext(typeof(TauManagerIdentityDbContext))]
-    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     [Migration("20201115154831_AddedUserUIThemes")]
     partial class AddedUserUIThemes
     {
