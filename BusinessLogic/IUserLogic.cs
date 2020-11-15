@@ -13,5 +13,6 @@ namespace TauManager.BusinessLogic
         Task<bool> SetUserActive(ClaimsPrincipal currentUser, string userId, bool status);
         Task<bool> SetSyndicateOverride(ClaimsPrincipal currentUser, int? syndicateId);
         Task<string> ResetPassword(string userId);
+        Task<bool> SetThemeOverride(ClaimsPrincipal currentUser, UserCSSTheme themeId);
     }
 }

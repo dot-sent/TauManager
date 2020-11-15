@@ -130,7 +130,20 @@
                         location.reload(false);
                     });
                 });
-            })
+            });
+            $('.theme-selector').click(function(evt){
+                var themeId = $(evt.target).data('theme-id');
+                $.post('/Home/SetUserTheme',
+                    {
+                        themeId : themeId
+                    },
+                    function(data){
+                        if (data.result) {
+                            location.reload(false);
+                        }
+                    }
+                );
+            });
         });
     </script>
 }

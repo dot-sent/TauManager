@@ -1,0 +1,14 @@
+@model TauManager.ViewModels.UserThemeSwitcherViewModel
+<li class="nav-item dropdown" id="li_theme_switcher">
+    <a class="nav-link dropdown-toggle" href="#" id="link_toggle_theme_switcher_dropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Theme <span class="text-danger">(new)</span></a>
+    <div class="dropdown-menu" aria-labelledby="link_toggle_theme_switcher_dropdown" id="div_theme_switcher_dropdown">
+    @foreach (var key in Model.AllThemes.Keys)
+    {
+        <a class="dropdown-item theme-selector" name="theme_id" data-theme-id="@key">@Model.AllThemes[key]@( (int)Model.CurrentTheme == key ? " (current)" : "" )</a>
+    }
+    </div>
+</li>
+
+@section Scripts {
+
+}

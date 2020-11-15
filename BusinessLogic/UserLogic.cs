@@ -204,6 +204,13 @@ namespace TauManager.BusinessLogic
             }
             return null;
         }
+        public async Task<bool> SetThemeOverride(ClaimsPrincipal currentUser, UserCSSTheme themeId)
+        {
+            var user = await _userManager.GetUserAsync(currentUser);
+            user.ThemeId = themeId;
+            await _userManager.UpdateAsync(user);
+            return true;
+        }
 
         /// <summary>
         /// Generates a Random Password

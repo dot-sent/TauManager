@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TauManager.Areas.Identity.Data;
 using TauManager.BusinessLogic;
@@ -11,11 +12,13 @@ namespace TauManager.Controllers
     {
         private IPlayerLogic _playerLogic { get; set; }
         private ApplicationIdentityUserManager _userManager { get; set; }
+        private IUserLogic _userLogic { get; set; }
 
-        public HomeController(IPlayerLogic playerLogic, ApplicationIdentityUserManager userManager)
+        public HomeController(IPlayerLogic playerLogic, ApplicationIdentityUserManager userManager, IUserLogic userLogic)
         {
             _playerLogic = playerLogic;
             _userManager = userManager;
+            _userLogic = userLogic;
         }
 
         public async Task<IActionResult> Index()
@@ -52,6 +55,14 @@ namespace TauManager.Controllers
         public IActionResult Acknowledgements()
         {
             return View();
+        }
+
+        [HttpPost]
+        [Authorize]
+        public async Task<IActionResult> SetUserTheme(UserCSSTheme themeId)
+        {
+            var result = await _userLogic.SetThemeOverride(User, themeId);
+            return Json(new {result = result});
         }
     }
 }

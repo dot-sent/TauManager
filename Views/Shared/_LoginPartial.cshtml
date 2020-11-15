@@ -7,14 +7,15 @@
 @if (SignInManager.IsSignedIn(User))
 {
     <li class="nav-item">
-        <a id="manage" class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">Hello @(UserManager.GetUserName(User))!</a>
+        <a id="manage" class="nav-link" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">Hello @(UserManager.GetUserName(User))!</a>
     </li>
     <li class="nav-item dropdown">
-        <a class="nav-link text-dark dropdown-toggle" href="#" id="link_toggle_settings_dropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Settings <span class="text-danger">(new)</span></a>
+        <a class="nav-link dropdown-toggle" href="#" id="link_toggle_settings_dropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Settings</a>
         <div class="dropdown-menu" aria-labelledby="link_toggle_settings_dropdown">
             <a class="dropdown-item" asp-controller="Settings" asp-action="Discord">Notifications</a>
         </div>
     </li>
+@await Component.InvokeAsync("UserThemeSwitcher")
     <li class="nav-item">
         <form id="logoutForm" class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
             <button id="logout" type="submit" class="nav-link btn btn-link text-dark">Logout</button>
