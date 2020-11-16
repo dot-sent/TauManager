@@ -107,10 +107,12 @@
     <script src="~/js/site.js" asp-append-version="true"></script>
 
     @RenderSection("Scripts", required: false)
-@if(User.IsInRole(TauManager.Areas.Identity.Data.ApplicationRoleManager.MultiSyndicate))
+@if(User.Identity.IsAuthenticated)
 {
     <script type="text/javascript">
         $(function(){
+        @if(User.IsInRole(TauManager.Areas.Identity.Data.ApplicationRoleManager.MultiSyndicate))
+        {
             $.get('/Syndicates/GetAll', undefined, function(data){
                 if (data.currentOverride.key == 0) { // No override, default syndicate set
                     $('#link_toggle_syndicate_switcher_dropdown').html(data.currentOverride.value + ' - ' + data.defaultSyndicate.value);
@@ -131,6 +133,7 @@
                     });
                 });
             });
+        }
             $('.theme-selector').click(function(evt){
                 var themeId = $(evt.target).data('theme-id');
                 $.post('/Home/SetUserTheme',
