@@ -107,48 +107,49 @@
     <script src="~/js/site.js" asp-append-version="true"></script>
 
     @RenderSection("Scripts", required: false)
+
 @if(User.Identity.IsAuthenticated)
 {
-    <script type="text/javascript">
-        $(function(){
-        @if(User.IsInRole(TauManager.Areas.Identity.Data.ApplicationRoleManager.MultiSyndicate))
-        {
-            $.get('/Syndicates/GetAll', undefined, function(data){
-                if (data.currentOverride.key == 0) { // No override, default syndicate set
-                    $('#link_toggle_syndicate_switcher_dropdown').html(data.currentOverride.value + ' - ' + data.defaultSyndicate.value);
-                } else {
-                    $('#link_toggle_syndicate_switcher_dropdown').html(data.currentOverride.value);
-                }
-                $('#a_set_default_syndicate').html('default - ' + data.defaultSyndicate.value);
-                Object.keys(data.allSyndicates).forEach(function(element){
-                    $('#div_syndicate_switcher_dropdown').append(
-                        '<a class="dropdown-item" href="/Users/SetSyndicateOverride?syndicateId=' + element + '">' + data.allSyndicates[element] + '</a>'
-                    );
-                })
-                $('#div_syndicate_switcher_dropdown a').click(function(e) {
-                    e.preventDefault();
-                    var url = $(e.target).attr('href');
-                    $.get(url, undefined, function(data){
-                        location.reload(false);
-                    });
-                });
-            });
-        }
-            $('.theme-selector').click(function(evt){
-                var themeId = $(evt.target).data('theme-id');
-                $.post('/Home/SetUserTheme',
-                    {
-                        themeId : themeId
-                    },
-                    function(data){
-                        if (data.result) {
-                            location.reload(false);
-                        }
-                    }
-                );
-            });
-        });
-    </script>
+@:    <script type="text/javascript">
+@:        $(function(){
+@if(User.IsInRole(TauManager.Areas.Identity.Data.ApplicationRoleManager.MultiSyndicate))
+{
+@:            $.get('/Syndicates/GetAll', undefined, function(data){
+@:                if (data.currentOverride.key == 0) { // No override, default syndicate set
+@:                    $('#link_toggle_syndicate_switcher_dropdown').html(data.currentOverride.value + ' - ' + data.defaultSyndicate.value);
+@:                } else {
+@:                    $('#link_toggle_syndicate_switcher_dropdown').html(data.currentOverride.value);
+@:                }
+@:                $('#a_set_default_syndicate').html('default - ' + data.defaultSyndicate.value);
+@:                Object.keys(data.allSyndicates).forEach(function(element){
+@:                    $('#div_syndicate_switcher_dropdown').append(
+@:                        '<a class="dropdown-item" href="/Users/SetSyndicateOverride?syndicateId=' + element + '">' + data.allSyndicates[element] + '</a>'
+@:                    );
+@:                })
+@:                $('#div_syndicate_switcher_dropdown a').click(function(e) {
+@:                    e.preventDefault();
+@:                    var url = $(e.target).attr('href');
+@:                    $.get(url, undefined, function(data){
+@:                        location.reload(false);
+@:                    });
+@:                });
+@:            });
+}
+@:            $('.theme-selector').click(function(evt){
+@:                var themeId = $(evt.target).data('theme-id');
+@:                $.post('/Home/SetUserTheme',
+@:                    {
+@:                        themeId : themeId
+@:                    },
+@:                    function(data){
+@:                        if (data.result) {
+@:                            location.reload(false);
+@:                        }
+@:                    }
+@:                );
+@:            });
+@:        });
+@:    </script>
 }
 </body>
 </html>
