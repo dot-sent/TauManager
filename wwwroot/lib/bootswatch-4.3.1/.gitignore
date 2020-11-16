@@ -15,7 +15,6 @@ composer.json
 docs/.nojekyll
 docs/2/
 docs/3/
-docs/4/
 docs/CNAME
 docs/_assets/
 docs/_vendor/
