@@ -11,7 +11,7 @@
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light border-bottom box-shadow mb-3">
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-light border-bottom box-shadow mb-3">
             <div class="container">
                 <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">TauManager</a>
                 <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".navbar-collapse" aria-controls="navbarSupportedContent"
@@ -23,7 +23,7 @@
 @if(User.IsInRole(TauManager.Areas.Identity.Data.ApplicationRoleManager.MultiSyndicate))
 {
                         <li class="nav-item dropdown" id="li_syndicate_switcher">
-                            <a class="nav-link text-dark dropdown-toggle" href="#" id="link_toggle_syndicate_switcher_dropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Loading...</a>
+                            <a class="nav-link dropdown-toggle" href="#" id="link_toggle_syndicate_switcher_dropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Loading...</a>
                             <div class="dropdown-menu" aria-labelledby="link_toggle_syndicate_switcher_dropdown" id="div_syndicate_switcher_dropdown">
                                 <a class="dropdown-item" asp-controller="Users" asp-action="SetSyndicateOverride" id="a_set_default_syndicate">Default</a>
                             </div>
@@ -34,7 +34,7 @@
     || User.IsInRole(TauManager.Areas.Identity.Data.ApplicationRoleManager.Administrator))
 {
                         <li class="nav-item dropdown">
-                            <a class="nav-link text-dark dropdown-toggle" href="#" id="link_toggle_admin_dropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Admin</a>
+                            <a class="nav-link dropdown-toggle" href="#" id="link_toggle_admin_dropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Admin</a>
                             <div class="dropdown-menu" aria-labelledby="link_toggle_admin_dropdown">
     @if(User.IsInRole(TauManager.Areas.Identity.Data.ApplicationRoleManager.MultiSyndicate))
     {
@@ -44,7 +44,7 @@
                             </div>
                         </li>
                         <li class="nav-item dropdown">
-                            <a class="nav-link text-dark dropdown-toggle" href="#" id="link_toggle_management_dropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Management</a>
+                            <a class="nav-link dropdown-toggle" href="#" id="link_toggle_management_dropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Management</a>
                             <div class="dropdown-menu" aria-labelledby="link_toggle_management_dropdown">
                                 <a class="dropdown-item" asp-controller="SyndicateManagement" asp-action="Index">Overview</a>
                                 <a class="dropdown-item" asp-controller="SyndicateManagement" asp-action="Players">Players list</a>
@@ -55,7 +55,7 @@
 @if(User.Identity.IsAuthenticated)
 {
                         <li class="nav-item dropdown">
-                            <a class="nav-link text-dark dropdown-toggle" href="#" id="link_toggle_campaigns_dropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Campaigns</a>
+                            <a class="nav-link dropdown-toggle" href="#" id="link_toggle_campaigns_dropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Campaigns</a>
                             <div class="dropdown-menu" aria-labelledby="link_toggle_campaigns_dropdown">
                                 <a class="dropdown-item" asp-controller="Campaigns" asp-action="Index">Overview</a>
                                 <a class="dropdown-item" asp-controller="Campaigns" asp-action="Leaderboards">Leaderboards <span class="text-danger">(new, but old)</span></a>
@@ -64,7 +64,7 @@
                             </div>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Market" asp-action="Index">Market</a>
+                            <a class="nav-link" asp-controller="Market" asp-action="Index">Market</a>
                         </li>
 }
                     </ul>
