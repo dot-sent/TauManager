@@ -2,9 +2,24 @@
 
 <script type="text/javascript" src="/lib/chart/Chart.bundle.min.js"></script>
 <script type="text/javascript">
+    // Function credits: https://stackoverflow.com/a/10958973/625594
+    var getCSS = function (prop, fromClass) {
+
+        var $inspector = $("<div>").css('display', 'none').addClass(fromClass);
+        $("body").append($inspector); // add to DOM, in order to read the CSS property
+        try {
+            return $inspector.css(prop);
+        } finally {
+            $inspector.remove(); // and remove from DOM
+        }
+    };
+
     var playerId = @(Model.Player.Id);
     var url = '@(Model.UseManagementUrl ? "/SyndicateManagement/PlayerDetailsChartData" : "/Home/PlayerDetailsChartData")';
     var chartObj = undefined;
+    var color1 = getCSS('color', 'text-success');
+    var color2 = getCSS('color', 'text-info');
+    console.log("Color1 = " + color1 + ", color2 = " + color2);
     function reloadChart(){
         if (chartObj != undefined) {
             chartObj.destroy();
@@ -17,8 +32,8 @@
         var secondGraphBase = $('input[name="secondGraphBase"]:checked').val();
         var label2 = $('input[name="dataKind2"]:checked').parent().text();
         var interval = $('input[name="interval"]:checked').val();
-        var ticks1 = { fontColor: "#22AA00" };
-        var ticks2 = { fontColor: "#2233AA" };
+        var ticks1 = { fontColor: color1 };
+        var ticks2 = { fontColor: color2 };
         if (firstGraphBase == 1) {
             ticks1.min = 0;    
         }
@@ -46,7 +61,7 @@
                                 datasets: [{
                                     label: label1,
                                     data: data,
-                                    borderColor: "#22AA00",
+                                    borderColor: color1,
                                     borderWidth: 2,
                                     fill: false,
                                     yAxisID: 'first-y-axis'
@@ -54,7 +69,7 @@
                                 {
                                     label: label2,
                                     data: data2,
-                                    borderColor: "#2233AA",
+                                    borderColor: color2,
                                     borderWidth: 2,
                                     fill: false,
                                     yAxisID: 'second-y-axis'
@@ -98,7 +113,7 @@
                             datasets: [{
                                 label: label1,
                                 data: data,
-                                borderColor: "#22AA00",
+                                borderColor: color1,
                                 borderWidth: 2,
                                 fill: false
                             }]
