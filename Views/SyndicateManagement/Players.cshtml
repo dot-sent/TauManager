@@ -6,6 +6,8 @@
 
 @section Head{
     <link rel="stylesheet" href="/lib/jquery-tablesorter/theme.default.css" />
+    <link rel="stylesheet" href="/lib/jquery-tablesorter/theme.blue.css" />
+    <link rel="stylesheet" href="/lib/jquery-tablesorter/theme.dark.css" />
 }
 
 <div class="text-center">
@@ -90,9 +92,10 @@
     <script type="text/javascript" src="/lib/jquery-tablesorter/jquery.tablesorter.min.js"></script>
     <script type="text/javascript" src="/lib/jquery-tablesorter/jquery.tablesorter.widgets.js"></script>
     <script type="text/javascript">
+        var themeName='@await Component.InvokeAsync("TableSorterThemeProvider")';
         $(function() {
             $("#table_users").tablesorter({
-                theme : "default",
+                theme : themeName,
                 widgets: ["zebra", "stickyHeaders"],
                 ignoreCase: true
 
