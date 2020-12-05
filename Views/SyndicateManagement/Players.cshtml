@@ -1,4 +1,5 @@
 @model TauManager.ViewModels.SyndicatePlayersViewModel
+@using static TauManager.ViewModels.SyndicatePlayersViewModel
 @using static TauManager.Utils.DictionaryExtensions
 @{
     ViewData["Title"] = "Players overview - syndicate management";
@@ -56,11 +57,13 @@
             {
                 @foreach(var player in Model.Players[tier])
                 {
+                    var tierStats = Model.PlayerStats[player.Tier];
+                    var totalDiff = TierStatistics.StatClass(player.StatTotal, tierStats.StatTotal);
                     <tr class="text-right">
                         <td class="text-left"><a asp-action="PlayerDetails" asp-route-id="@player.Id">@player.Name</a></td>
                         <td class="@(tier<5 && player.Active && (tier * 5 == (int)Math.Floor(player.Level)) ? "font-weight-bold text-success" : "")">@player.LevelString</td>
                         <td>@tier</td>
-                        <td>@player.StatTotal</td>
+                        <td class="@( totalDiff > 0 ? "text-danger" : totalDiff < 0 ? "text-success" : "" )">@player.StatTotal</td>
                         <td>@player.Strength</td>
                         <td>@player.Agility</td>
                         <td>@player.Stamina</td>

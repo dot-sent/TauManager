@@ -38,6 +38,7 @@
                     <th rowspan="2">Str</th>
                     <th rowspan="2">Agi</th>
                     <th rowspan="2">Sta</th>
+                    <th rowspan="2">Int</th>
                 </tr>
                 <tr>
                     <th>Avg</th>
@@ -59,6 +60,7 @@
                     <td>-</td>
                     <td>-</td>
                     <td>-</td>
+                    <td>-</td>
                 } else {
                     <td class="font-weight-bold">@Html.DisplayFor(m => m.PlayerStats[i].PlayerCount)</td>
                     <td class="font-weight-bold">@Html.DisplayFor(m => m.PlayerStats[i].StatTotal)</td>
@@ -67,6 +69,7 @@
                     <td>@Html.DisplayFor(m => m.PlayerStats[i].Strength)</td>
                     <td>@Html.DisplayFor(m => m.PlayerStats[i].Agility)</td>
                     <td>@Html.DisplayFor(m => m.PlayerStats[i].Stamina)</td>
+                    <td>@Html.DisplayFor(m => m.PlayerStats[i].Intelligence)</td>
                 }
                 </tr>
                 @if(Model.PlayerToCompare != null && Model.PlayerToCompare.Tier == i)
@@ -80,9 +83,10 @@
                     <td class="@(Model.PlayerStats[i].Strength > Model.PlayerToCompare.Strength ? "text-danger" : "text-success")">@Html.DisplayFor(m => m.PlayerToCompare.Strength), &Delta;=@((Model.PlayerToCompare.Strength - Model.PlayerStats[i].Strength).ToString("N3"))</td>
                     <td class="@(Model.PlayerStats[i].Agility > Model.PlayerToCompare.Agility ? "text-danger" : "text-success")">@Html.DisplayFor(m => m.PlayerToCompare.Agility), &Delta;=@((Model.PlayerToCompare.Agility - Model.PlayerStats[i].Agility).ToString("N3"))</td>
                     <td class="@(Model.PlayerStats[i].Stamina > Model.PlayerToCompare.Stamina ? "text-danger" : "text-success")">@Html.DisplayFor(m => m.PlayerToCompare.Stamina), &Delta;=@((Model.PlayerToCompare.Stamina - Model.PlayerStats[i].Stamina).ToString("N3"))</td>
+                    <td class="@(Model.PlayerStats[i].Intelligence > Model.PlayerToCompare.Intelligence ? "text-danger" : "text-success")">@Html.DisplayFor(m => m.PlayerToCompare.Intelligence), &Delta;=@((Model.PlayerToCompare.Intelligence - Model.PlayerStats[i].Intelligence).ToString("N3"))</td>
                 </tr>
                 }
-            }                
+            }
             </tbody>
         </table>
     </div>
