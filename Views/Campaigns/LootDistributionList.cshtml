@@ -237,7 +237,15 @@
 
                     }
                 });
-            })
+            });
+            $(function() {
+                configureControlPostback('.cb-player-active', '/SyndicateManagement/SetPlayerActive',
+                    {
+                        playerId: 'player-id',
+                        status: '#checked'
+                    }
+                );
+            });
         </script>
     }
     <script type="text/javascript">
