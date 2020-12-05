@@ -61,18 +61,41 @@
                 <td><a target="_blank" asp-controller="Campaigns" asp-action="View" asp-route-id="@loot.Campaign.Id">@loot.Campaign.Name</a></td>
                 <td><a target="_blank" href="@loot.Item.Url">@loot.Item.Name</a></td>
                 <td>@loot.Item.Caption</td>
-                <td>@loot.Status</td>
                 <td>
-                    @if (loot.HolderId.HasValue)
+                    @if (userHasEditRights)
                     {
-                        if (userHasEditRights) 
+                        <select id="select_loot_item_status_@(loot.Id)" class="select-loot-item-status" data-id="@loot.Id">
+                        @foreach (var status in Model.LootStatuses.Keys)
                         {
-                            <a target="_blank" asp-controller="SyndicateManagement" asp-action="PlayerDetails" asp-route-id="@loot.Holder.Id">@loot.Holder.Name</a>
-                        } else {
-                            @:@loot.Holder.Name
+                            <!option value="@status"@((int)loot.Status == status ? " selected" : "")>@(Model.LootStatuses[status])</!option>
                         }
+                        </select>
                     } else {
-                        @:-Undefined-
+                        @:@loot.Status
+                    }
+                </td>
+                <td>
+                    @if (userHasEditRights)
+                    {
+                        <select id="select_loot_item_holder_@(loot.Id)" class="select-loot-item-holder" data-id="@loot.Id">
+                            <!option value="0"@(loot.HolderId.HasValue && loot.HolderId.Value == 0 ? " selected" : "")><i>--Unassigned--</i></!option>
+                        @foreach (var player in Model.Players)
+                        {
+                            <!option value="@player.Id"@(loot.HolderId.HasValue && loot.HolderId.Value == player.Id ? " selected" : "")>@(player.Name)</!option>
+                        }
+                        </select>
+                        @if (loot.HolderId.HasValue)
+                        {
+                            <a target="_blank" asp-controller="SyndicateManagement" asp-action="PlayerDetails" asp-route-id="@loot.Holder.Id"><i class="fas fa-user"></i></a>
+                        }
+                    }
+                    else {
+                        @if (loot.HolderId.HasValue)
+                        {
+                            @:@loot.Holder.Name
+                        } else {
+                            @:-Undefined-
+                        }
                     }
                 </td>
                 <td>
@@ -84,7 +107,7 @@
                         <i>Not applicable</i>
                     }
                 </td>
-            </tr>            
+            </tr>
         }
         </tbody>
     </table>
@@ -138,4 +161,22 @@
     </div>
 }
 </div>
+}
+
+@section Scripts
+{
+<script type="text/javascript">
+    $(function() {
+        configureControlPostback('.select-loot-item-status', '/Campaigns/SetLootStatus',
+            {
+                id: 'id',
+                status: 'val'
+            });
+        configureControlPostback('.select-loot-item-holder', '/Campaigns/SetLootHolder',
+            {
+                id: 'id',
+                holderId: 'val'
+            });
+    });
+</script>
 }
