@@ -71,7 +71,8 @@
             @foreach (var player in Model.CurrentOrder)
             {
                 var isCurrent = Model.CurrentPlayer != null && Model.CurrentPlayer.Id == player.Id;
-                <tr class="@(player.Active ? "" : "text-muted")">
+                var hasRequests = Model.AllLootRequests.ContainsKey(player.Id);
+                <tr class="@((player.Active ? "" : "text-muted") + (hasRequests ? "" : " playerwithnorequests"))">
                     <th class="@(isCurrent ? "text-success" : "")">
                         @(player.Active ? "" : "(")@(index++)@(player.Active ? "" : ")")@(isCurrent ? " (you)" : "")
                     </th>
@@ -91,10 +92,12 @@
                     { 
                         var requestStatus = -1;
                         var comment = "";
+                        var isCollectorRequest = false;
                         if (Model.AllLootRequests.ContainsKey(player.Id) && Model.AllLootRequests[player.Id].ContainsKey(campaignLoot.Id))
                         {
                             requestStatus = (int)Model.AllLootRequests[player.Id][campaignLoot.Id].Status;
                             comment = Model.AllLootRequests[player.Id][campaignLoot.Id].SpecialOfferDescription;
+                            isCollectorRequest = Model.AllLootRequests[player.Id][campaignLoot.Id].IsCollectorRequest;
                         }
                         var cellClass = " ldl-ok";
                         if (player.Tier < campaignLoot.Item.Tier - 1)
@@ -108,6 +111,9 @@
                             @if (Model.AllCampaigns[campaignId].Attendance.Any(a => a.PlayerId == player.Id)) 
                             {
                                 <i class="fas fa-user-check text-secondary"></i>
+                            }
+                            @if (isCollectorRequest) {
+                                <i class="fa fa-boxes text-secondary"></i>
                             }
                             @if (comment == null || comment == "") 
                             {
