@@ -7,3 +7,20 @@
         @await Html.PartialAsync("_LootCardPartial", Model)
     </div>
 </div>
+
+@section Scripts
+{
+<script type="text/javascript">
+    $(function() {
+        $('#lootRequestSubmitButton').click(function(e){
+            e.preventDefault();
+            if ($('#checkbox_collector_request').is(':checked')) {
+                $('#hiddenCollectorRequest').val('true');
+            } else {
+                $('#hiddenCollectorRequest').val('false');
+            }
+            $('#form_item_application').submit();
+        });
+    })
+</script>
+}

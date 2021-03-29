@@ -57,7 +57,7 @@
             <li class="list-group-item">
             @if (Model.ShowSingleItemInterface)
             {
-                <form action="/Campaigns/ApplyForLoot/@Model.Loot.Id" method="post">
+                <form action="/Campaigns/ApplyForLoot/@Model.Loot.Id" method="post" id="form_item_application">
                     <div class="form-group">
                         <label for="radio_apply_normal">
                             <input type="radio" name="specialOffer" id="radio_apply_normal" value="False"@(Model.RequestExists ? Model.Request.Status == LootRequest.LootRequestStatus.Interested ? " checked" : "" : " checked")>
@@ -72,7 +72,14 @@
                         <textarea class="form-control" id="ta_special_request" name="comments">@(Model.RequestExists ? Model.Request.SpecialOfferDescription : "")</textarea>
                     </div>
                     <div class="form-group">
-                        <button type="submit" class="btn btn-success">@(Model.RequestExists ? "Save" : "Apply")</button>
+                        <input type="hidden" name="collectorRequest" id="hiddenCollectorRequest" value="@(Model.Request.IsCollectorRequest ? "true": "false")" />
+                        <label for="checkbox_collector_request">
+                            <input type="checkbox" id="checkbox_collector_request"@(Model.Request.IsCollectorRequest ? " checked=\"checked\"" : "") />
+                            Request for personal collection
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <button type="submit" id="lootRequestSubmitButton" class="btn btn-success">@(Model.RequestExists ? "Save" : "Apply")</button>
                         @if(Model.RequestExists)
                         {
                             <button type="submit" name="deleteRequest" value="true" class="btn btn-danger">Withdraw</button>
