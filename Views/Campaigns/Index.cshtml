@@ -319,6 +319,7 @@
                                 $newRadio.find('.span-player-name').html(
                                     (data.requests[i].attendedCampaign ? '<i class="fas fa-check text-success font-weight-bold"></i> ' :
                                     '<i class="fas fa-times text-danger font-weight-bold"></i> ') +
+                                    (data.requests[i].isCollectorRequest ? '<i class="fas fa-boxes text-info" title="Collector\'s request, lower priority"></i> ': '') +
                                     (data.requests[i].specialOfferDescription != undefined && data.requests[i].specialOfferDescription.length > 0 ?
                                     '<i class="fas fa-exclamation-triangle text-warning" title="' + data.requests[i].specialOfferDescription + '"></i>' :
                                     '') +
