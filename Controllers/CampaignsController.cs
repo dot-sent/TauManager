@@ -146,18 +146,18 @@ namespace TauManager.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> ApplyForLoot(int id)
+        public async Task<IActionResult> ApplyForLoot(int id, bool isPersonalRequest = false)
         {
             var currentPlayerId = await _userManager.GetPlayerIdAsync(User);
-            var newModel = _lootLogic.CreateNewLootApplication(id, currentPlayerId ?? 0, currentPlayerId);
+            var newModel = _lootLogic.CreateNewLootApplication(id, currentPlayerId ?? 0, currentPlayerId, isPersonalRequest);
             return View(newModel);
         }
 
         [HttpPost]
-        public async Task<IActionResult> ApplyForLoot(int id, string comments, bool specialOffer, bool collectorRequest, bool deleteRequest = false)
+        public async Task<IActionResult> ApplyForLoot(int id, string comments, bool specialOffer, bool collectorRequest, bool isPersonalRequest, bool deleteRequest = false)
         {
             var currentPlayerId = await _userManager.GetPlayerIdAsync(User);
-            var newModel = await _lootLogic.ApplyForLoot(id, currentPlayerId ?? 0, comments, currentPlayerId, specialOffer, collectorRequest, deleteRequest);
+            var newModel = await _lootLogic.ApplyForLoot(id, currentPlayerId ?? 0, comments, currentPlayerId, specialOffer, collectorRequest, isPersonalRequest, deleteRequest);
             return View("LootApplicationStatus", newModel);
         }
 

@@ -73,6 +73,9 @@
                     } else {
                         @:@loot.Status
                     }
+                    @if (loot.Status == CampaignLoot.CampaignLootStatus.StaysWithSyndicate) {
+                        <button class="btn btn-sm btn-primary">Request</button>
+                    }
                 </td>
                 <td>
                     @if (userHasEditRights)
