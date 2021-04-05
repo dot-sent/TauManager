@@ -249,5 +249,13 @@ namespace TauManager.Controllers
             var model = _campaignLogic.GetLeaderboard(playerId);
             return View(model);
         }
+
+        [HttpGet]
+        [AuthorizeRoles(ApplicationRoleManager.Administrator, ApplicationRoleManager.Leader, ApplicationRoleManager.Officer)]
+        public async Task<IActionResult> PersonalRequests()
+        {
+            var model = _lootLogic.GetPersonalRequests(await _userManager.GetPlayerIdAsync(User), (await GetSyndicate()).Id);
+            return View(model);
+        }
     }
 }

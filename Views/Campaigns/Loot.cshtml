@@ -74,7 +74,12 @@
                         @:@loot.Status
                     }
                     @if (loot.Status == CampaignLoot.CampaignLootStatus.StaysWithSyndicate) {
-                        <button class="btn btn-sm btn-primary">Request</button>
+                        if(Model.PersonalRequestLootIds.Contains(loot.Id))
+                        {
+                            <a asp-action="ApplyForLoot" asp-route-id="@loot.Id" asp-route-isPersonalRequest="True" class="btn btn-sm btn-warning">Edit or Withdraw request</a>
+                        } else {
+                            <a asp-action="ApplyForLoot" asp-route-id="@loot.Id" asp-route-isPersonalRequest="True" class="btn btn-sm btn-success">Request</a>
+                        }
                     }
                 </td>
                 <td>

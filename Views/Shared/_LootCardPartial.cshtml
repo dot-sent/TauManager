@@ -58,6 +58,7 @@
             @if (Model.ShowSingleItemInterface)
             {
                 <form action="/Campaigns/ApplyForLoot/@Model.Loot.Id" method="post" id="form_item_application">
+                    <input type="hidden" name="isPersonalRequest" value="@(Model.Request.IsPersonalRequest.ToString())" />
                     <div class="form-group">
                         <label for="radio_apply_normal">
                             <input type="radio" name="specialOffer" id="radio_apply_normal" value="False"@(Model.RequestExists ? Model.Request.Status == LootRequest.LootRequestStatus.Interested ? " checked" : "" : " checked")>

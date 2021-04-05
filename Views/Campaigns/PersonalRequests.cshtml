@@ -1,0 +1,167 @@
+@model List<TauManager.ViewModels.LootItemViewModel>
+@using System.Linq
+@{
+    ViewData["Title"] = "Personal loot requests";
+    var userHasEditRights = 
+        User.IsInRole(TauManager.Areas.Identity.Data.ApplicationRoleManager.Administrator)
+        || User.IsInRole(TauManager.Areas.Identity.Data.ApplicationRoleManager.Leader)
+        || User.IsInRole(TauManager.Areas.Identity.Data.ApplicationRoleManager.Officer);
+}
+
+<div class="text-center"><h2>Personal loot requests</h2></div>
+
+<div class="card mb-3 text-center">
+    <div class="card-header">
+        Personal loot requests
+    </div>
+    <div class="card-body">
+        @if(Model.Count > 0)
+        {
+        <div class="card-columns">
+            @foreach (var loot in Model)
+            {
+                @await Html.PartialAsync("_LootCardPartial", loot);
+            }
+        </div>
+        } else {
+            <i class="text-center">None at this moment</i>
+        }
+    </div>
+</div>
+
+@if (userHasEditRights)
+{
+    <div class="modal fade" id="modal_award_loot" tabindex="-1" role="dialog" aria-labelledby="modal_award_loot_title" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modal_award_loot_title">Award/update loot</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="form_award_loot">
+                        <label>Existing requests:</label>
+                        <div class="form-group" id="group_award_loot_requests">
+                            <p></p>
+                            <div class="form-check">
+                                <input type="radio" id="radio_loot_stays_with_syndicate" name="lootStatusFormRadio" class="form-check-input" data-loot-status="@(TauManager.Models.CampaignLoot.CampaignLootStatus.StaysWithSyndicate)">
+                                <label class="form-check-label" for="radio_loot_stays_with_syndicate">Item stays with the syndicate</label>
+                            </div>
+                            <div class="form-check">
+                                <input type="radio" id="radio_loot_other" name="lootStatusFormRadio" class="form-check-input" data-loot-status="@(TauManager.Models.CampaignLoot.CampaignLootStatus.Other)">
+                                <label class="form-check-label" for="radio_loot_other">Other (allocation will be handled outside Manager)</label>
+                            </div>
+                            <div class="form-check">
+                                <input type="checkbox" id="cb_other_syndicate_available" name="lootAvailableToOtherSyndicates" class="form-check-input">
+                                <label class="form-check-label" for="cb_other_syndicate_available">Mark item as available to other syndicates</label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="modal_award_loot_submit">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="loot_check_template" class="d-none mb-1">
+        <div class="form-check">
+            <input type="radio" name="lootStatusFormRadio" class="form-check-input" data-loot-status="@(TauManager.Models.CampaignLoot.CampaignLootStatus.PermanentlyAwarded)">
+            <label class="form-check-label"><span class="span-player-name"></span> - award permanently</label>
+        </div>
+        <div class="form-check">
+            <input type="radio" name="lootStatusFormRadio" class="form-check-input" data-loot-status="@(TauManager.Models.CampaignLoot.CampaignLootStatus.OnLoan)">
+            <label class="form-check-label"><span class="span-player-name"></span> - on loan</label>
+        </div>
+    </div>
+}
+
+
+@section Scripts
+{
+@if (userHasEditRights)
+{
+    <script type="text/javascript">
+        $(function() {
+            configureControlPostback('.select-loot-item-status', '/Campaigns/SetLootStatus',
+                {
+                    id: 'id',
+                    status: 'val'
+                });
+            configureControlPostback('.select-loot-item-holder', '/Campaigns/SetLootHolder',
+                {
+                    id: 'id',
+                    holderId: 'val'
+                });
+            $('#modal_award_loot').on('show.bs.modal', function (event) {
+                var $button = $(event.relatedTarget);
+                var campaignLootId = $button.data('id');
+                var $modal = $(this);
+                $modal.find('#modal_award_loot_title').html('Award ' + $button.data('name'));
+                $modal.data('loot-id', campaignLootId);
+                $('#group_award_loot_requests > p').html('');
+                $('#group_award_loot_requests > p').append('<i>Loading...</i>');
+                $.ajax({
+                    url: '/Campaigns/GetLootRequestsJson',
+                    data: {
+                        id: campaignLootId
+                    },
+                    cache: false,
+                    type: 'GET',
+                    success: function(data, textStatus, jqXHR){
+                        $('#group_award_loot_requests > p').html('');
+                        if (data.requests.length == 0) {
+                            $('#group_award_loot_requests > p').append('<i>None</i>');
+                        } else {
+                            for(var i = 0; i < data.requests.length; i++) {
+                                var $newRadio = $('#loot_check_template').clone();
+                                $newRadio.removeClass('d-none');
+                                $newRadio.attr('id', '');
+                                $newRadio.find('.span-player-name').html(
+                                    (data.requests[i].attendedCampaign ? '<i class="fas fa-check text-success font-weight-bold"></i> ' :
+                                    '<i class="fas fa-times text-danger font-weight-bold"></i> ') +
+                                    (data.requests[i].isCollectorRequest ? '<i class="fas fa-boxes text-info" title="Collector\'s request, lower priority"></i> ': '') +
+                                    (data.requests[i].specialOfferDescription != undefined && data.requests[i].specialOfferDescription.length > 0 ?
+                                    '<i class="fas fa-exclamation-triangle text-warning" title="' + data.requests[i].specialOfferDescription + '"></i>' :
+                                    '') +
+                                    data.requests[i].playerName + ' (' + data.requests[i].activePlayerPosition + ')');
+                                $newRadio.find('.form-check-input').data('loot-request-id', data.requests[i].id);
+                                $('#group_award_loot_requests > p').append($newRadio);
+                            }
+                        }
+                    }
+                });
+            });
+            $('#modal_award_loot_submit').click(function(evt){
+                var $form = $('#form_award_loot');
+                var $checkedRadio = $form.find('input[name="lootStatusFormRadio"]:checked');
+                var lootId = $('#modal_award_loot').data('loot-id');
+                var lootAvailableToOtherSyndicates = $form.find("#cb_other_syndicate_available").is(':checked');
+                if ($checkedRadio) {
+                    $.ajax({
+                        url: '/Campaigns/AwardLoot',
+                        type: 'POST',
+                        cache: false,
+                        data: {
+                            lootRequestId: $checkedRadio.data('loot-request-id'),
+                            lootId: lootId,
+                            status: $checkedRadio.data('loot-status'),
+                            lootAvailableToOtherSyndicates: lootAvailableToOtherSyndicates
+                        },
+                        success: function(data, textStatus, jqXHR){
+                            $('#modal_award_loot').modal('hide');
+                            location.reload(true);
+                        },
+                        error: function(jqXHR, textStatus, errorThrown){
+                            console.log('Error when awarding item: ' + textStatus);
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+}
+}
