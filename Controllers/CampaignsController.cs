@@ -98,7 +98,8 @@ namespace TauManager.Controllers
         }
         public async Task<IActionResult> Loot(int[] display = null, int itemTier = 0, int itemType = 0)
         {
-            var model = _lootLogic.GetOverview(display, itemTier, itemType, (await GetSyndicate()).Id);
+            var playerId = await _userManager.GetPlayerIdAsync(User);
+            var model = _lootLogic.GetOverview(playerId, display, itemTier, itemType, (await GetSyndicate()).Id);
             return View(model);
         }
         public async Task<IActionResult> LootDistributionList()
