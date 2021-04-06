@@ -57,6 +57,10 @@
                                 <input type="checkbox" id="cb_other_syndicate_available" name="lootAvailableToOtherSyndicates" class="form-check-input">
                                 <label class="form-check-label" for="cb_other_syndicate_available">Mark item as available to other syndicates</label>
                             </div>
+                            <div class="form-check">
+                                <input type="checkbox" id="cb_drop_requestor_down" name="dropRequestorDown" class="form-check-input">
+                                <label class="form-check-label" for="cb_drop_requestor_down">Drop requestor down in the LDL</label>
+                            </div>
                         </div>
                     </form>
                 </div>
@@ -107,7 +111,8 @@
                 $.ajax({
                     url: '/Campaigns/GetLootRequestsJson',
                     data: {
-                        id: campaignLootId
+                        id: campaignLootId,
+                        personalRequests: 'True',
                     },
                     cache: false,
                     type: 'GET',
@@ -140,6 +145,7 @@
                 var $checkedRadio = $form.find('input[name="lootStatusFormRadio"]:checked');
                 var lootId = $('#modal_award_loot').data('loot-id');
                 var lootAvailableToOtherSyndicates = $form.find("#cb_other_syndicate_available").is(':checked');
+                var dropRequestorDown = $form.find("#cb_drop_requestor_down").is(':checked');
                 if ($checkedRadio) {
                     $.ajax({
                         url: '/Campaigns/AwardLoot',
@@ -149,7 +155,8 @@
                             lootRequestId: $checkedRadio.data('loot-request-id'),
                             lootId: lootId,
                             status: $checkedRadio.data('loot-status'),
-                            lootAvailableToOtherSyndicates: lootAvailableToOtherSyndicates
+                            lootAvailableToOtherSyndicates: lootAvailableToOtherSyndicates,
+                            dropRequestorDown: dropRequestorDown,
                         },
                         success: function(data, textStatus, jqXHR){
                             $('#modal_award_loot').modal('hide');

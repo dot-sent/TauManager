@@ -24,7 +24,11 @@ namespace TauManager.Controllers
         public async Task<IActionResult> Index()
         {
             var playerId = await _userManager.GetPlayerIdAsync(User);
-            var model = _playerLogic.GetHomePageModel(playerId);
+            var user = await _userManager.GetUserAsync(User);
+            var isOfficer = await _userManager.IsInRoleAsync(user, ApplicationRoleManager.Leader) ||
+                await _userManager.IsInRoleAsync(user, ApplicationRoleManager.Officer) ||
+                await _userManager.IsInRoleAsync(user, ApplicationRoleManager.Administrator);
+            var model = _playerLogic.GetHomePageModel(playerId, isOfficer);
             return View(model);
         }
 

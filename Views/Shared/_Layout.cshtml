@@ -61,6 +61,12 @@
                                 <a class="dropdown-item" asp-controller="Campaigns" asp-action="Leaderboards">Leaderboards <span class="text-danger">(new, but old)</span></a>
                                 <a class="dropdown-item" asp-controller="Campaigns" asp-action="Loot">Loot items and history</a>
                                 <a class="dropdown-item" asp-controller="Campaigns" asp-action="LootDistributionList">Loot Distribution List</a>
+    @if(User.IsInRole(TauManager.Areas.Identity.Data.ApplicationRoleManager.Officer)
+        || User.IsInRole(TauManager.Areas.Identity.Data.ApplicationRoleManager.Leader)
+        || User.IsInRole(TauManager.Areas.Identity.Data.ApplicationRoleManager.Administrator))
+    {
+                                <a class="dropdown-item" asp-controller="Campaigns" asp-action="PersonalRequests">Personal Requests (officers only)</a>
+    }
                             </div>
                         </li>
                         <li class="nav-item">

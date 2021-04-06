@@ -218,17 +218,17 @@ namespace TauManager.Controllers
 
         [HttpGet]
         [AuthorizeRoles(ApplicationRoleManager.Leader, ApplicationRoleManager.Officer)]
-        public IActionResult GetLootRequestsJson(int id)
+        public IActionResult GetLootRequestsJson(int id, bool personalRequests = false)
         {
-            var model = _lootLogic.GetLootRequestsInfo(id);
+            var model = _lootLogic.GetLootRequestsInfo(id, personalRequests);
             return Json(model);
         }
 
         [HttpPost]
         [AuthorizeRoles(ApplicationRoleManager.Leader, ApplicationRoleManager.Officer)]
-        public async Task<IActionResult> AwardLoot(int lootId, int? lootRequestId, CampaignLoot.CampaignLootStatus status, bool? lootAvailableToOtherSyndicates)
+        public async Task<IActionResult> AwardLoot(int lootId, int? lootRequestId, CampaignLoot.CampaignLootStatus status, bool? lootAvailableToOtherSyndicates, bool dropRequestorDown = true)
         {
-            var result = await _lootLogic.AwardLoot(lootId, lootRequestId, status, lootAvailableToOtherSyndicates);
+            var result = await _lootLogic.AwardLoot(lootId, lootRequestId, status, lootAvailableToOtherSyndicates, dropRequestorDown);
             if (!result) return Conflict();
             return Ok();
         }

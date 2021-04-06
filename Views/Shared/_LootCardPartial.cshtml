@@ -15,13 +15,8 @@
                 }
                 </p>
             </li>
-@if(!Model.ShowEditControls)
+@if(Model.ShowRequestsExplicitly || (!Model.ShowEditControls && !Model.Loot.HolderId.HasValue))
 {
-        // Requests only show for items without owners
-        // It meanst that once you assign an item to someone, they won't show
-        // If that's a problem, remove this condition
-        @if (!Model.Loot.HolderId.HasValue)
-        {
             <li class="list-group-item">
                 Existing requests:
                 @if (Model.AllRequests == null || Model.AllRequests.Count == 0)
@@ -41,7 +36,9 @@
                     </ul>
                 }
             </li>
-        }
+}
+@if(!Model.ShowEditControls)
+{
             <li class="list-group-item">
                 <label for="select_loot_item_status_@(Model.Loot.Id)">Status: @(Model.Loot.Status)</label>
             </li>
