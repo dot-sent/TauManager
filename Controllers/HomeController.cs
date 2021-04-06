@@ -25,7 +25,8 @@ namespace TauManager.Controllers
         {
             var playerId = await _userManager.GetPlayerIdAsync(User);
             var user = await _userManager.GetUserAsync(User);
-            var isOfficer = await _userManager.IsInRoleAsync(user, ApplicationRoleManager.Leader) ||
+            var isOfficer = user == null ? false:
+                await _userManager.IsInRoleAsync(user, ApplicationRoleManager.Leader) ||
                 await _userManager.IsInRoleAsync(user, ApplicationRoleManager.Officer) ||
                 await _userManager.IsInRoleAsync(user, ApplicationRoleManager.Administrator);
             var model = _playerLogic.GetHomePageModel(playerId, isOfficer);
