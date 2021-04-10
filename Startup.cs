@@ -33,6 +33,9 @@ namespace TauManager
                 // This lambda determines whether user consent for non-essential cookies is needed for a given request.
                 options.CheckConsentNeeded = context => true;
                 options.MinimumSameSitePolicy = SameSiteMode.None;
+                options.ConsentCookie.SameSite = SameSiteMode.None;
+                options.ConsentCookie.SecurePolicy = CookieSecurePolicy.Always;
+                options.Secure = CookieSecurePolicy.Always;
             });
 
             services.AddDbContext<TauDbContext>(options =>
