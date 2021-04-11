@@ -10,3 +10,7 @@ packages-microsoft-prod.deb
 scripts/.market_test_data.sql.swp
 scripts/market_test_data.sql
 tau.env
+wwwroot/img/item
+wwwroot/img/default
+ScaffoldingReadMe.txt
+global.json
