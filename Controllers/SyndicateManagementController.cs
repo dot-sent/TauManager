@@ -143,10 +143,21 @@ namespace TauManager.Controllers
         public async Task<IActionResult> GetPlayerPageUploadToken()
         {
             var user = await _userManager.GetUserAsync(User);
+            var existingToken = user.PlayerPageUploadToken;
+            if (string.IsNullOrEmpty(existingToken))
+            {
+                return await RenewPlayerPageUploadToken();
+            }
+            return View(model: existingToken);
+        }
+        public async Task<IActionResult> RenewPlayerPageUploadToken()
+        {
+            var user = await _userManager.GetUserAsync(User);
             var token = Random.GetRandom256ByteString();
             user.PlayerPageUploadToken = token;
             await _userManager.UpdateAsync(user);
-            return View(model: token);
+            return View(viewName: "GetPlayerPageUploadToken", model: token);
         }
+
     }
 }
