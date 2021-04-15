@@ -52,6 +52,7 @@
                 <th>Status</th>
                 <th>Holder/Owner</th>
                 <th>Stats (P/I/E, Accuracy, Weight)</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -72,14 +73,6 @@
                         </select>
                     } else {
                         @:@loot.Status
-                    }
-                    @if (loot.Status == CampaignLoot.CampaignLootStatus.StaysWithSyndicate) {
-                        if(Model.PersonalRequestLootIds.Contains(loot.Id))
-                        {
-                            <a asp-action="ApplyForLoot" asp-route-id="@loot.Id" asp-route-isPersonalRequest="True" class="btn btn-sm btn-warning">Edit or Withdraw request</a>
-                        } else {
-                            <a asp-action="ApplyForLoot" asp-route-id="@loot.Id" asp-route-isPersonalRequest="True" class="btn btn-sm btn-success">Request</a>
-                        }
                     }
                 </td>
                 <td>
@@ -115,6 +108,16 @@
                         <i>Not applicable</i>
                     }
                 </td>
+                <td>
+                    @if (loot.Status == CampaignLoot.CampaignLootStatus.StaysWithSyndicate) {
+                        if(Model.PersonalRequestLootIds.Contains(loot.Id))
+                        {
+                            <a asp-action="ApplyForLoot" asp-route-id="@loot.Id" asp-route-isPersonalRequest="True" class="btn btn-sm btn-warning">Edit or Withdraw request</a>
+                        } else {
+                            <a asp-action="ApplyForLoot" asp-route-id="@loot.Id" asp-route-isPersonalRequest="True" class="btn btn-sm btn-success">Request</a>
+                        }
+                    }
+                </td>
             </tr>
         }
         </tbody>
@@ -126,11 +129,9 @@
 }
 </div>
 
-@if(userHasEditRights)
-{
 <div class="card mb-3 text-center table-responsive">
     <div class="card-header">
-        <h4>Loot available from different syndicates (officers-only)</h4>
+        <h4>Loot available from other syndicates</h4>
     </div>
 @if(Model.OtherSyndicatesLoot != null && Model.OtherSyndicatesLoot.Count() > 0)
 {
@@ -141,6 +142,7 @@
                 <th>Description</th>
                 <th>Stats (P/I/E, Accuracy, Weight)</th>
                 <th>Syndicate</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -159,7 +161,17 @@
                     }
                 </td>
                 <td>[@loot.Campaign.Syndicate.Tag]</td>
-            </tr>            
+                <td>
+                    @if (loot.Status == CampaignLoot.CampaignLootStatus.StaysWithSyndicate) {
+                        if(Model.PersonalRequestLootIds.Contains(loot.Id))
+                        {
+                            <a asp-action="ApplyForLoot" asp-route-id="@loot.Id" asp-route-isPersonalRequest="True" class="btn btn-sm btn-warning">Edit or Withdraw request</a>
+                        } else {
+                            <a asp-action="ApplyForLoot" asp-route-id="@loot.Id" asp-route-isPersonalRequest="True" class="btn btn-sm btn-success">Request</a>
+                        }
+                    }
+                </td>
+            </tr>
         }
         </tbody>
     </table>
@@ -169,7 +181,6 @@
     </div>
 }
 </div>
-}
 
 @section Scripts
 {
