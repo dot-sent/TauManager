@@ -13,6 +13,10 @@
     <div class="col-md-12 alert alert-@(announcement.Style.ToString().ToLower())">
         Message from <b>@(announcement.FromId.HasValue ? announcement.From.Name : "System")</b>:<br/>
         @announcement.Text
+        @if(!String.IsNullOrWhiteSpace(announcement.Url)) {
+            <br/>
+            <a class="btn btn-sm btn-primary" href="@announcement.Url">@announcement.UrlButtonText</a>
+        }
     </div>
 </div>
 }
