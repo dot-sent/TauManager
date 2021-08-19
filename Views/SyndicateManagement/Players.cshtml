@@ -48,7 +48,7 @@
                     <th>Uni</th>
                     <th>Last updated</th>
                     <th>Last activity</th>
-                    <th>Campaign att% Total/T5H</th>
+                    <th>Campaign att% Total/T@(TauManager.Constants.MaxTier)H</th>
                     <th>In?</th>
                 </tr>
             </thead>
@@ -61,7 +61,7 @@
                     var totalDiff = TierStatistics.StatClass(player.StatTotal, tierStats.StatTotal);
                     <tr class="text-right">
                         <td class="text-left"><a asp-action="PlayerDetails" asp-route-id="@player.Id">@player.Name</a></td>
-                        <td class="@(tier<5 && player.Active && (tier * 5 == (int)Math.Floor(player.Level)) ? "font-weight-bold text-success" : "")">@player.LevelString</td>
+                        <td class="@(tier<TauManager.Constants.MaxTier && player.Active && (tier * 5 == (int)Math.Floor(player.Level)) ? "font-weight-bold text-success" : "")">@player.LevelString</td>
                         <td>@tier</td>
                         <td class="@( totalDiff > 0 ? "text-danger" : totalDiff < 0 ? "text-success" : "" )">@player.StatTotal</td>
                         <td>@player.Strength</td>

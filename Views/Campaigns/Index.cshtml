@@ -166,7 +166,7 @@
             <th>Station</th>
             <th>Difficulty</th>
             <th>Tiers</th>
-            <th>Attendance T5H+</th>
+            <th>Attendance T@(TauManager.Constants.MaxTier)H+</th>
             <th>Actions</th>
         </thead>
         <tbody>
@@ -197,7 +197,7 @@
                         <i class="fas fa-clipboard-list font-weight-bold text-muted"></i>
                         <span class="font-weight-bold text-muted">Excluded</span>
                     } else if (campaign.Tiers.HasValue &&
-                        campaign.Tiers.Value > 15 &&
+                        campaign.Tiers.Value > 31 &&
                         campaign.Difficulty.HasValue &&
                         (campaign.Difficulty.Value == Campaign.CampaignDifficulty.Hard || campaign.Difficulty.Value == Campaign.CampaignDifficulty.Extreme))
                     {

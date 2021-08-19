@@ -52,9 +52,9 @@
             </div>
             <div class="control-group">
                 <label for="input_min_tier">Tier: from</label>
-                <input type="number" min="1" max="5" style="w-10" class="form-control" id="input_min_tier" name="minTier" value="@(Model.Filters.MinTier.HasValue ? Model.Filters.MinTier.Value.ToString() : "1")"/>
+                <input type="number" min="1" max="@(TauManager.Constants.MaxTier)" style="w-10" class="form-control" id="input_min_tier" name="minTier" value="@(Model.Filters.MinTier.HasValue ? Model.Filters.MinTier.Value.ToString() : "1")"/>
                 <label for="input max_tier">to</label>
-                <input type="number" min="1" max="5" style="w-10" class="form-control" id="input_max_tier" name="maxTier" value="@(Model.Filters.MaxTier.HasValue ? Model.Filters.MaxTier.Value.ToString() : "5")"/>
+                <input type="number" min="1" max="@(TauManager.Constants.MaxTier)" style="w-10" class="form-control" id="input_max_tier" name="maxTier" value="@(Model.Filters.MaxTier.HasValue ? Model.Filters.MaxTier.Value.ToString() : TauManager.Constants.MaxTier.ToString())"/>
             </div>
         </div>
         <div class="col-md-4">

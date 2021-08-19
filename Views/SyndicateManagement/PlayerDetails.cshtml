@@ -57,9 +57,9 @@
         <dl class="card-body row mb-0">
             <dt class="col-sm-2">Overall</dt>
             <dd class="col-sm-2">@Model.Attendance.TotalAttendance.SingleOrGiven(Model.Player.Id, 0)%</dd>
-            <dt class="col-sm-2">All T5 Hard+</dt>
+            <dt class="col-sm-2">All T@(TauManager.Constants.MaxTier) Hard+</dt>
             <dd class="col-sm-2">@Model.Attendance.T5HardAttendance.SingleOrGiven(Model.Player.Id, 0)%</dd>
-            <dt class="col-sm-2">Last 10 T5 Hard+</dt>
+            <dt class="col-sm-2">Last 10 T@(TauManager.Constants.MaxTier) Hard+</dt>
             <dd class="col-sm-2">@Model.Attendance.Last10T5HardAttendance.SingleOrGiven(Model.Player.Id, 0)%</dd>
         </dl>
     </div>

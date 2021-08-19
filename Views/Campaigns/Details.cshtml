@@ -103,7 +103,7 @@
                     <div class="form-group">
                         <label for="campaign_tiers">Tiers: </label>
                         <div class="input-group" id="campaign_tiers">
-                        @for(var tier = 1; tier <= 5; tier++)
+                        @for(var tier = 1; tier <= TauManager.Constants.MaxTier; tier++)
                         {
                             <label for="cb_tier_@(tier)" class="form-control">
                                 <input type="checkbox" name="Tier@(tier)" id="cb_tier_@tier"@(Model.Campaign.TiersList.Contains(tier) ? " checked" : "")>
@@ -255,7 +255,7 @@
             e.preventDefault();
             var tiers = 0;
             var currentTierVal = 1;
-            for (var i = 1; i<=5; i++){
+            for (var i = 1; i<=@TauManager.Constants.MaxTier; i++){
                 var $elem = $('#cb_tier_' + i);
                 var value = $elem.prop('checked');
                 if (value == true){

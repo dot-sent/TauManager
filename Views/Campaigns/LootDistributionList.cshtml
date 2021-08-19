@@ -51,7 +51,7 @@
                     <th rowspan="2">Player</th>
                     <th rowspan="2">T</th>
                     <th rowspan="2">Active?</th>
-                    <th rowspan="2">Att% T5H+</th>
+                    <th rowspan="2">Att% T@(TauManager.Constants.MaxTier)H+</th>
                 @foreach(var campaignId in allCampaignIds)
                 {
                     <th colspan="@(Model.AllCampaignLoot[campaignId].Count())"><a href="/Campaigns/View/@campaignId" target="_blank">@(Model.AllCampaigns[campaignId].Name)</a></th>
