@@ -89,7 +89,7 @@ namespace TauManager
             #endregion
 
             #region Util services registration
-            services.AddScoped<ITauHeadClient, TauHead>();
+            services.AddScoped<ITauHeadClient, TauTrackerClient>();
             #endregion
         }
 
