@@ -108,20 +108,20 @@ select.btn-mini + .caret {
   border-radius: .2rem;
 }
 
-.btn-display-lr-editor:hover {
-  font-weight: bold;
+td.ldl-modal-trigger:hover {
+  border: solid 2px red;
+}
+
+td.ldl-modal-trigger > i{
+  color: lightgray;
 }
 
 .ldl-ok {
-  background-color: lightgreen;
+  background-color: white;
 }
 
-.ldl-warn {
-  background-color: yellow;
-}
-
-.ldl-blocked {
-  background-color: coral;
+.ldl-absent {
+  background-color: lightgray;
 }
 
 .nav-pills.nav-green a {

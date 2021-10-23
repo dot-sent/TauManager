@@ -13,29 +13,43 @@
     <h2 class="text-center">Current distribution list</h2>
 </div>
 <div class="text-center">
-    <form class="form-inline" id="form_filter" asp-action="SetLootDistributionListParams">
+    <form id="form_filter" asp-action="SetLootDistributionListParams">
         <input type="hidden" id="hidden_includeInactive" name="includeInactive">
         <input type="hidden" id="hidden_undistributedLootOnly" name="undistributedLootOnly">
-
-        <div class="form-check mb-2 mr-sm-2">
-            <input type="checkbox" class="form-check-input" id="cb_filter_includeInactive"@(Model.IncludeInactive ? " checked": "")>
-            <label for="cb_filter_includeInactive" class="form-check-label">Include inactive players</label>
+        <div class="row">
+            <div class="col-auto">
+                <div class="form-check mb-2 mr-sm-2">
+                    <input type="checkbox" class="form-check-input" id="cb_filter_includeInactive"@(Model.IncludeInactive ? " checked": "")>
+                    <label for="cb_filter_includeInactive" class="form-check-label">Include inactive players</label>
+                </div>
+            </div>
+            <div class="col-auto">
+                <div class="form-check mb-2 mr-sm-4">
+                    <input type="checkbox" class="form-check-input" id="cb_filter_undistributedLootOnly"@(Model.UndistributedLootOnly ? " checked": "")>
+                    <label for="cb_filter_undistributedLootOnly" class="form-check-label">Show undistributed loot only</label>
+                </div>
+            </div>
         </div>
-        <div class="form-check mb-2 mr-sm-4">
-            <input type="checkbox" class="form-check-input" id="cb_filter_undistributedLootOnly"@(Model.UndistributedLootOnly ? " checked": "")>
-            <label for="cb_filter_undistributedLootOnly" class="form-check-label">Show undistributed loot only</label>
+        <div class="row">
+            <div class="col-auto">
+                <div class="input-group mb-2 mr-sm-2">
+                    <label for="cb_filter_campaign_id" class="mr-sm-1">Show campaign:</label>
+                    <select class="form-control" id="cb_filter_campaign_id" name="id">
+                        <!option value="0"@(Model.CampaignId.HasValue ? "" : " selected")>-- All campaigns --</!option>
+                    @foreach(var campaignId in Model.AllCampaigns.Keys.OrderByDescending(k => k))
+                    {
+                        <!option value="@campaignId"@(Model.CampaignId.HasValue ? Model.CampaignId.Value == campaignId ? " selected" : "" : "")>@(Model.AllCampaigns[campaignId].Name) - @(Model.AllCampaigns[campaignId].Station), T@(String.Join("", Model.AllCampaigns[campaignId].TiersList)), @(Model.AllCampaigns[campaignId].Loot.Count()) epic(s)</!option>
+                    }
+                    </select>
+                </div>
+            </div>
+            <div class="col-auto">
+                <input type="submit" class="btn btn-sm btn-primary form-control form-control-sm mb-2 mr-sm-2" id="btn_filter_apply" value="Apply filters">
+            </div>
+            <div class="col-auto">
+                <a class="btn btn-sm btn-primary form-control" href="#">Toggle empty cells</a>
+            </div>
         </div>
-        <div class="input-group mb-2 mr-sm-2">
-            <label for="cb_filter_campaign_id" class="mr-sm-1">Show campaign:</label>
-            <select class="form-control" id="cb_filter_campaign_id" name="id">
-                <!option value="0"@(Model.CampaignId.HasValue ? "" : " selected")>-- All campaigns --</!option>
-            @foreach(var campaignId in Model.AllCampaigns.Keys.OrderByDescending(k => k))
-            {
-                <!option value="@campaignId"@(Model.CampaignId.HasValue ? Model.CampaignId.Value == campaignId ? " selected" : "" : "")>@(Model.AllCampaigns[campaignId].Name) - @(Model.AllCampaigns[campaignId].Station), T@(String.Join("", Model.AllCampaigns[campaignId].TiersList)), @(Model.AllCampaigns[campaignId].Loot.Count()) epic(s)</!option>
-            }
-            </select>
-        </div>
-        <input type="submit" class="btn btn-sm btn-primary form-control form-control-sm mb-2 mr-sm-2" id="btn_filter_apply" value="Apply">
     </form>
 </div>
 
@@ -62,7 +76,11 @@
                 {
                     foreach(var campaignLoot in Model.AllCampaignLoot[campaignId])
                     {
-                        <th id="th_cl_@campaignLoot.Id"><a target="_blank" href="@(campaignLoot.Item.Url)">@(campaignLoot.Item.Name)</a> - @(campaignLoot.Item.LDLCaption)</th>
+                        var hiddenClass = "";
+                        if (campaignLoot.Requests != null && campaignLoot.Requests.Count() == 0) {
+                             hiddenClass = "class=\"d-none hidden-empty-cells\"";
+                        }
+                        <th id="th_cl_@campaignLoot.Id"@Html.Raw(hiddenClass)><a target="_blank" href="@(campaignLoot.Item.Url)">@(campaignLoot.Item.Name)</a> - @(campaignLoot.Item.LDLCaption)</th>
                     }
                 }
                 </tr>
@@ -72,6 +90,7 @@
             {
                 var isCurrent = Model.CurrentPlayer != null && Model.CurrentPlayer.Id == player.Id;
                 var hasRequests = Model.AllLootRequests.ContainsKey(player.Id);
+                var playerClasses = new List<string>();
                 <tr class="@((player.Active ? "" : "text-muted") + (hasRequests ? "" : " playerwithnorequests"))">
                     <th class="@(isCurrent ? "text-success" : "")">
                         @(player.Active ? "" : "(")@(index++)@(player.Active ? "" : ")")@(isCurrent ? " (you)" : "")
@@ -96,33 +115,37 @@
                         if (Model.AllLootRequests.ContainsKey(player.Id) && Model.AllLootRequests[player.Id].ContainsKey(campaignLoot.Id))
                         {
                             requestStatus = (int)Model.AllLootRequests[player.Id][campaignLoot.Id].Status;
-                            comment = Model.AllLootRequests[player.Id][campaignLoot.Id].SpecialOfferDescription;
+                            comment = Html.Encode(Model.AllLootRequests[player.Id][campaignLoot.Id].SpecialOfferDescription);
                             isCollectorRequest = Model.AllLootRequests[player.Id][campaignLoot.Id].IsCollectorRequest;
                         }
                         var cellClass = " ldl-ok";
-                        if (player.Tier < campaignLoot.Item.Tier - 1)
+                        if (!Model.AllCampaigns[campaignId].Attendance.Any(a => a.PlayerId == player.Id))
                         {
-                            cellClass = " ldl-blocked";
-                        } else if (player.Tier == campaignLoot.Item.Tier - 1) {
-                            cellClass = " ldl-warn";
+                            cellClass = " ldl-absent";
                         }
-                        
-                        <td class="text-center@(cellClass)">
-                            @if (Model.AllCampaigns[campaignId].Attendance.Any(a => a.PlayerId == player.Id)) 
-                            {
-                                <i class="fas fa-user-check text-secondary"></i>
+                        if (campaignLoot.Requests == null || campaignLoot.Requests.Count() == 0) cellClass += " d-none hidden-empty-cells";
+                        var cellAttributes = String.Empty;
+                        if (userHasEditRights) {
+                            cellClass += " ldl-modal-trigger";
+                            cellAttributes = String.Format(
+                                " data-player-id=\"{0}\" data-loot-id=\"{1}\" data-status=\"{2}\" data-comment=\"{3}\"",
+                                player.Id, campaignLoot.Id, requestStatus, comment);
+                        }
+                        <td class="text-center@(cellClass)"@Html.Raw(cellAttributes)>
+                            @if (player.Tier < campaignLoot.Item.Tier - 1 && requestStatus > -1) {
+                                <i class="fa fa-exclamationi>-triangle text-danger" title="Ineligible by tier!"></i>
                             }
                             @if (isCollectorRequest) {
-                                <i class="fa fa-boxes text-secondary"></i>
+                                <i class="fa fa-boxes"></i>
                             }
                             @if (comment == null || comment == "") 
                             {
-                                <span class="font-weight-bold">@(requestStatus == -1 ? "" : Model.AllLootRequests[player.Id][campaignLoot.Id].Status.ToString())</span>
+                                <span>@(requestStatus == -1 ? "" : Model.AllLootRequests[player.Id][campaignLoot.Id].Status.ToString())</span>
                             } else {
                                 <span title="@comment">@(requestStatus == -1 ? "" : Model.AllLootRequests[player.Id][campaignLoot.Id].Status.ToString())</span>
                             }
                             
-                        @if(userHasEditRights)
+                        @if(false && userHasEditRights)
                         {
                             <input type="button" class="btn btn-xs btn-display-lr-editor text-muted" data-toggle="modal" data-target="#modal_edit_lr" value="(edit)"
                                 data-player-id="@player.Id" data-loot-id="@campaignLoot.Id" data-status="@requestStatus" data-comment="@comment">
@@ -214,18 +237,6 @@
     @if(userHasEditRights)
     {
         <script type="text/javascript">
-            $('#modal_edit_lr').on('show.bs.modal', function (event) {
-                var button = $(event.relatedTarget);
-                var modal = $(this);
-                modal.find('.modal-title').text(
-                    $('#th_pl_' + button.data('player-id')).text() + 
-                    ' for ' +
-                     $('#th_cl_' + button.data('loot-id')).text());
-                modal.find('#select_lr_status').val(button.data('status'));
-                modal.find('#ta_special_request_comments').val(button.data('comment'));
-                modal.find('#hidden_lr_player_id').val(button.data('player-id'));
-                modal.find('#hidden_lr_loot_id').val(button.data('loot-id'));
-            });
             $('#modal_edit_lr_submit').click(function(evt){
                 var form = $('#form_edit_loot_request');
                 form.find('#hidden_lr_drop_down').val(form.find('#cb_drop_player_loot_request').prop('checked'));
@@ -243,6 +254,21 @@
 
                     }
                 });
+            });
+            $('.ldl-modal-trigger').click(function(evt){
+                let elem = $(evt.target);
+                if (!elem.hasClass('ldl-modal-trigger')) {
+                    elem = elem.parent('.ldl-modal-trigger');
+                }
+                var modal = $("#modal_edit_lr");
+                modal.find('.modal-title').text(
+                    $('#th_pl_' + elem.data('player-id')).text() + ' for ' +
+                    $('#th_cl_' + elem.data('loot-id')).text());
+                modal.find('#select_lr_status').val(elem.data('status'));
+                modal.find('#ta_special_request_comments').val(elem.data('comment'));
+                modal.find('#hidden_lr_player_id').val(elem.data('player-id'));
+                modal.find('#hidden_lr_loot_id').val(elem.data('loot-id'));
+                modal.modal(); // Chicken chicken chicken. Chicken? Chicken!
             });
             $(function() {
                 configureControlPostback('.cb-player-active', '/SyndicateManagement/SetPlayerActive',
