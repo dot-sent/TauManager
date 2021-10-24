@@ -47,7 +47,7 @@
                 <input type="submit" class="btn btn-sm btn-primary form-control form-control-sm mb-2 mr-sm-2" id="btn_filter_apply" value="Apply filters">
             </div>
             <div class="col-auto">
-                <a class="btn btn-sm btn-primary form-control" href="#">Toggle empty cells</a>
+                 <a class="btn btn-sm btn-primary form-control" href="#" onclick="javascript: $('.hidden-empty-cells').toggleClass('d-none');">Toggle empty cells</a>
             </div>
         </div>
     </form>
@@ -68,7 +68,8 @@
                     <th rowspan="2">Att% T@(TauManager.Constants.MaxTier)H+</th>
                 @foreach(var campaignId in allCampaignIds)
                 {
-                    <th colspan="@(Model.AllCampaignLoot[campaignId].Count())"><a href="/Campaigns/View/@campaignId" target="_blank">@(Model.AllCampaigns[campaignId].Name)</a></th>
+                    var lootClass = Model.AllCampaignLoot[campaignId].Sum(cl => cl.Requests.Count) == 0 ? " class=\"d-none hidden-empty-cells\"" : "";
+                    <th colspan="@(Model.AllCampaignLoot[campaignId].Count())"@Html.Raw(lootClass)><a href="/Campaigns/View/@campaignId" target="_blank">@(Model.AllCampaigns[campaignId].Name)</a></th>
                 }
                 </tr>
                 <tr>
@@ -89,9 +90,21 @@
             @foreach (var player in Model.CurrentOrder)
             {
                 var isCurrent = Model.CurrentPlayer != null && Model.CurrentPlayer.Id == player.Id;
-                var hasRequests = Model.AllLootRequests.ContainsKey(player.Id);
-                var playerClasses = new List<string>();
-                <tr class="@((player.Active ? "" : "text-muted") + (hasRequests ? "" : " playerwithnorequests"))">
+                var hasRequests = isCurrent; // Always show the current player's row
+                if (!hasRequests)
+                {
+                    foreach(var campaignId in allCampaignIds)
+                    {
+                        if (player.LootRequests.Any(lr =>
+                            lr.Loot.CampaignId == campaignId &&
+                            (!Model.UndistributedLootOnly ||
+                                (lr.Status != LootRequest.LootRequestStatus.Awarded &&
+                                lr.Loot.Status == CampaignLoot.CampaignLootStatus.Undistributed)
+                            )
+                        )) hasRequests = true;
+                    }
+                }
+                <tr class="@((player.Active ? "" : "text-muted") + (hasRequests ? "" : " d-none hidden-empty-cells"))">
                     <th class="@(isCurrent ? "text-success" : "")">
                         @(player.Active ? "" : "(")@(index++)@(player.Active ? "" : ")")@(isCurrent ? " (you)" : "")
                     </th>
